@@ -4,52 +4,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clase 3: Anatomía del Dataset Olist - SINT-201</title>
+    <title>Sesión 3 - Proyecto Integrador IA (SINT-649)</title>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lato:wght@300;400;700;900&family=Fira+Code:wght@400;500&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lato:wght@300;400;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script>
-        window.MathJax = {
-            tex: {
-                inlineMath: [['$', '$'], ['\\(', '\\)']]
-            }
-        };
-    </script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-
     <style>
+        /* =========================================
+           CORE VARIABLES & THEME
+           ========================================= */
         :root {
-            /* Base Colors */
-            --bg-dark: #0f172a;
-            --bg-darker: #020617;
+            /* Backgrounds */
+            --bg-deep: #020617;
+            --bg-gradient: radial-gradient(circle at 50% 120%, #1e1b4b, #020617);
+
+            /* Text */
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
+            --text-dim: #64748b;
 
-            /* Accents */
-            --primary: #0ea5e9;
-            /* Sky Blue */
-            --secondary: #8b5cf6;
-            /* Violet */
-            --accent: #22d3ee;
-            /* Cyan */
-            --rose: #f43f5e;
-            /* Rose for errors/attention */
-            --emerald: #10b981;
-            /* Green for success */
-            --amber: #f59e0b;
-            /* Amber for warnings */
+            /* Accents (Neon Palette) */
+            --c-cyan: #22d3ee;
+            --c-purple: #d8b4fe;
+            --c-pink: #f472b6;
+            --c-green: #4ade80;
+            --c-gold: #facc15;
+            --c-danger: #ef4444;
+            --c-blue: #38bdf8;
 
             /* Glassmorphism */
-            --glass-bg: rgba(30, 41, 59, 0.4);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-bg: rgba(15, 23, 42, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.03);
+            --glass-blur: blur(20px);
+            --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 20px rgba(56, 189, 248, 0.15);
 
-            /* Code */
-            --code-bg: #1e1e2e;
+            /* Spacing & sizing */
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --container-max: 1400px;
         }
 
+        /* =========================================
+           RESET & BASIC SETUP
+           ========================================= */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -58,24 +57,65 @@
 
         body {
             font-family: 'Inter', system-ui, sans-serif;
-            background: var(--bg-dark);
+            background-color: var(--bg-deep);
             background-image:
-                radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.1), transparent 25%),
-                radial-gradient(circle at 85% 30%, rgba(14, 165, 233, 0.1), transparent 25%),
+                linear-gradient(to bottom, transparent, var(--bg-deep)),
                 url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
             color: var(--text-main);
             height: 100vh;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
         }
 
+        /* Ambient Background Orbs */
+        body::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.1), transparent 60%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            bottom: -20%;
+            right: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(192, 132, 252, 0.1), transparent 60%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+            animation: float 25s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(20px, 40px);
+            }
+        }
+
+        /* =========================================
+           SLIDES ARCHITECTURE
+           ========================================= */
         .slides-container {
-            flex: 1;
-            width: 100%;
             position: relative;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
-            perspective: 1000px;
         }
 
         .slide {
@@ -85,71 +125,100 @@
             justify-content: center;
             align-items: center;
             opacity: 0;
-            transform: scale(0.9) translateY(30px);
-            transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            visibility: hidden;
+            transform: scale(0.96) translateY(15px);
+            transition: opacity 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            padding: 40px;
             pointer-events: none;
-            padding: 2rem;
         }
 
         .slide.active {
             opacity: 1;
+            visibility: visible;
             transform: scale(1) translateY(0);
             pointer-events: all;
             z-index: 10;
         }
 
+        /* =========================================
+           COMPONENTS: CARDS & CONTAINERS
+           ========================================= */
         .card {
             background: var(--glass-bg);
-            backdrop-filter: blur(24px) saturate(180%);
-            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
             border: 1px solid var(--glass-border);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), inset 0 0 20px rgba(255, 255, 255, 0.02);
-            border-radius: 32px;
-            padding: 2.5rem;
+            border-top: 1px solid var(--glass-highlight);
+            border-radius: var(--radius-lg);
+            padding: 3.5rem;
             width: 100%;
-            max-width: 1400px;
-            height: 90vh;
+            max-width: var(--container-max);
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
             display: flex;
             flex-direction: column;
             position: relative;
-            overflow: hidden;
         }
 
+        /* Scrollbar Styling */
+        .card::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .card::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .card::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .card::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Typography */
         h1 {
             font-family: 'Lato', sans-serif;
             font-weight: 900;
-            font-size: 4rem;
+            font-size: clamp(3rem, 5vw, 5.5rem);
             line-height: 1.1;
-            margin-bottom: 2rem;
-            letter-spacing: -0.02em;
-            background: linear-gradient(to right, #ffffff 30%, #94a3b8);
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #fff 20%, #94a3b8 100%);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
+            letter-spacing: -0.03em;
         }
 
         h2 {
             font-family: 'Lato', sans-serif;
             font-weight: 800;
-            font-size: 2.5rem;
+            font-size: clamp(2rem, 3.5vw, 3rem);
             margin-bottom: 2rem;
-            color: #fff;
-            display: inline-flex;
-            align-items: center;
-            gap: 1rem;
+            background: linear-gradient(90deg, #fff, var(--c-cyan));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
         }
 
         h3 {
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             color: #fff;
-            margin-bottom: 1rem;
+            margin-bottom: 0.8rem;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         p,
         li {
-            font-size: 1.1rem;
-            line-height: 1.6;
+            font-size: 1.15rem;
+            line-height: 1.7;
             color: var(--text-muted);
             margin-bottom: 1rem;
         }
@@ -159,1060 +228,343 @@
             font-weight: 600;
         }
 
-        .tag {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 99px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 1rem;
-            background: rgba(14, 165, 233, 0.2);
-            color: var(--primary);
-            border: 1px solid rgba(14, 165, 233, 0.3);
+        ul {
+            margin-left: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        li::marker {
+            color: var(--c-cyan);
         }
 
         /* Grids */
         .grid-2 {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 3rem;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 2rem;
             height: 100%;
         }
 
-        .bento-grid {
+        .split-layout {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1.5rem;
-            height: 100%;
-            flex: 1;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 3rem;
+            align-items: start;
         }
 
-        .bento-box {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
+        /* Concept Boxes */
+        .concept-box {
+            background: rgba(255, 255, 255, 0.02);
             padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            transition: transform 0.3s ease;
-        }
-
-        .bento-box:hover {
-            transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.05);
-            border-color: var(--primary);
-        }
-
-        /* Spiderweb Visualization */
-        .spider-container {
-            position: relative;
-            width: 100%;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
             height: 100%;
+        }
+
+        .concept-box:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* =========================================
+           CODE BLOCK / TERMINAL STYLING
+           ========================================= */
+        .window-interface {
+            background-color: #0f172a;
+            /* Deep Navy Terminal */
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 10px;
+        }
+
+        .window-header {
+            background-color: #1e293b;
+            padding: 12px 16px;
             display: flex;
-            justify-content: center;
+            gap: 8px;
             align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .node {
-            position: absolute;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            z-index: 2;
-        }
-
-        .node:hover {
-            transform: scale(1.1);
-            z-index: 10;
-        }
-
-        .node-circle {
-            width: 80px;
-            height: 80px;
+        .window-dot {
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
-            background: rgba(30, 41, 59, 0.9);
-            border: 2px solid var(--glass-border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            margin-bottom: 0.5rem;
         }
 
-        .node-label {
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: var(--text-muted);
+        .dot-red {
+            background-color: #ef4444;
         }
 
-        .node.center .node-circle {
-            width: 140px;
-            height: 140px;
-            border-color: var(--primary);
-            background: rgba(14, 165, 233, 0.1);
-            box-shadow: 0 0 40px rgba(14, 165, 233, 0.3);
-            color: var(--primary);
-            font-size: 2.5rem;
+        .dot-yellow {
+            background-color: #f59e0b;
         }
 
-        .line {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.1);
-            height: 2px;
-            transform-origin: left center;
-            z-index: 1;
+        .dot-green {
+            background-color: #22c55e;
         }
 
-        /* Timeline Horizontal */
-        .timeline {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: relative;
-            margin: 3rem 0;
-            padding: 0 1rem;
+        .filename {
+            margin-left: 10px;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            opacity: 0.8;
         }
 
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 1rem;
-            right: 1rem;
-            top: 10px;
-            height: 2px;
-            background: rgba(255, 255, 255, 0.2);
-            z-index: 0;
-        }
-
-        .time-point {
-            position: relative;
-            z-index: 2;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 18%;
-        }
-
-        .time-dot {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: var(--bg-dark);
-            border: 3px solid var(--text-muted);
-            margin-bottom: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .time-point.active .time-dot {
-            border-color: var(--emerald);
-            background: var(--emerald);
-            box-shadow: 0 0 15px var(--emerald);
-        }
-
-        .time-point.warning .time-dot {
-            border-color: var(--amber);
-            background: var(--amber);
-            box-shadow: 0 0 15px var(--amber);
-        }
-
-        .time-label {
+        .code-content {
+            padding: 24px;
+            margin: 0;
+            overflow-x: auto;
+            color: #e2e8f0;
             font-size: 0.95rem;
-            color: #fff;
+            line-height: 1.6;
+            white-space: pre;
+            /* CRITICAL FIX: Preserves spacing and newlines */
+            tab-size: 4;
+        }
+
+        /* Syntax Highlighting Classes */
+        .kwd {
+            color: var(--c-purple);
             font-weight: bold;
-            display: block;
-            margin-bottom: 0.25rem;
         }
 
-        .time-desc {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            display: block;
-            line-height: 1.3;
+        /* Keywords */
+        .func {
+            color: var(--c-gold);
         }
 
-        /* Join Flow Vertical */
-        .join-step {
+        /* Functions */
+        .str {
+            color: var(--c-green);
+        }
+
+        /* Strings */
+        .num {
+            color: var(--c-pink);
+        }
+
+        /* Numbers */
+        .cls {
+            color: var(--c-cyan);
+        }
+
+        /* Classes */
+        .cmt {
+            color: #64748b;
+            font-style: italic;
+        }
+
+        /* Comments */
+        .op {
+            color: var(--c-blue);
+        }
+
+        /* Operators */
+
+        /* =========================================
+           NAVIGATION & UTILS
+           ========================================= */
+        .footer-nav {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             align-items: center;
             gap: 20px;
-            padding: 1.5rem;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 12px;
-            border: 1px solid var(--glass-border);
-            margin-bottom: 1rem;
+            z-index: 100;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
         }
 
-        .join-number {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            flex-shrink: 0;
-        }
-
-        /* Modals */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.95);
-            z-index: 1000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        .modal-content {
-            background: #1e293b;
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 4rem;
-            width: 90%;
-            max-width: 1000px;
-            position: relative;
-        }
-
-        .close-modal {
-            position: absolute;
-            top: 1.5rem;
-            right: 2rem;
-            background: transparent;
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.05);
             border: none;
-            color: white;
-            font-size: 2rem;
+            color: var(--text-main);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
         }
 
-        #progressBar {
+        .nav-btn:hover:not(:disabled) {
+            background: var(--c-cyan);
+            color: #000;
+            transform: scale(1.1);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .slide-counter {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        .progress-bar {
             position: fixed;
             top: 0;
             left: 0;
             height: 3px;
-            z-index: 200;
-            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+            background: linear-gradient(90deg, var(--c-cyan), var(--c-purple));
             width: 0%;
-            transition: width 0.4s ease;
+            transition: width 0.3s ease;
+            z-index: 200;
+            box-shadow: 0 0 15px var(--c-cyan);
         }
 
-        .explanation-text {
-            font-size: 1.1rem;
-            color: var(--text-muted);
-            margin-top: 0.5rem;
-        }
+        /* Responsive Breakpoints */
+        @media (max-width: 1024px) {
+            .split-layout {
+                grid-template-columns: 1fr;
+            }
 
-        /* Explicit Tooltips */
-        .term {
-            border-bottom: 2px dashed rgba(34, 211, 238, 0.4);
-            cursor: help;
-            position: relative;
-            transition: all 0.2s;
-        }
+            .card {
+                padding: 2.5rem;
+            }
 
-        .term:hover {
-            color: var(--accent);
-            border-bottom-color: var(--accent);
-        }
-
-        .term:hover::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 120%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.95);
-            color: #fff;
-            padding: 0.8rem 1.2rem;
-            border-radius: 8px;
-            width: max-content;
-            max-width: 300px;
-            white-space: normal;
-            font-size: 0.9rem;
-            border: 1px solid var(--accent);
-            z-index: 1000;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            line-height: 1.4;
-            text-align: center;
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 
 <body>
-    <div id="progressBar"></div>
+
+    <div class="progress-bar" id="progressBar"></div>
 
     <div class="slides-container">
 
-        <!-- SLIDE 1: Title -->
+        <!-- ================================================================= -->
+        <!-- BLOQUE 1: INTRODUCCIÓN Y CONTEXTO -->
+        <!-- ================================================================= -->
+
+        <!-- Slide 1: Portada -->
         <div class="slide active">
-            <div class="card" style="text-align: center; justify-content: center; align-items: center;">
-                <span class="tag">SINT-201 &bull; Clase 3 &bull; Data Engineering <span class="term"
-                        data-tooltip="Ingeniería de Datos: La disciplina de diseñar y construir sistemas para recolectar y usar datos.">(?)</span></span>
-                <h1>Anatomía del Dataset Olist</h1>
-                <p style="max-width: 900px; margin: 0 auto 3rem auto; font-size: 1.5rem; color: #e2e8f0;">
-                    Vamos a construir el "Plano Maestro" del E-commerce.
+            <div class="card" style="text-align: center; justify-content: center; min-height: 60vh;">
+                <p
+                    style="color: var(--c-cyan); letter-spacing: 3px; text-transform: uppercase; font-size: 0.9rem; font-weight: 700; margin-bottom: 20px;">
+                    SINT-649 | Proyecto Integrador IA
+                </p>
+                <h1>Sesión 3: Calidad de Datos &<br>Ética Tecnológica</h1>
+                <p style="font-size: 1.6rem; color: var(--text-muted); margin-top: 1rem;">
+                    De la Limpieza de Datos a la Responsabilidad Algorítmica.
                 </p>
 
+
+
                 <div
-                    style="max-width: 800px; text-align: left; background: rgba(255,255,255,0.03); padding: 2rem; border-radius: 20px;">
-                    <p style="margin-bottom: 0.5rem;"><strong style="color: var(--primary);">👩‍🏫 Mensaje para la
-                            Clase:</strong></p>
-                    <p>
-                        "Olviden la idea de abrir un solo archivo Excel con todas las respuestas.
-                        Este <span class="term"
-                            data-tooltip="Dataset: Conjunto de datos estructurados, generalmente en tablas.">dataset</span>
-                        es una <strong>Base de Datos Relacional</strong> real. Tienen 9 tablas separadas.
-                        Si no entienden cómo se conectan (quién compró qué, cuándo y dónde), sus análisis estarán
-                        fundamentalmente equivocados."
-                    </p>
+                    style="margin-top: 3rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; text-align: left; width: 100%; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px;">
+                    <!-- Col 1 -->
+                    <div style="display: flex; gap: 15px; align-items: flex-start;">
+                        <div
+                            style="background: rgba(6,182,212,0.1); padding: 12px; border-radius: 8px; color: var(--c-cyan);">
+                            <i class="fa-solid fa-user-tie"></i>
+                        </div>
+                        <div>
+                            <h4
+                                style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: #64748b; margin: 0 0 5px 0; font-weight: 600;">
+                                Profesor</h4>
+                            <p style="font-size: 1.1rem; color: #fff; margin: 0;">Dr. J. Ignacio Borge</p>
+                            <p style="font-size: 0.9rem; color: var(--c-cyan); margin: 2px 0 0 0; font-style: italic;">
+                                Científico computacional</p>
+                        </div>
+                    </div>
+
+                    <!-- Col 2 -->
+                    <div style="display: flex; gap: 15px; align-items: flex-start;">
+                        <div
+                            style="background: rgba(236,72,153,0.1); padding: 12px; border-radius: 8px; color: var(--c-pink);">
+                            <i class="fa-regular fa-calendar-check"></i>
+                        </div>
+                        <div>
+                            <h4
+                                style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: #64748b; margin: 0 0 5px 0; font-weight: 600;">
+                                Fecha</h4>
+                            <p style="font-size: 1.1rem; color: #fff; margin: 0;">Martes 03 de Febrero</p>
+                            <p style="font-size: 0.9rem; color: var(--text-muted); margin: 2px 0 0 0;">2026</p>
+                        </div>
+                    </div>
+
+                    <!-- Col 3 -->
+                    <div style="display: flex; gap: 15px; align-items: flex-start;">
+                        <div
+                            style="background: rgba(74,222,128,0.1); padding: 12px; border-radius: 8px; color: var(--c-green);">
+                            <i class="fa-solid fa-building-columns"></i>
+                        </div>
+                        <div>
+                            <h4
+                                style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: #64748b; margin: 0 0 5px 0; font-weight: 600;">
+                                Institución</h4>
+                            <p style="font-size: 1.1rem; color: #fff; margin: 0;">Universidad CENFOTEC</p>
+                            <p style="font-size: 0.9rem; color: var(--text-muted); margin: 2px 0 0 0;">Escuela de
+                                Sistemas Inteligente</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- SLIDE 2: The Mental Map (Official Schema) -->
+        <!-- Slide 2: Contexto y Objetivos -->
         <div class="slide">
             <div class="card">
-                <h2>El Esquema Relacional <span style="font-size: 0.6em; opacity: 0.7;">(ERD: Entity Relationship
-                        Diagram)</span></h2>
+                <h2>Contexto de la Sesión</h2>
+                <p style="margin-bottom: 3rem; max-width: 800px;">En esta sesión integraremos tres dimensiones
+                    fundamentales para la construcción de sistemas de IA robustos y confiables:</p>
 
-                <style>
-                    /* Icon Node CSS */
-                    .icon-node {
-                        position: absolute;
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: center;
-                        cursor: pointer;
-                        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-                        z-index: 10;
-                    }
-
-                    .icon-circle {
-                        width: 90px;
-                        height: 90px;
-                        border-radius: 50%;
-                        background: var(--node-bg);
-                        border: 3px solid var(--node-border);
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        font-size: 2.2rem;
-                        color: #fff;
-                        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 0 4px rgba(255, 255, 255, 0.05);
-                        position: relative;
-                        overflow: hidden;
-                    }
-
-                    /* Shiny effect */
-                    .icon-circle::after {
-                        content: '';
-                        position: absolute;
-                        top: -50%;
-                        left: -50%;
-                        width: 200%;
-                        height: 200%;
-                        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-                        transform: rotate(45deg);
-                    }
-
-                    .node-label {
-                        margin-top: 12px;
-                        background: rgba(15, 23, 42, 0.9);
-                        padding: 4px 12px;
-                        border-radius: 99px;
-                        font-family: 'Fira Code', monospace;
-                        font-size: 0.85rem;
-                        color: var(--text-muted);
-                        border: 1px solid rgba(255, 255, 255, 0.1);
-                        white-space: nowrap;
-                    }
-
-                    .icon-node:hover {
-                        transform: scale(1.15) translateY(-5px);
-                        z-index: 20;
-                    }
-
-                    .icon-node:hover .node-label {
-                        color: #fff;
-                        border-color: var(--node-border);
-                    }
-
-                    /* Colors based on Kaggle Diagram */
-                    .node-orders {
-                        --node-bg: linear-gradient(135deg, #e11d48, #be123c);
-                        --node-border: #f43f5e;
-                    }
-
-                    .node-items {
-                        --node-bg: linear-gradient(135deg, #ea580c, #c2410c);
-                        --node-border: #f97316;
-                    }
-
-                    .node-products {
-                        --node-bg: linear-gradient(135deg, #ca8a04, #a16207);
-                        --node-border: #eab308;
-                    }
-
-                    .node-customers {
-                        --node-bg: linear-gradient(135deg, #0d9488, #0f766e);
-                        --node-border: #14b8a6;
-                    }
-
-                    .node-geo {
-                        --node-bg: linear-gradient(135deg, #2563eb, #1d4ed8);
-                        --node-border: #3b82f6;
-                    }
-
-                    .node-payments {
-                        --node-bg: linear-gradient(135deg, #475569, #334155);
-                        --node-border: #94a3b8;
-                    }
-
-                    .node-reviews {
-                        --node-bg: linear-gradient(135deg, #9333ea, #7e22ce);
-                        --node-border: #a855f7;
-                    }
-
-                    .node-sellers {
-                        --node-bg: linear-gradient(135deg, #059669, #047857);
-                        --node-border: #10b981;
-                    }
-
-                    /* Arrow Labels */
-                    .conn-label {
-                        position: absolute;
-                        font-family: 'Fira Code', monospace;
-                        font-size: 0.7rem;
-                        color: #94a3b8;
-                        background: #0f172a;
-                        padding: 2px 6px;
-                        border-radius: 4px;
-                        border: 1px solid rgba(255, 255, 255, 0.1);
-                        transform: translate(-50%, -50%);
-                        z-index: 5;
-                    }
-                </style>
-
-                <div style="flex: 1; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden;"
-                    id="erd-container">
-                    <img src="https://i.imgur.com/HRhd2Y0.png" alt="Olist Relational Schema"
-                        style="max-width: 85%; max-height: 72vh; object-fit: contain; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
-
-                </div>
-            </div>
-        </div>
-
-        <!-- SLIDE 2.5: SQL Commands Toolkit -->
-        <div class="slide">
-            <div class="card" style="display: flex; flex-direction: column;">
-                <h2><i class="fa-brands fa-python"></i> Comandos Python/Pandas</h2>
-                <p style="font-size: 0.95rem; margin-bottom: 1.5rem; opacity: 0.9;">
-                    <strong><span class="term"
-                            data-tooltip="pandas: Biblioteca de software escrita para el lenguaje Python para manipulación y análisis de datos.">pandas</span></strong>
-                    es la biblioteca de Python.
-                    <span style="opacity: 0.7;">Haz click en cada comando para ver ejemplos detallados:</span>
-                </p>
-
-                <!-- Asymmetric Grid of Commands -->
-                <div style="display: grid; 
-                            grid-template-columns: 1.2fr 1fr 1fr 1fr; 
-                            grid-template-rows: auto auto; 
-                            gap: 1rem; 
-                            flex: 1;
-                            grid-template-areas: 
-                                'select filter filter merge'
-                                'groupby sort head merge';">
-
-                    <!-- SELECT columns -->
-                    <div class="bento-box" onclick="openPandasModal('select')"
-                        style="border-left: 4px solid var(--primary); cursor: pointer; transition: transform 0.2s; padding: 1.2rem; position: relative; min-height: 120px;"
-                        onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                        <h3 style="color: var(--primary); margin-bottom: 0.5rem; font-size: 1.2rem;">
-                            <code>[[columnas]]</code>
-                        </h3>
-                        <p style="font-size: 0.95rem; opacity: 0.85; margin: 0;">Seleccionar columnas</p>
-                        <i class="fa-solid fa-circle-info"
-                            style="position: absolute; top: 0.7rem; right: 0.7rem; font-size: 0.85rem; opacity: 0.5;"></i>
-                    </div>
-
-                    <!-- WHERE / Filter -->
-                    <div class="bento-box" onclick="openPandasModal('filter')"
-                        style="grid-area: filter; border-left: 4px solid var(--amber); cursor: pointer; transition: transform 0.2s; padding: 1.2rem; position: relative;"
-                        onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                        <h3 style="color: var(--amber); margin-bottom: 0.5rem;"><code>df[condición]</code></h3>
-                        <p style="font-size: 0.9rem; margin-bottom: 0.8rem; opacity: 0.9;">
-                            <strong>Qué hace:</strong> Filtra filas <span
-                                style="font-size: 0.8em; opacity: 0.7;">(Similar a <strong>WHERE</strong> en SQL)</span>
-                        </p>
-                        <pre
-                            style="background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 6px; font-size: 0.85rem; overflow-x: auto;">orders[orders['order_status'] == 'delivered']</pre>
-                        <p style="font-size: 0.8rem; margin-top: 0.5rem; opacity: 0.7;">
-                            📌 Usa == para igualdad, != para diferente, >, <, etc. </p>
-                    </div>
-
-                    <!-- JOIN / Merge -->
-                    <div class="bento-box" onclick="openPandasModal('merge')"
-                        style="grid-area: merge; border-left: 4px solid var(--emerald); cursor: pointer; transition: transform 0.2s; padding: 1.2rem; position: relative;"
-                        onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                        <h3 style="color: var(--emerald); margin-bottom: 0.5rem; font-size: 1.2rem;">
-                            <code>pd.merge()</code>
-                        </h3>
-                        <p style="font-size: 0.95rem; opacity: 0.85; margin: 0;">Unir tablas</p>
-                        <i class="fa-solid fa-circle-info"
-                            style="position: absolute; top: 0.7rem; right: 0.7rem; font-size: 0.85rem; opacity: 0.5;"></i>
-                    </div>
-
-                    <!-- GROUP BY -->
-                    <div class="bento-box" onclick="openPandasModal('groupby')"
-                        style="grid-area: groupby; border-left: 4px solid var(--secondary); cursor: pointer; transition: transform 0.2s; padding: 1.2rem; position: relative;"
-                        onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                        <h3 style="color: var(--secondary); margin-bottom: 0.5rem; font-size: 1.2rem;">
-                            <code>.groupby()</code>
-                        </h3>
-                        <p style="font-size: 0.95rem; opacity: 0.85; margin: 0;">Agrupar datos</p>
-                        <i class="fa-solid fa-circle-info"
-                            style="position: absolute; top: 0.7rem; right: 0.7rem; font-size: 0.85rem; opacity: 0.5;"></i>
-                    </div>
-
-                    <!-- ORDER BY / Sort -->
-                    <div class="bento-box" onclick="openPandasModal('sort')"
-                        style="grid-area: sort; border-left: 4px solid var(--rose); cursor: pointer; transition: transform 0.2s; padding: 1.2rem; position: relative;"
-                        onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                        <h3 style="color: var(--rose); margin-bottom: 0.5rem; font-size: 1.2rem;">
-                            <code>.sort_values()</code>
-                        </h3>
-                        <p style="font-size: 0.95rem; opacity: 0.85; margin: 0;">Ordenar</p>
-                        <i class="fa-solid fa-circle-info"
-                            style="position: absolute; top: 0.7rem; right: 0.7rem; font-size: 0.85rem; opacity: 0.5;"></i>
-                    </div>
-
-                    <!-- LIMIT / Head -->
-                    <div class="bento-box" onclick="openPandasModal('head')"
-                        style="grid-area: head; border-left: 4px solid #06b6d4; cursor: pointer; transition: transform 0.2s; padding: 1.2rem; position: relative;"
-                        onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                        <h3 style="color: #06b6d4; margin-bottom: 0.5rem; font-size: 1.2rem;">
-                            <code>.head(n)</code>
-                        </h3>
-                        <p style="font-size: 0.95rem; opacity: 0.85; margin: 0;">Primeras N filas</p>
-                        <i class="fa-solid fa-circle-info"
-                            style="position: absolute; top: 0.7rem; right: 0.7rem; font-size: 0.85rem; opacity: 0.5;"></i>
-                    </div>
-
-                </div>
-
-                <!-- Footer Note -->
-                <div
-                    style="margin-top: 1.5rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border-left: 4px solid var(--primary);">
-                    <strong style="color: var(--primary);">� Lenguaje del Curso:</strong>
-                    <p style="margin-top: 0.5rem; font-size: 0.95rem;">
-                        Estos comandos pertenecen a <strong>Python</strong> usando la biblioteca
-                        <strong>pandas</strong>.
-                        Pandas es el estándar de la industria para análisis de datos en Python. Primero debes importar:
-                        <code
-                            style="background: rgba(0,0,0,0.3); padding: 0.2rem 0.5rem; border-radius: 4px;">import pandas as pd</code>
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <!-- SLIDE 3: Orders Deep Dive -->
-        <div class="slide">
-            <div class="card">
-                <h2>La Tabla Madre: <code style="color: var(--primary);">olist_orders</code></h2>
-
-                <!-- Asymmetric Layout: Concepts (Left) vs Analysis (Right) -->
-                <div class="grid-asymmetric"
-                    style="display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 1.5rem; height: 100%; align-content: start; margin-top: 1rem;">
-
-                    <!-- LEFT COLUMN: Concepts & Rules -->
-                    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-
-                        <!-- 1. Definition -->
-                        <div class="bento-box" onclick="openConceptModal('bitacora')"
-                            style="cursor: pointer; transition: transform 0.2s;"
-                            onmouseover="this.style.transform='scale(1.02)'"
-                            onmouseout="this.style.transform='scale(1)'">
-                            <h3 style="color: var(--primary); margin-bottom: 0.5rem;">Bitácora del Sistema <i
-                                    class="fa-solid fa-circle-info"
-                                    style="font-size: 0.8rem; opacity: 0.5; margin-left: 0.5rem;"></i></h3>
-                            <p>Cada fila es un pedido único <span class="term"
-                                    data-tooltip="Cada fila representa una transacción individual. No hay duplicados de ID.">(PK)</span>.
-                            </p>
-                            <p style="font-size: 0.9rem; margin-top: 0.5rem; opacity: 0.8;">Solo sabe que "Alguien"
-                                pidió "Algo" en tal "Fecha" <span class="term"
-                                    data-tooltip="Timestamp: Marca de tiempo que incluye Fecha y Hora exacta (AAAA-MM-DD HH:MM:SS)">(Timestamp)</span>.
-                            </p>
-                        </div>
-
-                        <!-- 2. Warning -->
-                        <div class="bento-box" onclick="openConceptModal('importante')"
-                            style="border-left: 4px solid var(--rose); background: rgba(244, 63, 94, 0.05); cursor: pointer; transition: transform 0.2s;"
-                            onmouseover="this.style.transform='scale(1.02)'"
-                            onmouseout="this.style.transform='scale(1)'">
-                            <h3 style="color: var(--rose); font-size: 1rem; margin-bottom: 0.5rem;"><i
-                                    class="fa-solid fa-circle-exclamation"></i> IMPORTANTE <i
-                                    class="fa-solid fa-circle-info"
-                                    style="font-size: 0.8rem; opacity: 0.5; margin-left: 0.5rem;"></i></h3>
-                            <p style="font-size: 0.95rem;">Esta tabla <strong>NO SABE</strong> qué producto se compró ni
-                                cuánto costó.</p>
-                        </div>
-
-                        <!-- 3. Rule of Gold -->
-                        <div class="bento-box" onclick="openConceptModal('regla')"
-                            style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), transparent); border: 1px solid var(--amber); cursor: pointer; transition: transform 0.2s;"
-                            onmouseover="this.style.transform='scale(1.02)'"
-                            onmouseout="this.style.transform='scale(1)'">
-                            <h3 style="color: var(--amber); margin-bottom: 0.5rem;"><i class="fa-solid fa-star"></i>
-                                Regla de Oro <i class="fa-solid fa-circle-info"
-                                    style="font-size: 0.8rem; opacity: 0.5; margin-left: 0.5rem;"></i></h3>
-                            <p style="font-size: 1.1rem; font-weight: bold;">Filtrar solo <code>delivered</code></p>
-                            <p style="font-size: 0.85rem; margin-top: 0.5rem; opacity: 0.8;">
-                                Existen órdenes 'cancelled' o 'shipped'. Si no filtras, estarás reportando ventas
-                                falsas.
-                            </p>
-                        </div>
-
-                    </div>
-
-                    <!-- RIGHT COLUMN: Timeline & KPIs -->
-                    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-
-                        <!-- 4. Timeline (Needs width) -->
-                        <div class="bento-box" onclick="openConceptModal('lifecycle')"
-                            style="flex: 0 0 auto; cursor: pointer; transition: transform 0.2s; position: relative;"
-                            onmouseover="this.style.transform='scale(1.02)'"
-                            onmouseout="this.style.transform='scale(1)'">
-                            <h3
-                                style="color: var(--text-muted); font-size: 1rem; margin-bottom: 0.8rem; text-align: center;">
-                                El Ciclo de Vida del Pedido (5 Fechas Clave)
-                            </h3>
-                            <p
-                                style="font-size: 0.9rem; text-align: center; opacity: 0.8; margin-bottom: 1.2rem; line-height: 1.5;">
-                                Cada pedido pasa por <strong>5 momentos</strong> registrados con timestamps.
-                                Estas fechas nos permiten calcular demoras, identificar retrasos y medir la experiencia
-                                del cliente.
-                                <i class="fa-solid fa-circle-info"
-                                    style="margin-left: 0.5rem; font-size: 0.75rem; opacity: 0.5;"></i>
-                            </p>
-                            <div class="timeline" style="transform: scale(0.95); width: 100%;">
-                                <div class="time-point active">
-                                    <div class="time-dot"></div>
-                                    <span class="time-label">Purchase</span>
-                                    <span class="time-desc">Clic de compra</span>
-                                </div>
-                                <div class="time-point active">
-                                    <div class="time-dot"></div>
-                                    <span class="time-label">Approved</span>
-                                    <span class="time-desc">Pago OK</span>
-                                </div>
-                                <div class="time-point active">
-                                    <div class="time-dot"></div>
-                                    <span class="time-label">Carrier</span>
-                                    <span class="time-desc">En camino</span>
-                                </div>
-                                <div class="time-point active">
-                                    <div class="time-dot"></div>
-                                    <span class="time-label">Customer</span>
-                                    <span class="time-desc"
-                                        style="color: var(--emerald); font-weight: bold;">¡Recibido!</span>
-                                </div>
-                                <div class="time-point warning">
-                                    <div class="time-dot"></div>
-                                    <span class="time-label">Estimated</span>
-                                    <span class="time-desc">La Promesa <span class="term"
-                                            data-tooltip="Fecha Estimada: La fecha límite que el sistema le prometió al cliente.">(Target)</span></span>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <!-- 5. KPIs -->
-                        <div class="bento-box" onclick="openConceptModal('kpis')"
-                            style="flex: 1; display: flex; flex-direction: column; justify-content: center; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); cursor: pointer; transition: transform 0.2s; position: relative;"
-                            onmouseover="this.style.transform='scale(1.02)'"
-                            onmouseout="this.style.transform='scale(1)'">
-                            <h3 style="color: var(--emerald); margin-bottom: 0.8rem;">
-                                KPIs que calcularemos hoy:
-                                <i class="fa-solid fa-circle-info"
-                                    style="margin-left: 0.5rem; font-size: 0.75rem; opacity: 0.5;"></i>
-                            </h3>
-                            <p style="font-size: 0.9rem; margin-bottom: 1rem; opacity: 0.9; line-height: 1.5;">
-                                Estos indicadores miden la <strong>experiencia del cliente</strong>. Nos dicen si Olist
-                                cumple sus promesas
-                                y dónde están los cuellos de botella en la logística.
-                            </p>
-
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                                <!-- KPI 1 -->
-                                <div style="padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
-                                    <strong style="color: #fff;">1. Demora Real</strong>
-                                    <div style="margin: 0.5rem 0; font-family: monospace; font-size: 0.9rem;">
-                                        <span style="color: var(--emerald);">delivered</span> - <span
-                                            style="color: var(--primary);">purchase</span>
-                                    </div>
-                                    <p style="font-size: 0.85rem; opacity: 0.85; line-height: 1.4; margin-top: 0.5rem;">
-                                        <strong>¿Qué mide?</strong> El tiempo total desde que el cliente hizo clic en
-                                        "Comprar"
-                                        hasta que recibió su producto. Es la <em>experiencia real</em> del cliente.
-                                    </p>
-                                </div>
-
-                                <!-- KPI 2 -->
-                                <div style="padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
-                                    <strong style="color: #fff;">2. "Delay" (Retraso)</strong>
-                                    <div style="margin: 0.5rem 0; font-family: monospace; font-size: 0.9rem;">
-                                        <span style="color: var(--emerald);">delivered</span> - <span
-                                            style="color: var(--amber);">estimated</span>
-                                    </div>
-                                    <p style="font-size: 0.85rem; opacity: 0.85; line-height: 1.4; margin-top: 0.5rem;">
-                                        <strong>¿Qué mide?</strong> Si Olist cumplió su promesa de entrega.
-                                        Un número <span style="color: var(--rose);">positivo</span> significa que llegó
-                                        tarde.
-                                        Un número <span style="color: var(--emerald);">negativo</span> significa que
-                                        llegó antes (¡cliente feliz!).
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-
-                    </div>
-
-                </div>
-            </div>
-        </div>
-
-        <!-- SLIDE 4: Items & Money -->
-<!-- SLIDE 4: Items & Money -->
-<div class="slide">
-    <div class="card" style="padding: 3rem; display: flex; flex-direction: column;">
-        <h2 style="margin-bottom: 2rem;">Dinero y Detalle: <code style="color: var(--secondary);">olist_items</code>
-        </h2>
-
-        <div class="grid-2" style="gap: 4rem; align-items: start;">
-
-            <!-- LEFT: Narrative Structure (Anatomy) -->
-            <div class="bento-box"
-                style="justify-content: flex-start; text-align: left; padding: 2.5rem; background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.1);">
-                <h3 style="color: var(--secondary); margin-bottom: 1.5rem; font-size: 1.4rem;">
-                    <i class="fa-solid fa-diagram-project"></i> Anatomía de una Orden
-                </h3>
-
-                <p style="margin-bottom: 2rem; font-size: 1.1rem; line-height: 1.6; opacity: 0.9;">
-                    Esta tabla es el corazón. Una orden (#123) puede tener múltiples items. Amazon no te envía 3 cajas
-                    distintas, te envía 1 caja con 3 cosas.
-                </p>
-
-                <!-- Visual Receipt -->
-                <div
-                    style="background: #fff; color: #000; padding: 1.5rem; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-family: 'Courier New', monospace; position: relative; transform: rotate(-2deg); margin: 1rem 0;">
-                    <div
-                        style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 0.5rem; margin-bottom: 0.5rem; font-weight: bold;">
-                        OLIST MARKETPLACE</div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.2rem;">
-                        <span>Item 1: TV 4K</span>
-                        <span>$500</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <span>Item 2: HDMI Cable</span>
-                        <span>$10</span>
-                    </div>
-                    <div
-                        style="border-top: 1px solid #000; padding-top: 0.5rem; display: flex; justify-content: space-between; font-weight: bold;">
-                        <span>TOTAL</span>
-                        <span>$510</span>
-                    </div>
-                    <div
-                        style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 20px; height: 20px; background: radial-gradient(circle, #333 20%, transparent 20%); background-size: 10px 10px; opacity: 0.1;">
-                    </div>
-                </div>
-
-                <div
-                    style="margin-top: 1.5rem; font-size: 0.9rem; opacity: 0.7; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
-                    <strong>Regla:</strong> 1 Fila = 1 Producto. (Si compras 5 cosas, tendrás 5 filas con el mismo
-                    <code>order_id</code>).
-                </div>
-            </div>
-
-            <!-- RIGHT: Money Flow Dashboard -->
-            <div style="display: flex; flex-direction: column; gap: 2rem;">
-
-                <div
-                    style="background: rgba(16, 185, 129, 0.05); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--emerald);">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
-                        <h4 style="color: var(--emerald); font-size: 1.1rem; margin: 0;">💰 Price (Precio)</h4>
-                        <span
-                            style="background: var(--emerald); color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">INGRESO</span>
-                    </div>
-                    <p style="font-size: 1rem; margin-bottom: 0.5rem;">El costo del producto.</p>
-                    <p style="font-size: 0.9rem; opacity: 0.8;"><i class="fa-solid fa-arrow-right"></i> Va al
-                        <strong>Vendedor</strong> (Seller).</p>
-                </div>
-
-                <div
-                    style="background: rgba(59, 130, 246, 0.05); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--primary);">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
-                        <h4 style="color: var(--primary); font-size: 1.1rem; margin: 0;">🚚 Freight (Envío)</h4>
-                        <span
-                            style="background: var(--primary); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">COSTO</span>
-                    </div>
-                    <p style="font-size: 1rem; margin-bottom: 0.5rem;">El costo logístico.</p>
-                    <p style="font-size: 0.9rem; opacity: 0.8;"><i class="fa-solid fa-arrow-right"></i> Va a
-                        <strong>Correos</strong> (Carrier). <br> <span style="color: var(--rose);">Olist NO toca
-                            esto.</span></p>
-                </div>
-
-                <!-- KPI Snapshot -->
-                <div
-                    style="background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 12px; margin-top: 0.5rem;">
-                    <strong
-                        style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; letter-spacing: 1px; color: var(--text-muted); text-transform: uppercase;">Cómo
-                        calcular ventas (GMV)</strong>
-                    <code
-                        style="display: block; font-family: 'Fira Code', monospace; color: var(--emerald); font-size: 1.1rem;">items['price'].sum()</code>
-                </div>
-
-            </div>
-
-        </div>
-    </div>
-</div>
-
-<!-- SLIDE 5: Customer Trap -->
-<div class="slide">
-    <div class="card" style="padding: 3rem; display: flex; flex-direction: column;">
-
-        <h2 style="margin-bottom: 2rem;">La Trampa del ID: <span style="font-size: 0.6em; opacity: 0.7;">Sessions vs
-                Users</span></h2>
-
-        <div class="grid-2" style="gap: 4rem; align-items: start;">
-
-            <!-- LEFT: Narrative Context -->
-            <div class="bento-box"
-                style="justify-content: flex-start; text-align: left; padding: 2.5rem; background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.1);">
-                <h3 style="color: var(--rose); margin-bottom: 1.5rem; font-size: 1.4rem;">
-                    <i class="fa-solid fa-person-circle-question"></i> ¿Quién es el cliente?
-                </h3>
-
-                <p style="margin-bottom: 1.5rem; font-size: 1.1rem; line-height: 1.6; opacity: 0.9;">
-                    Olist es un Marketplace. No tiene "cuentas de usuario" centralizadas de la manera tradicional.
-                </p>
-
-                <ul style="margin-bottom: 2rem; font-size: 1rem; line-height: 1.8; opacity: 0.8; padding-left: 1.2rem;">
-                    <li>Cada compra genera un ID temporal (como un ticket de turno).</li>
-                    <li>Si compras hoy y mañana, tendrás IDs distintos.</li>
-                    <li><strong>El problema:</strong> Si contamos estos IDs, creemos que tenemos el doble de clientes.
-                    </li>
-                </ul>
-
-                <div
-                    style="background: rgba(244, 63, 94, 0.1); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--rose);">
-                    <strong style="color: var(--rose); display: block; margin-bottom: 0.5rem;">Analogía
-                        Carnicería:</strong>
-                    <p style="font-size: 0.9rem; margin: 0;">Sacas "Ticket A-50" hoy. Mañana sacas "Ticket B-20". Eres
-                        la misma persona, pero tienes dos números distintos.</p>
-                </div>
-            </div>
-
-            <!-- RIGHT: The Trap vs Solution Visuals -->
-            <div style="display: flex; flex-direction: column; gap: 2rem;">
-
-                <!-- The TRAP (Red) -->
-                <div
-                    style="background: rgba(244, 63, 94, 0.05); padding: 1.5rem; border-radius: 12px; border: 1px dashed var(--rose); position: relative;">
-                    <span
-                        style="position: absolute; top: -10px; right: 20px; background: var(--rose); color: white; padding: 2px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">EVITAR</span>
-
-                    <h4
-                        style="color: var(--rose); font-size: 1.2rem; margin-bottom: 0.5rem; font-family: 'Fira Code', monospace;">
-                        customer_id</h4>
-                    <p style="font-size: 0.9rem; margin-bottom: 1rem; opacity: 0.8;">El ID de la <strong>sesión</strong>
-                        de compra.</p>
-
-                    <div style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 6px;">
-                        <code style="color: var(--rose); font-size: 0.85rem;">orders['customer_id'].nunique()</code>
-                        <div style="font-size: 0.75rem; margin-top: 4px; opacity: 0.6;">Resultado: Inflado (No son
-                            personas reales)</div>
-                    </div>
-                </div>
-
-                <!-- The SOLUTION (Green) -->
-                <div
-                    style="background: rgba(16, 185, 129, 0.05); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--emerald); box-shadow: 0 0 20px rgba(16, 185, 129, 0.1); position: relative;">
-                    <span
-                        style="position: absolute; top: -10px; right: 20px; background: var(--emerald); color: black; padding: 2px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">CORRECTO</span>
-
-                    <h4
-                        style="color: var(--emerald); font-size: 1.2rem; margin-bottom: 0.5rem; font-family: 'Fira Code', monospace;">
-                        customer_unique_id</h4>
-                    <p style="font-size: 0.9rem; margin-bottom: 1rem; opacity: 0.8;">La <strong>Huella Digital</strong>
-                        real del usuario.</p>
-
-                    <div style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 6px;">
-                        <code
-                            style="color: var(--emerald); font-size: 0.85rem;">customers['customer_unique_id'].nunique()</code>
-                        <div style="font-size: 0.75rem; margin-top: 4px; opacity: 0.6;">Resultado: Real (Conteo de
-                            personas únicas)</div>
-                    </div>
-                </div>
-
-            </div>
-
-        </div>
-    </div>
-</div>
-
-        <!-- SLIDE 6: Context Layers -->
-        <div class="slide">
-            <div class="card" style="padding: 2rem; display: flex; flex-direction: column;">
-                <h2 style="margin-bottom: 1rem;">Tablas de Contexto (Los Detalles)</h2>
-
-                <div class="bento-grid"
-                    style="grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 1.5rem;">
-
-                    <!-- Products -->
-                    <div class="bento-box"
-                        style="justify-content: flex-start; align-items: stretch; text-align: left; padding: 1.5rem;">
-                        <h3 style="color: var(--accent); margin-top: 0;"><i class="fa-solid fa-tags"></i> Products</h3>
-                        <p style="margin-bottom: 0.5rem; flex: 1;">Dimensiones (peso, altura) para costos de envío.</p>
-                        <div
-                            style="background: rgba(30, 41, 59, 0.6); padding: 0.8rem; border-radius: 12px; border: 1px solid var(--glass-border);">
-                            <div style="font-size: 0.9rem; margin-bottom: 0.3rem;">
-                                <strong style="color: var(--accent);">Problema:</strong> <code>product_category</code>
-                                en Portugués.
-                            </div>
-                            <div style="font-size: 0.9rem;">
-                                <strong style="color: var(--emerald);">Solución:</strong> JOIN con
-                                <code>translation</code>.
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Payments -->
-                    <div class="bento-box"
-                        style="justify-content: flex-start; align-items: stretch; text-align: left; padding: 1.5rem;">
-                        <h3 style="margin-top: 0;"><i class="fa-solid fa-credit-card"></i> Payments</h3>
-                        <p style="margin-bottom: 0.5rem; flex: 1;">Nos dice <strong>CÓMO</strong> pagaron.</p>
-                        <div
-                            style="background: rgba(255, 255, 255, 0.05); padding: 0.8rem; border-radius: 12px; margin-top: auto;">
-                            <code>payment_installments</code>:<br>
-                            Brasil es economía de crédito. Pagan todo a <strong>10-12 cuotas</strong>.
-                        </div>
-                    </div>
-
-                    <!-- Reviews -->
-                    <div class="bento-box"
-                        style="justify-content: flex-start; align-items: stretch; text-align: left; padding: 1.5rem;">
-                        <h3 style="margin-top: 0;"><i class="fa-solid fa-star"></i> Reviews</h3>
-                        <p style="margin-bottom: 0.5rem; flex: 1;">Calificación (1 a 5).</p>
-                        <div
-                            style="background: rgba(255, 255, 255, 0.05); padding: 0.8rem; border-radius: 12px; margin-top: auto; font-size: 0.9rem;">
-                            <strong>Nota Curiosa:</strong> Review a la <strong>Orden</strong>, no al producto. <br>Envío
-                            malo = 1 estrella al producto.
-                        </div>
-                    </div>
-
-                    <!-- Geo -->
-                    <div class="bento-box"
-                        style="justify-content: flex-start; align-items: stretch; text-align: left; padding: 1.5rem;">
-                        <h3 style="margin-top: 0;"><i class="fa-solid fa-map-marked-alt"></i> Geo</h3>
-                        <p style="margin-bottom: 0.5rem; flex: 1;">Latitud y Longitud por Zip Code.</p>
-                        <div
-                            style="background: rgba(244, 63, 94, 0.1); padding: 0.8rem; border-radius: 12px; margin-top: auto; border: 1px solid var(--rose);">
-                            <strong style="color: var(--rose); display: block; margin-bottom: 0.3rem;">
-                                <i class="fa-solid fa-triangle-exclamation"></i> Cuidado:
-                            </strong>
-                            <span style="font-size: 0.9rem;">Zip Code es un área. Deben <strong>promediar</strong>
-                                (Centroide) o duplicarán ventas.</span>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-
-        <!-- SLIDE 7: The Join Map -->
-        <div class="slide">
-            <div class="card">
-                <h2>El Flujo de Joins (La Receta)</h2>
                 <div class="grid-2">
-                    <div style="display: flex; flex-direction: column; justify-content: center;">
-                        <p style="font-size: 1.3rem;">Para que no se pierdan programando, sigan esta ruta para crear su
-                            <strong>"Tablón Maestro"</strong>:
+                    <div class="concept-box">
+                        <h3 style="color: var(--c-cyan);"><i class="fa-solid fa-database"></i> Técnica</h3>
+                        <p style="margin-bottom: 1rem;"><strong>El "Mise en Place (todo en su lugar)" de la IA.</strong>
                         </p>
-                        <p>Es como armar un Lego. Empiezas con la base lógica y vas agregando piezas.</p>
+                        <p style="font-size: 0.95rem; color: var(--text-dim); line-height: 1.5;">
+                            Un chef no cocina con ingredientes sucios. Igual nosotros: antes de entrenar, debemos
+                            limpiar,
+                            ajustar y preparar los datos para que el modelo "no se indigeste".
+                            <br><br>
+                            Sin esto, incluso el mejor algoritmo del mundo fallará (Garbage In, Garbage Out).
+                        </p>
                     </div>
 
-                    <div style="overflow-y: auto; padding-right: 1rem;">
-                        <div class="join-step">
-                            <div class="join-number">1</div>
-                            <div>
-                                <strong>Orders</strong>
-                                <div class="explanation-text">Empiecen aquí. Filtren status='delivered'. Esta es su
-                                    base.</div>
+                    <div class="concept-box">
+                        <h3 style="color: var(--c-green);"><i class="fa-solid fa-code"></i> Práctica</h3>
+                        <p style="margin-bottom: 1.5rem;">Implementación real con bibliotecas estándar:</p>
+
+                        <div style="display: flex; gap: 25px; align-items: center;">
+                            <div style="text-align: center; color: var(--text-main);">
+                                <i class="fa-brands fa-python"
+                                    style="font-size: 2.5rem; color: #306998; filter: drop-shadow(0 0 10px rgba(48, 105, 152, 0.4)); margin-bottom: 5px;"></i>
+                                <div style="font-size: 0.8rem; font-weight: 600;">Python</div>
                             </div>
-                        </div>
-
-                        <div style="display: flex; justify-content: center; height: 30px;">
-                            <div style="width: 2px; background: rgba(255,255,255,0.1);"></div>
-                        </div>
-
-                        <div class="join-step">
-                            <div class="join-number" style="background: var(--primary);">2</div>
-                            <div>
-                                JOIN <strong>Items</strong> <span style="font-size: 0.8rem; opacity: 0.5;">ON
-                                    order_id</span>
-                                <div class="explanation-text">Pegan productos a las órdenes. Su tabla crece en filas (1
-                                    orden -> 3 items).</div>
+                            <div style="text-align: center; color: var(--text-main);">
+                                <i class="fa-solid fa-brain"
+                                    style="font-size: 2.2rem; color: var(--c-gold); filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.4)); margin-bottom: 5px;"></i>
+                                <div style="font-size: 0.8rem; font-weight: 600;">scikit-learn</div>
                             </div>
-                        </div>
-
-                        <div style="display: flex; justify-content: center; height: 30px;">
-                            <div style="width: 2px; background: rgba(255,255,255,0.1);"></div>
-                        </div>
-
-                        <div class="join-step">
-                            <div class="join-number">3</div>
-                            <div>
-                                JOIN <strong>Products</strong> <span style="font-size: 0.8rem; opacity: 0.5;">ON
-                                    product_id</span>
-                                <div class="explanation-text">Ahora saben QUÉ son esos items (categoría, peso).</div>
-                            </div>
-                        </div>
-
-                        <div style="display: flex; justify-content: center; height: 30px;">
-                            <div style="width: 2px; background: rgba(255,255,255,0.1);"></div>
-                        </div>
-
-                        <div class="join-step">
-                            <div class="join-number">4</div>
-                            <div>
-                                JOIN <strong>Customers</strong> <span style="font-size: 0.8rem; opacity: 0.5;">ON
-                                    customer_id</span>
-                                <div class="explanation-text" style="color: var(--emerald);">¡Crucial! Aquí obtienen el
-                                    <code>customer_unique_id</code> y la ciudad.
-                                </div>
+                            <div style="text-align: center; color: var(--text-main);">
+                                <i class="fa-solid fa-table-columns"
+                                    style="font-size: 2.2rem; color: var(--c-purple); filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.4)); margin-bottom: 5px;"></i>
+                                <div style="font-size: 0.8rem; font-weight: 600;">pandas</div>
                             </div>
                         </div>
                     </div>
@@ -1220,1318 +572,624 @@
             </div>
         </div>
 
-        <!-- SLIDE 8: Sanity Checks -->
+        <!-- Slide 3: Contexto y Objetivos (continuación) -->
         <div class="slide">
             <div class="card">
-                <h2>Sanity Checks <span style="color: var(--rose); font-size: 0.8em; opacity: 0.8;">("Examen
-                        Sorpresa")</span></h2>
-                <p style="margin-bottom: 3rem;">Antes de tirar código, demostremos que entendemos el negocio.</p>
+                <h2>Contexto de la Sesión</h2>
+                <p style="margin-bottom: 3rem;">Continuación de las dimensiones fundamentales:</p>
 
-                <style>
-                    .flip-card {
-                        background-color: transparent;
-                        width: 100%;
-                        height: 100%;
-                        min-height: 550px;
-                        /* Senior Designer Fix: Force height for content */
-                        perspective: 1000px;
-                        cursor: pointer;
-                    }
-
-                    /* Compact version for Mosaic Grids (Shared slides) */
-                    .flip-card.compact {
-                        min-height: 320px;
-                    }
-
-                    .flip-card-inner {
-                        position: relative;
-                        width: 100%;
-                        height: 100%;
-                        text-align: center;
-                        transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-                        transform-style: preserve-3d;
-                    }
-
-                    /* Click-based toggle instead of hover */
-                    .flip-card.flipped .flip-card-inner {
-                        transform: rotateY(180deg);
-                    }
-
-                    .flip-card-front,
-                    .flip-card-back {
-                        position: absolute;
-                        width: 100%;
-                        height: 100%;
-                        -webkit-backface-visibility: hidden;
-                        backface-visibility: hidden;
-                        border-radius: 24px;
-                        padding: 2.5rem;
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: center;
-                        align-items: center;
-                        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6);
-                        border: 1px solid rgba(255, 255, 255, 0.05);
-                        overflow: hidden;
-                        /* Crucial for containment */
-                    }
-
-                    .flip-card-front {
-                        background: rgba(15, 23, 42, 0.7);
-                        background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.05), transparent), #0f172a;
-                    }
-
-                    .flip-card-back {
-                        transform: rotateY(180deg);
-                        background: #0f172a;
-                        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-                        border: 1px solid rgba(255, 255, 255, 0.1);
-                    }
-
-                    .question-icon {
-                        font-size: 2rem;
-                        /* Larger icons */
-                        margin-bottom: 0.6rem;
-                        opacity: 0.9;
-                    }
-
-                    .question-text {
-                        font-size: 1.15rem;
-                        /* Larger text */
-                        line-height: 1.4;
-                        color: #e2e8f0;
-                        font-weight: 500;
-                    }
-
-                    .answer-title {
-                        font-size: 1.35rem;
-                        /* Larger title */
-                        font-weight: bold;
-                        margin-bottom: 0.5rem;
-                        text-transform: uppercase;
-                        letter-spacing: 1.5px;
-                    }
-
-                    .card-hint {
-                        position: absolute;
-                        bottom: 1rem;
-                        font-size: 0.75rem;
-                        color: rgba(255, 255, 255, 0.5);
-                        text-transform: uppercase;
-                        letter-spacing: 2px;
-                        font-weight: 600;
-                        width: 100%;
-                        text-align: center;
-                    }
-
-                    .answer-text {
-                        font-size: 1.05rem;
-                        opacity: 0.95;
-                        line-height: 1.6;
-                        text-align: left;
-                        width: 100%;
-                        height: 100%;
-                        overflow-y: auto;
-                        padding-right: 0.5rem;
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: center;
-                    }
-
-                    /* Custom Scrollbar */
-                    .answer-text::-webkit-scrollbar {
-                        width: 4px;
-                    }
-
-                    .answer-text::-webkit-scrollbar-thumb {
-                        background: rgba(255, 255, 255, 0.2);
-                        border-radius: 4px;
-                    }
-                </style>
-
-                <!-- Design Rescue: Split-Attention Solution (Questions always visible) -->
-                <style>
-                    /* Scoped Styles for Split-View */
-                    .split-container {
-                        display: grid;
-                        grid-template-columns: 1fr 1fr 1fr;
-                        gap: 2rem;
-                        width: 100%;
-                        height: 100%;
-                    }
-
-                    .split-col {
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: flex-start;
-                        height: 100%;
-                        position: relative;
-                    }
-
-                    .question-box {
-                        background: rgba(255, 255, 255, 0.05);
-                        border: 1px solid rgba(255, 255, 255, 0.1);
-                        border-radius: 16px;
-                        padding: 1.5rem;
-                        margin-bottom: 1rem;
-                        transition: all 0.3s ease;
-                        cursor: pointer;
-                        z-index: 2;
-                    }
-
-                    .question-box:hover,
-                    .question-box.active {
-                        background: rgba(255, 255, 255, 0.1);
-                        border-color: var(--primary);
-                        transform: translateY(-5px);
-                    }
-
-                    .question-box.active {
-                        border-bottom-left-radius: 0;
-                        border-bottom-right-radius: 0;
-                        margin-bottom: 0;
-                        border-bottom: none;
-                    }
-
-                    .answer-pane {
-                        background: rgba(15, 23, 42, 0.8);
-                        border: 1px solid var(--primary);
-                        border-top: none;
-                        border-bottom-left-radius: 16px;
-                        border-bottom-right-radius: 16px;
-                        padding: 1.5rem;
-                        opacity: 0;
-                        transform: translateY(-10px);
-                        pointer-events: none;
-                        transition: all 0.3s ease;
-                        height: 0;
-                        overflow: hidden;
-                    }
-
-                    .question-box.active+.answer-pane {
-                        opacity: 1;
-                        transform: translateY(0);
-                        pointer-events: all;
-                        height: auto;
-                        flex: 1;
-                        /* Fill remaining space */
-                        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-                    }
-                </style>
-
-                <div class="split-container">
-
-                    <!-- COL 1: Money -->
-                    <div class="split-col">
-                        <div class="question-box" onclick="this.classList.toggle('active')">
-                            <div style="font-size: 2rem; color: var(--primary); margin-bottom: 0.5rem;"><i
-                                    class="fa-solid fa-coins"></i></div>
-                            <h3 style="color: #fff; font-size: 1.1rem; margin-bottom: 0.5rem;">Total Ventas</h3>
-                            <p style="font-size: 0.95rem; opacity: 0.8;">¿Sumar <code>price</code> en Items da el Valor
-                                Bruto?</p>
-                            <div style="font-size: 0.8rem; color: var(--primary); margin-top: 0.5rem;">Click para
-                                respuesta ▼</div>
-                        </div>
-                        <div class="answer-pane">
-                            <strong
-                                style="color: var(--primary); font-size: 1.2rem; display: block; margin-bottom: 0.5rem;">¡SÍ!</strong>
-                            <p style="font-size: 0.9rem;">La tabla <code>Items</code> tiene una fila por CADA unidad
-                                vendida.</p>
-                            <ul style="font-size: 0.9rem; padding-left: 1.2rem; margin-top: 0.5rem; opacity: 0.8;">
-                                <li>Suma del precio base.</li>
-                                <li>NO incluye flete.</li>
-                                <li>Coincide con Payments.</li>
-                            </ul>
-                        </div>
+                <div class="grid-2">
+                    <div class="concept-box">
+                        <h3 style="color: var(--c-pink);"><i class="fa-solid fa-scale-balanced"></i> Ética-Legal</h3>
+                        <p>Responsabilidad algorítmica, sesgos y marco regulatorio costarricense (Ley 8968).</p>
                     </div>
 
-                    <!-- COL 2: Customers -->
-                    <div class="split-col">
-                        <div class="question-box" onclick="this.classList.toggle('active')"
-                            style="border-color: rgba(244, 63, 94, 0.3);">
-                            <div style="font-size: 2rem; color: var(--rose); margin-bottom: 0.5rem;"><i
-                                    class="fa-solid fa-users-slash"></i></div>
-                            <h3 style="color: #fff; font-size: 1.1rem; margin-bottom: 0.5rem;">Conteo Clientes</h3>
-                            <p style="font-size: 0.95rem; opacity: 0.8;">¿Contar <code>customer_id</code> da clientes
-                                únicos?</p>
-                            <div style="font-size: 0.8rem; color: var(--rose); margin-top: 0.5rem;">Click para respuesta
-                                ▼</div>
-                        </div>
-                        <div class="answer-pane" style="border-color: var(--rose);">
-                            <strong
-                                style="color: var(--rose); font-size: 1.2rem; display: block; margin-bottom: 0.5rem;">¡NO!
-                                🚨</strong>
-                            <p style="font-size: 0.9rem;"><code>customer_id</code> cambia en cada compra.</p>
-                            <div
-                                style="background: rgba(244, 63, 94, 0.1); padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem;">
-                                <span style="font-size: 0.85rem;">Usa: <strong>customer_unique_id</strong></span>
-                            </div>
-                        </div>
+                    <div class="concept-box">
+                        <h3 style="color: var(--c-gold);"><i class="fa-solid fa-chart-line"></i> Metodológica</h3>
+                        <p>Ciclo iterativo de validación y documentación de decisiones técnicas para trazabilidad total.
+                        </p>
                     </div>
-
-                    <!-- COL 3: Joins -->
-                    <div class="split-col">
-                        <div class="question-box" onclick="this.classList.toggle('active')"
-                            style="border-color: rgba(16, 185, 129, 0.3);">
-                            <div style="font-size: 2rem; color: var(--emerald); margin-bottom: 0.5rem;"><i
-                                    class="fa-solid fa-table-list"></i></div>
-                            <h3 style="color: #fff; font-size: 1.1rem; margin-bottom: 0.5rem;">Filas Duplicadas</h3>
-                            <p style="font-size: 0.95rem; opacity: 0.8;">Join Orders + Items = ¿Más filas?</p>
-                            <div style="font-size: 0.8rem; color: var(--emerald); margin-top: 0.5rem;">Click para
-                                respuesta ▼</div>
-                        </div>
-                        <div class="answer-pane" style="border-color: var(--emerald);">
-                            <strong
-                                style="color: var(--emerald); font-size: 1.2rem; display: block; margin-bottom: 0.5rem;">Es
-                                Normal (1:N)</strong>
-                            <p style="font-size: 0.9rem;">1 Orden puede tener 5 productos.</p>
-                            <ul style="font-size: 0.9rem; padding-left: 1.2rem; margin-top: 0.5rem; opacity: 0.8;">
-                                <li>La orden se repite por cada item.</li>
-                                <li>El dataset crece naturalmente.</li>
-                            </ul>
-                        </div>
-                    </div>
-
                 </div>
-
             </div>
         </div>
 
-        <!-- SLIDE 9: Intro Part II -->
+        <!-- Slide 4: Estrategias de Limpieza - Imputación -->
         <div class="slide">
-            <div class="card"
-                style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: radial-gradient(circle at center, rgba(34, 211, 238, 0.15) 0%, rgba(15, 23, 42, 0.98) 70%); border: 1px solid var(--accent); padding: 3rem; position: relative; overflow: hidden;">
+            <div class="card">
+                <h2>Estrategias de Limpieza</h2>
+                <p style="margin-bottom: 3rem;">Tratamiento sistemático de problemas comunes en datasets:</p>
+
+                <div class="grid-2">
+                    <div class="concept-box" style="border-left: 4px solid var(--c-purple);">
+                        <h3>Imputación <span
+                                style="font-size: 0.9rem; opacity: 0.7; font-weight: 400; margin-left: auto;">¿Huecos?</span>
+                        </h3>
+                        <p style="margin-bottom: 1rem; font-size: 0.95rem; color: #fff;">
+                            <strong>Problema:</strong> La mayoría de modelos matemáticos colapsan si encuentran un
+                            espacio vacío (NaN).
+                        </p>
+                        <p style="font-size: 0.95rem; color: var(--text-dim);">
+                            <strong>Solución:</strong> Rellenar ese hueco con un valor inteligente.
+                        </p>
+                        <ul style="margin-top: 0.5rem;">
+                            <li><strong>Media/Promedio:</strong> Úsala si tus datos son "normales".</li>
+                            <li><strong>Mediana:</strong> Úsala si tienes datos locos (outliers) que arruinarían el
+                                promedio (ej. Salario de Elon Musk).</li>
+                            <li><strong>Moda:</strong> Úsala para texto o categorías (ej. rellenar con el color más
+                                común).</li>
+                        </ul>
+                    </div>
+
+                    <div class="concept-box" style="border-left: 4px solid var(--c-cyan);">
+                        <h3>Normalización <span
+                                style="font-size: 0.9rem; opacity: 0.7; font-weight: 400; margin-left: auto;">Escalas</span>
+                        </h3>
+                        <p style="margin-bottom: 1rem; font-size: 0.95rem; color: #fff;">
+                            <strong>Problema:</strong> Si tienes "Edad (0-100)" y "Sueldo (0-1,000,000)", el modelo le
+                            dará toda la importancia al Sueldo solo porque el número es más grande.
+                        </p>
+                        <p style="font-size: 0.95rem; color: var(--text-dim);">
+                            <strong>Solución:</strong> Aplastar todos los números para que jueguen en la misma cancha.
+                        </p>
+                        <ul style="margin-top: 0.5rem;">
+                            <li><strong>Min-Max:</strong> Obliga a todos a estar entre 0 y 1.</li>
+                            <li><strong>StandardScaler:</strong> Transforma los datos para que su centro sea 0. Ideal si
+                                usas modelos complejos (SVM, Logística).</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Estrategias de Limpieza - Encoding y Outliers -->
+        <div class="slide">
+            <div class="card">
+                <h2>Estrategias de Limpieza</h2>
+                <p style="margin-bottom: 3rem;">Transformación de datos para el modelo:</p>
+
+                <div class="grid-2">
+                    <div class="concept-box" style="border-left: 4px solid var(--c-green);">
+                        <h3>Encoding <span
+                                style="font-size: 0.9rem; opacity: 0.7; font-weight: 400; margin-left: auto;">Categóricos</span>
+                        </h3>
+                        <p>Convertir texto a tensores numéricos.</p>
+                        <ul>
+                            <li><strong>One-Hot:</strong> Crea columnas binarias por categoría. (Rojo → [1,0,0]). Ideal
+                                si no hay orden.</li>
+                            <li><strong>Label Encoding:</strong> Asigna enteros (Rojo→1, Azul→2).
+                                <strong>Riesgo:</strong> El modelo puede interpretar falsamente que 2 > 1 (Azul es
+                                "mejor" que Rojo), creando una jerarquía inexistente.
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="concept-box" style="border-left: 4px solid var(--c-danger);">
+                        <h3>Outliers <span
+                                style="font-size: 0.9rem; opacity: 0.7; font-weight: 400; margin-left: auto;">Anomalías</span>
+                        </h3>
+                        <p>Detección y tratamiento.</p>
+                        <ul>
+                            <li><strong>IQR Method:</strong> Rango intercuartil.</li>
+                            <li><strong>Z-Score > 3:</strong> Desviación estándar.</li>
+                            <li><strong>Tratamiento:</strong> Clip (topar), eliminar o transformar logarítmicamente.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Ciclo de Validación -->
+        <div class="slide">
+            <div class="card">
+                <h2>El Ciclo de Validación</h2>
+                <p>La limpieza no es un paso único, sino un proceso <strong>iterativo</strong>.</p>
+
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 50px; border-radius: 20px; margin-top: 3rem; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="text-align: center; flex: 1;">
+                        <div
+                            style="font-size: 4rem; color: var(--c-purple); font-weight: 900; margin-bottom: 10px; opacity: 0.2;">
+                            01</div>
+                        <h3 style="justify-content: center; color: var(--c-purple);">Diagnóstico</h3>
+                        <p style="font-size: 0.95rem;">Detectar Nulos, Duplicados, Tipos erróneos.</p>
+                    </div>
+
+                    <i class="fa-solid fa-arrow-right" style="font-size: 1.5rem; color: var(--text-dim);"></i>
+
+                    <div style="text-align: center; flex: 1;">
+                        <div
+                            style="font-size: 4rem; color: var(--c-cyan); font-weight: 900; margin-bottom: 10px; opacity: 0.2;">
+                            02</div>
+                        <h3 style="justify-content: center; color: var(--c-cyan);">Tratamiento</h3>
+                        <p style="font-size: 0.95rem;">Imputar, Escalar, Codificar.</p>
+                    </div>
+
+                    <i class="fa-solid fa-arrow-right" style="font-size: 1.5rem; color: var(--text-dim);"></i>
+
+                    <div style="text-align: center; flex: 1;">
+                        <div
+                            style="font-size: 4rem; color: var(--c-green); font-weight: 900; margin-bottom: 10px; opacity: 0.2;">
+                            03</div>
+                        <h3 style="justify-content: center; color: var(--c-green);">Verificación</h3>
+                        <p style="font-size: 0.95rem;">Check de estadísticas post-proceso.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- BLOQUE 2: DIMENSIÓN ÉTICA Y LEGAL -->
+        <!-- ================================================================= -->
+
+        <!-- Slide 8: Ética - Marco Legal cr -->
+        <div class="slide">
+            <div class="card">
+                <h2>Ética Aplicada: Marco Legal <span
+                        style="font-size: 0.8em; vertical-align: middle; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 30px; display: inline-flex; align-items: center; gap: 8px;">CR
+                        <img src="https://flagcdn.com/w40/cr.png" alt="Bandera Costa Rica"
+                            style="height: 20px; border-radius: 2px; box-shadow: 0 0 5px rgba(0,0,0,0.3);"></span>
+                </h2>
+
+                <div class="split-layout">
+                    <div>
+                        <p style="margin-bottom: 2rem;">Todo científico de datos debe conocer las reglas del juego.</p>
+                        <ul style="line-height: 1.5; font-size: 0.95rem;">
+                            <li style="margin-bottom: 12px;"><strong>Privacidad por Diseño:</strong> La protección de
+                                datos no es un "parche" final, sino que se integra desde la arquitectura inicial del
+                                sistema.</li>
+                            <li style="margin-bottom: 12px;"><strong>Derecho al Olvido:</strong> La facultad del
+                                ciudadano de solicitar que sus datos obsoletos o irrelevantes sean eliminados de bases
+                                de datos públicas.</li>
+                            <li><strong>Seguridad de la Info:</strong> Garantizar confidencialidad, integridad y
+                                disponibilidad.</li>
+                        </ul>
+                    </div>
+
+                    <div class="concept-box"
+                        style="border: 1px solid var(--c-cyan); background: rgba(34, 211, 238, 0.05);">
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                            <i class="fa-solid fa-book-journal-whills"
+                                style="font-size: 2rem; color: var(--c-cyan);"></i>
+                            <h3 style="color: #fff; margin: 0;">Ley N° 8968</h3>
+                        </div>
+                        <p><strong>Protección de la Persona frente al Tratamiento de sus Datos Personales.</strong></p>
+                        <p style="font-size: 0.95rem; margin-top: 1rem; color: var(--text-main);">
+                            Requiere <strong>Consentimiento Informado</strong> explícito. El usuario debe saber qué
+                            datos se recogen, para qué, y quién es responsable.
+                        </p>
+
+                        <a href="http://www.pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=70975&nValor3=85989&strTipM=TC"
+                            target="_blank"
+                            style="display: inline-block; margin-top: 1rem; color: var(--c-cyan); text-decoration: none; font-weight: 600; font-size: 0.9rem; border-bottom: 1px dotted var(--c-cyan); transition: all 0.3s ease;">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Acá puedes leer la ley
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: Responsabilidad Social -->
+        <div class="slide">
+            <div class="card">
+                <h2>Responsabilidad y Sesgos</h2>
+                <p>Los algoritmos no son neutros; aprenden los prejuicios de los datos.</p>
+
+                <div class="grid-2" style="margin-top: 2rem;">
+                    <div class="concept-box" style="border-top: 4px solid var(--c-danger);">
+                        <h3 style="color: var(--c-danger);">Sesgos Comunes</h3>
+                        <ul style="font-size: 0.9rem;">
+                            <li style="margin-bottom: 8px;"><strong>Representación:</strong> El dataset de entrenamiento
+                                no representa a la población real (ej. un sistema de reconocimiento facial entrenado
+                                solo con hombres blancos fallará con otras demografías).</li>
+                            <li style="margin-bottom: 8px;"><strong>Histórico:</strong> Los datos reflejan prejuicios
+                                humanos del pasado. Si usamos datos históricos de contratación discriminatorios, el
+                                modelo aprenderá a discriminar automáticamente.</li>
+                            <li><strong>Medición y Variables Proxy:</strong> Ocurre al medir mal una característica. Una
+                                <em>"variable proxy"</em> es un dato indirecto usado cuando el real no está disponible
+                                (ej. usar "Código Postal" como proxy de "Riesgo Crediticio" puede esconder un sesgo
+                                racial/económico grave).
+                            </li>
+                        </ul>
+                        </ul>
+                    </div>
+
+                    <div class="concept-box" style="border-top: 4px solid var(--c-green);">
+                        <h3 style="color: var(--c-green);">Transparencia (XAI)</h3>
+                        <p style="margin-bottom: 0.5rem;"><strong>XAI (Explainable Artificial Intelligence):</strong>
+                            Inteligencia Artificial Explicable. Busca hacer que los resultados sean comprensibles para
+                            humanos, evitando "cajas negras".</p>
+                        <ul style="font-size: 0.95rem;">
+                            <li style="margin-bottom: 8px;"><strong>SHAP (SHapley Additive exPlanations):</strong>
+                                Asigna un valor de importancia a cada variable (juego cooperativo) para explicar <em>por
+                                    qué</em> el modelo predijo X.</li>
+                            <li><strong>LIME (Local Interpretable Model-agnostic Explanations):</strong> Explica una
+                                predicción individual aproximándola con un modelo lineal simple y local.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- BLOQUE 3: ACTIVIDAD PRÁCTICA -->
+        <!-- ================================================================= -->
+
+        <!-- Slide 12: Intro Etapa 3 -->
+        <div class="slide">
+            <div class="card" style="text-align: center; justify-content: center;">
+                <h2 style="font-size: 4rem; margin-bottom: 1rem;">Etapa 3</h2>
+                <h3 style="justify-content: center; font-size: 2.5rem; color: var(--c-cyan);">Implementación & Código
+                </h3>
+
+                <div style="margin: 3rem 0;">
+                    <i class="fa-brands fa-python"
+                        style="font-size: 6rem; color: var(--c-blue); filter: drop-shadow(0 0 30px rgba(56, 189, 248, 0.4));"></i>
+                </div>
+
+                <p style="font-size: 1.4rem;">Desarrollo del pipeline de preprocesamiento usando<br><strong
+                        style="color: #fff;">Pandas</strong> y <strong style="color: #fff;">Scikit-Learn</strong>.</p>
+            </div>
+        </div>
+
+        <!-- Slide 14: Paso 1 - Configuración -->
+        <div class="slide">
+            <div class="card">
+                <h2>Paso 1: Configuración</h2>
+                <p>Importación de librerías esenciales.</p>
+
+                <div class="split-layout">
+                    <div style="display: flex; flex-direction: column; justify-content: center;">
+                        <div class="concept-box">
+                            <h3 style="color: var(--c-purple);">Stack Tecnológico</h3>
+                            <ul>
+                                <li><strong>Pandas:</strong> Manipulación tabular.</li>
+                                <li><strong>NumPy:</strong> Operaciones vectoriales.</li>
+                                <li><strong>Sklearn.impute:</strong> Manejo de nulos.</li>
+                                <li><strong>Sklearn.preprocessing:</strong> Escalado.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="window-interface">
+                        <div class="window-header">
+                            <div class="window-dot dot-red"></div>
+                            <div class="window-dot dot-yellow"></div>
+                            <div class="window-dot dot-green"></div>
+                            <span class="filename">main.py</span>
+                        </div>
+                        <pre class="code-content">
+<span class="cmt"># 1. Stack Tecnológico</span>
+<span class="kwd">import</span> pandas <span class="kwd">as</span> pd <span class="cmt"># Estándar industrial para manipulación de DataFrames</span>
+<span class="kwd">import</span> numpy <span class="kwd">as</span> np
+
+<span class="cmt"># Módulos de Scikit-Learn</span>
+<span class="kwd">from</span> sklearn.impute <span class="kwd">import</span> SimpleImputer
+<span class="kwd">from</span> sklearn.preprocessing <span class="kwd">import</span> StandardScaler
+
+<span class="func">print</span>(<span class="str">"✅ Entorno configurado correctamente."</span>)
+</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 15: Paso 2 - Carga -->
+        <div class="slide">
+            <div class="card">
+                <h2>Paso 2: Ingesta de Datos</h2>
+                <p>Lectura del CSV e inspección inicial de estructura.</p>
+
+                <div class="split-layout">
+                    <div>
+                        <div class="concept-box">
+                            <h3 style="color: var(--c-green);">Inspección</h3>
+                            <p>Comandos clave para "sentir" los datos:</p>
+                            <ul style="font-family: 'JetBrains Mono'; font-size: 0.9rem;">
+                                <li>.head()</li>
+                                <li>.info()</li>
+                                <li>.describe()</li>
+                                <li>.isnull().sum()</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="window-interface">
+                        <div class="window-header">
+                            <div class="window-dot dot-red"></div>
+                            <div class="window-dot dot-yellow"></div>
+                            <div class="window-dot dot-green"></div>
+                            <span class="filename">data_loader.py</span>
+                        </div>
+                        <pre class="code-content">
+<span class="cmt"># Ingesta de Datos: Carga el CSV en memoria RAM</span>
+df <span class="op">=</span> pd.<span class="func">read_csv</span>(<span class="str">"datos_proyecto.csv"</span>)
+
+<span class="cmt"># Dimensiones y tipos</span>
+<span class="func">print</span>(<span class="str">"Dimensiones:"</span>, df.shape)
+<span class="func">print</span>(df.<span class="func">info</span>())
+
+<span class="cmt"># Conteo de nulos por columna</span>
+<span class="func">print</span>(df.<span class="func">isnull</span>().<span class="func">sum</span>())
+</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 16: Paso 3 - Transformación -->
+        <div class="slide">
+            <div class="card">
+                <h2>Paso 3: Transformación</h2>
+                <p>El núcleo del preprocesamiento: Limpiar y Escalar.</p>
+
+                <div class="split-layout">
+                    <div>
+                        <ul style="margin-top: 1rem;">
+                            <li>Usamos <strong>Mediana</strong> para edad (robusto a outliers).</li>
+                            <li>Usamos <strong>Z-Score</strong> para ingresos (mejor para modelos lineales).</li>
+                        </ul>
+                        <div class="concept-box" style="margin-top: 2rem; border-color: var(--c-gold);">
+                            <strong style="color: var(--c-gold);">Tip Crítico (Data Leakage):</strong>
+                            <p style="margin-top: 5px; font-size: 0.95rem;">
+                                Siempre ajuste el scaler (<code>.fit()</code>) <strong>SOLO con los datos de
+                                    entrenamiento</strong> (<code>X_train</code>).
+                                <br><br>
+                                Si haces <code>.fit()</code> con todo el dataset, el modelo "aprenderá" estadísticas
+                                (media, varianza) de los datos de test, haciendo trampas. Esto invalida tus métricas de
+                                evaluación.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="window-interface">
+                        <div class="window-header">
+                            <div class="window-dot dot-red"></div>
+                            <div class="window-dot dot-yellow"></div>
+                            <div class="window-dot dot-green"></div>
+                            <span class="filename">preprocessing.py</span>
+                        </div>
+                        <pre class="code-content">
+<span class="cmt"># A. Imputación: Rellenar huecos con Mediana (robusta a outliers)</span>
+imputer <span class="op">=</span> <span class="cls">SimpleImputer</span>(strategy<span class="op">=</span><span class="str">'median'</span>)
+df[<span class="str">'edad'</span>] <span class="op">=</span> imputer.<span class="func">fit_transform</span>(df[[<span class="str">'edad'</span>]])
+
+<span class="cmt"># B. Normalización (Ingresos)</span>
+scaler <span class="op">=</span> <span class="cls">StandardScaler</span>()
+df[<span class="str">'ingreso_s'</span>] <span class="op">=</span> scaler.<span class="func">fit_transform</span>(df[[<span class="str">'ingresos'</span>]])
+
+<span class="cmt"># Verificación rápida</span>
+<span class="func">print</span>(df[[<span class="str">'edad'</span>, <span class="str">'ingreso_s'</span>]].<span class="func">describe</span>())
+</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 17: Paso 4 - Registro de Decisiones -->
+        <div class="slide">
+            <div class="card">
+                <h2>Paso 4: Documentación</h2>
+                <p>La trazabilidad es un requerimiento ético y técnico.</p>
+
+                <div class="split-layout">
+                    <div>
+                        <div class="concept-box"
+                            style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2);">
+                            <h3 style="color: var(--c-gold);"><i class="fa-solid fa-triangle-exclamation"></i> Log de
+                                Decisiones</h3>
+                            <p style="font-size: 1rem;">Cada transformación debe quedar registrada. Si un modelo falla
+                                en producción, necesitamos saber cómo se manipularon los datos originales.</p>
+                        </div>
+                    </div>
+
+                    <div class="window-interface">
+                        <div class="window-header">
+                            <div class="window-dot dot-red"></div>
+                            <div class="window-dot dot-yellow"></div>
+                            <div class="window-dot dot-green"></div>
+                            <span class="filename">decision_log.json</span>
+                        </div>
+                        <pre class="code-content">
+decision_log <span class="op">=</span> {
+    <span class="str">"fecha"</span>: <span class="str">"2026-02-03"</span>,
+    <span class="str">"version"</span>: <span class="str">"1.0.0"</span>,
+    <span class="str">"transformaciones"</span>: {
+        <span class="str">"edad"</span>: {
+            <span class="str">"metodo"</span>: <span class="str">"Imputación Mediana"</span>,
+            <span class="str">"razon"</span>: <span class="str">"Se detectaron valores extremos (outliers) que sesgarían el promedio simple"</span>
+        },
+        <span class="str">"ingresos"</span>: {
+            <span class="str">"metodo"</span>: <span class="str">"StandardScaler"</span>,
+            <span class="str">"razon"</span>: <span class="str">"Algoritmo SVM requiere varianza unitaria"</span>
+        }
+    }
+}
+</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 20: Cierre -->
+        <div class="slide">
+            <div class="card" style="text-align: center; justify-content: center;">
+                <h2>Siguiente Fase: El Corazón del Proyecto</h2>
+                <p
+                    style="font-size: 1.3rem; color: var(--text-muted); margin-bottom: 3rem; max-width: 800px; margin-left: auto; margin-right: auto;">
+                    El modelaje no es solo código, es dar vida a los datos. Pero cuidado: un corazón no late en el
+                    vacío.
+                </p>
+
+                <div class="grid-2" style="gap: 4rem; text-align: left; align-items: start;">
+
+                    <!-- The Heart (Model) -->
+                    <div class="concept-box"
+                        style="border-top: 4px solid var(--c-pink); position: relative; height: 100%;">
+                        <div
+                            style="position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background: var(--bg-dark); padding: 10px; border-radius: 50%; border: 1px solid var(--c-pink); box-shadow: 0 0 20px rgba(244, 114, 182, 0.2);">
+                            <i class="fa-solid fa-heart-pulse" style="font-size: 2.5rem; color: var(--c-pink);"></i>
+                        </div>
+                        <h3 style="text-align: center; margin-top: 1.5rem; color: var(--c-pink); font-size: 1.8rem;">El
+                            Corazón (Modelaje)</h3>
+                        <p style="text-align: center; color: #fff; margin-bottom: 2rem;">Es el motor que bombea
+                            predicciones.</p>
+
+                        <ul style="font-size: 1rem; line-height: 1.8;">
+                            <li><strong style="color: var(--c-pink);">Entrenar & Comparar:</strong> No te cases con el
+                                primer algoritmo. Prueba varios (Árboles, Regresión, Redes).</li>
+                            <li><strong style="color: var(--c-pink);">Seleccionar:</strong> ¿Cuál gana? Explícame
+                                <em>por qué</em> es mejor (Métricas vs Interpretabilidad).
+                            </li>
+                            <li><strong style="color: var(--c-pink);">Predecir:</strong> Generar resultados futuros
+                                basados en lo aprendido.</li>
+                        </ul>
+                    </div>
+
+                    <!-- The Body (Context) -->
+                    <div class="concept-box"
+                        style="border-top: 4px solid var(--c-cyan); position: relative; height: 100%;">
+                        <div
+                            style="position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background: var(--bg-dark); padding: 10px; border-radius: 50%; border: 1px solid var(--c-cyan); box-shadow: 0 0 20px rgba(34, 211, 238, 0.2);">
+                            <i class="fa-solid fa-user-astronaut" style="font-size: 2.5rem; color: var(--c-cyan);"></i>
+                        </div>
+                        <h3 style="text-align: center; margin-top: 1.5rem; color: var(--c-cyan); font-size: 1.8rem;">El
+                            Cuerpo (Contexto)</h3>
+                        <p style="text-align: center; color: #fff; margin-bottom: 2rem;">El órgano que da sentido al
+                            latido.</p>
+
+                        <p style="font-size: 1rem; line-height: 1.6; text-align: justify; color: var(--text-muted);">
+                            Un modelo perfecto matemático puede ser inútil en la vida real.
+                            <br><br>
+                            Debes contextualizar todo:
+                            <span
+                                style="display: block; margin-top: 10px; font-style: italic; color: var(--c-cyan); text-align: center;">
+                                "¿Qué significa este error para el negocio? ¿Cómo afecta el entorno a esta predicción?"
+                            </span>
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Slide 12: Summary (Ported) -->
+    <div class="slide">
+        <div class="card" style="text-align: center; justify-content: center; align-items: center;">
+            <h2 style="font-size: 4rem;">¿Preguntas?</h2>
+            <p style="font-size: 1.5rem; max-width: 600px; color: var(--text-muted);">
+                El EDA es un arte. No tengas miedo de ensuciarte las manos con los datos.
+            </p>
+
+            <!-- Interactive Chinese Quote -->
+            <div id="quoteContainer" onclick="toggleQuote()" style="margin: 2.5rem auto; padding: 2.5rem 3rem; max-width: 850px; min-height: 200px;
+                    background: linear-gradient(135deg, rgba(192, 132, 252, 0.1) 0%, rgba(56, 189, 248, 0.1) 100%);
+                    border: 2px solid rgba(192, 132, 252, 0.3); border-radius: 20px;
+                    cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden;
+                    display: flex; flex-direction: column; justify-content: center;">
 
                 <!-- Background decoration -->
                 <div
-                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: linear-gradient(rgba(34, 211, 238, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(34, 211, 238, 0.05) 1px, transparent 1px); background-size: 50px 50px; opacity: 0.5; pointer-events: none;">
+                    style="position: absolute; top: -20px; right: -20px; font-size: 8rem; opacity: 0.05; font-family: 'Lato', sans-serif; font-weight: 900; pointer-events: none; color: #fff;">
+                    引
                 </div>
 
-                <!-- Eyebrow -->
-                <div
-                    style="font-size: 1.5rem; letter-spacing: 0.5em; text-transform: uppercase; color: var(--accent); margin-bottom: 2rem; font-weight: 600; text-shadow: 0 0 10px rgba(34, 211, 238, 0.5);">
-                    Parte II
-                </div>
-
-                <!-- Hero Title -->
-                <h1
-                    style="font-size: 5rem; line-height: 1.1; margin-bottom: 2rem; color: #fff; font-weight: 800; text-shadow: 0 5px 15px rgba(0,0,0,0.5);">
-                    Ejecución del <br>
-                    <span
-                        style="background: linear-gradient(to right, #fff, var(--accent)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Análisis
-                        Exploratorio</span>
-                </h1>
-
-                <!-- Divider -->
-                <div
-                    style="width: 100px; height: 6px; background: var(--accent); margin-bottom: 2.5rem; border-radius: 3px; box-shadow: 0 0 15px var(--accent);">
-                </div>
-
-                <!-- Subtitle -->
-                <p style="font-size: 1.8rem; color: var(--text-muted); max-width: 800px; font-weight: 300;">
-                    De <span style="color: #fff; border-bottom: 1px solid rgba(255,255,255,0.3);">CSVs sueltos</span> a
-                    <span style="color: #fff; font-weight: 600;">Insights de Negocio</span> aplicables.
-                </p>
-            </div>
-        </div>
-
-        <!-- SLIDE 10: The Golden Rule -->
-        <div class="slide">
-            <div class="card"
-                style="display: flex; flex-direction: column; justify-content: center; padding: 3rem; border: 2px solid var(--rose); box-shadow: 0 0 50px rgba(244, 63, 94, 0.1);">
-                <div style="text-align: center; margin-bottom: 3rem;">
-                    <div style="font-size: 4rem; color: var(--rose); margin-bottom: 1rem;"><i
-                            class="fa-solid fa-hand"></i></div>
-                    <h2
-                        style="font-size: 3rem; color: var(--rose); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 2px;">
-                        La Regla de Oro</h2>
-                    <p style="font-size: 1.5rem; opacity: 0.9;">Antes de graficar, hay que <strong
-                            style="text-decoration: underline; text-decoration-color: var(--rose);">FILTRAR</strong>.
-                    </p>
-                </div>
-
-                <div class="grid-2" style="gap: 3rem; align-items: stretch;">
-                    <div
-                        style="background: rgba(244, 63, 94, 0.08); padding: 2rem; border-radius: 20px; border-left: 6px solid var(--rose); display: flex; flex-direction: column; justify-content: center;">
-                        <h3 style="color: var(--rose); font-size: 1.5rem; margin-bottom: 1rem;"><i
-                                class="fa-solid fa-triangle-exclamation"></i> El Error</h3>
-                        <p style="font-size: 1.2rem; line-height: 1.6;">Si incluyen <code>cancelled</code> o
-                            <code>unavailable</code>, <strong>ensuciarán</strong> todos sus cálculos de ventas reales y
-                            tiempos de entrega.
-                        </p>
-                    </div>
-
-                    <div
-                        style="background: rgba(16, 185, 129, 0.08); padding: 2rem; border-radius: 20px; border-left: 6px solid var(--emerald); display: flex; flex-direction: column; justify-content: center;">
-                        <h3 style="color: var(--emerald); font-size: 1.5rem; margin-bottom: 1rem;"><i
-                                class="fa-solid fa-code"></i> La Instrucción</h3>
-                        <pre
-                            style="background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 10px; font-size: 1.1rem; overflow-x: auto; color: var(--emerald); margin: 0;"># Solo ventas reales ("entregadas")
-orders = orders[orders['order_status'] == 'delivered']</pre>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- SLIDE 11: Trends -->
-        <div class="slide">
-            <div class="card" style="padding: 3rem; display: flex; flex-direction: column;">
-<h2 style="margin-bottom: 2rem;">1. Análisis de Tendencias</h2>
-
-<div class="grid-2" style="gap: 4rem; align-items: start;">
-
-    <!-- LEFT: Narrative Context (Text Only, No Card) -->
-    <div style="text-align: left; padding-right: 1rem;">
-
-        <!-- History Block -->
-        <div style="margin-bottom: 3rem;">
-            <h3
-                style="color: var(--accent); font-size: 1.6rem; margin-bottom: 1rem; border-left: 4px solid var(--accent); padding-left: 1rem;">
-                Contexto Histórico: El Colapso de 2017</h3>
-            <p style="font-size: 1.1rem; line-height: 1.8; opacity: 0.9; margin-bottom: 1.5rem;">
-                En Noviembre de 2017, Olist enfrentó su primer <strong>Black Friday</strong> masivo. La demanda se
-                triplicó en 24 horas, saturando la capacidad logística de los vendedores.
-            </p>
-            <p style="font-size: 1.1rem; line-height: 1.8; opacity: 0.9;">
-                <i class="fa-solid fa-arrow-right" style="color: var(--accent);"></i> <strong>El Objetivo:</strong> No
-                estamos solo "analizando ventas". Estamos usando los datos de 2017 para dimensionar la operación de 2018
-                y evitar otro colapso.
-            </p>
-        </div>
-
-        <!-- Technical Specs (Smaller, Secondary) -->
-        <div>
-            <h4
-                style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px;">
-                Requerimientos Técnicos</h4>
-            <ul style="font-size: 1rem; line-height: 1.6; color: var(--text-muted); list-style: none; padding: 0;">
-                <li style="margin-bottom: 0.5rem;"><i class="fa-solid fa-code"
-                        style="margin-right: 8px; color: var(--primary);"></i> <strong>Variable:</strong>
-                    <code>order_purchase_timestamp</code></li>
-                <li style="margin-bottom: 0.5rem;"><i class="fa-solid fa-filter"
-                        style="margin-right: 8px; color: var(--primary);"></i> <strong>Transformación:</strong> str →
-                    datetime</li>
-                <li><i class="fa-solid fa-layer-group" style="margin-right: 8px; color: var(--primary);"></i>
-                    <strong>Agrupación:</strong> YYYY-MM</li>
-            </ul>
-        </div>
-    </div>
-
-    <!-- RIGHT: Visual Anchor (Compact Card) -->
-    <div style="display: flex; justify-content: center;">
-        <div class="flip-card" onclick="this.classList.toggle('flipped')"
-            style="cursor: pointer; width: 100%; max-width: 400px; height: 350px;">
-            <div class="flip-card-inner">
-                <!-- Front: minimal Data Anchor -->
-                <div class="flip-card-front"
-                    style="background: rgba(245, 158, 11, 0.05); border-color: var(--amber); justify-content: center;">
-
-                    <!-- Hero Data Point -->
-                    <div style="text-align: center;">
-                        <div
-                            style="font-size: 0.9rem; color: var(--amber); letter-spacing: 2px; margin-bottom: 0.8rem; text-transform: uppercase; opacity: 0.8;">
-                            El Pico Máximo</div>
-                        <div
-                            style="font-size: 4rem; font-weight: 900; color: #fff; line-height: 1; text-shadow: 0 0 30px rgba(245, 158, 11, 0.4);">
-                            NOV '17</div>
-                        <div style="font-size: 1.3rem; color: var(--amber); margin-top: 0.8rem; font-weight: 300;">Black
-                            Friday</div>
-                    </div>
-
-                    <div class="card-hint">Click para contexto estrategico</div>
-                </div>
-
-                <!-- Back: The Context -->
-                <div class="flip-card-back" style="background: #1e293b; border-color: var(--amber); padding: 2rem;">
-                    <div class="answer-title" style="color: var(--amber); margin-bottom: 1rem; font-size: 1.3rem;">
-                        Lección Aprendida</div>
-                    <div class="answer-text" style="text-align: left; font-size: 1rem; line-height: 1.6;">
-                        <p style="margin-bottom: 1rem;">El pico no es aleatorio, es <strong>estacionalidad
-                                forzada</strong>.</p>
-                        <ul style="padding-left: 1.2rem;">
-                            <li style="margin-bottom: 0.5rem;"><strong>Impacto:</strong> +300% Carga Logística.</li>
-                            <li><strong>Acción:</strong> Contratar flota extra en Octubre.</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>            </div>
-        </div>
-
-
-        <!-- SLIDE 12: Anomalies & Outliers -->
-        <div class="slide">
-            <div class="card" style="padding: 3rem; display: flex; flex-direction: column;">
-<h2 style="margin-bottom: 2rem;">2. Detección de Anomalías <span style="font-size: 0.6em; opacity: 0.7;">(Clean
-        Data)</span></h2>
-
-<div class="grid-2" style="gap: 4rem; align-items: start;">
-
-    <!-- LEFT: Tech Setup (Feature Engineering) -->
-    <div class="bento-box"
-        style="justify-content: flex-start; align-items: stretch; text-align: left; padding: 2.5rem; background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.1);">
-
-        <h3 style="color: var(--amber); margin-bottom: 1.5rem; font-size: 1.4rem;">Ingeniería de Variables</h3>
-        <p style="margin-bottom: 2rem; opacity: 0.9; font-size: 1.1rem; line-height: 1.6;">
-            El CEO dice que la logística es un desastre. ¿Verdad o mentira?
-        </p>
-
-        <!-- Calculation Card -->
-        <div
-            style="background: rgba(15, 23, 42, 0.6); padding: 2rem; border-radius: 12px; margin-bottom: 2.5rem; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 2px 10px rgba(0,0,0,0.3);">
-            <strong style="display: block; margin-bottom: 1rem; color: #fff; font-size: 1.1rem;">
-                <span style="border-bottom: 2px dashed var(--primary); padding-bottom: 2px;">Lead Time</span> (Tiempo de
-                Ciclo):
-            </strong>
-            <code
-                style="display: block; color: var(--amber); font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; font-family: 'Fira Code', monospace;">
-                                delivery_date - purchase_date
-                            </code>
-            <div style="font-size: 0.9rem; opacity: 0.6;">(Convertir a días numéricos)</div>
-        </div>
-
-        <!-- Analysis Tools -->
-        <div>
-            <p style="margin-bottom: 1rem; font-size: 1.1rem;">
-                <strong>Herramienta:</strong> <u
-                    style="text-decoration-color: var(--text-muted); text-underline-offset: 4px;">Boxplot</u> (Diagrama
-                de Caja)
-            </p>
-            <ul style="font-size: 1.05rem; padding-left: 1.2rem; opacity: 0.8; line-height: 1.8;">
-                <li>Caja aplastada (10-15 días).</li>
-                <li>Nube de puntos negros (<span
-                        style="color: var(--text-muted); border-bottom: 1px dotted var(--text-muted);">Outliers</span>).
-                </li>
-            </ul>
-        </div>
-    </div>
-
-    <!-- RIGHT: Critical Cases (Cards) -->
-    <div style="display: flex; flex-direction: column; gap: 2rem;">
-
-        <!-- Case A: Red (Drop) -->
-        <div
-            style="background: rgba(220, 38, 38, 0.08); padding: 2rem; border-radius: 12px; border: 1px solid rgba(220, 38, 38, 0.4); position: relative; overflow: hidden;">
-            <!-- Top Strip -->
-            <div style="position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #ef4444;"></div>
-
-            <h4 style="color: #ef4444; font-size: 1.2rem; margin-bottom: 0.8rem; font-weight: 700;">Caso A: Tiempos
-                Negativos (-5 días)</h4>
-            <p style="font-size: 1rem; margin-bottom: 1.5rem; opacity: 0.9;">Viajes en el tiempo. Error de sistema.</p>
-
-            <div
-                style="background: #ef4444; color: white; display: inline-block; padding: 6px 16px; border-radius: 4px; font-size: 0.85rem; font-weight: 800; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);">
-                ACCIÓN: ELIMINAR (DROP)
-            </div>
-        </div>
-
-        <!-- Case B: Orange (Analyze) -->
-        <div
-            style="background: rgba(245, 158, 11, 0.08); padding: 2rem; border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.4); position: relative; overflow: hidden;">
-            <!-- Top Strip -->
-            <div style="position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #f59e0b;"></div>
-
-            <h4 style="color: #f59e0b; font-size: 1.2rem; margin-bottom: 0.8rem; font-weight: 700;">Caso B: Extremos
-                (180+ días)</h4>
-            <p style="font-size: 1rem; margin-bottom: 1.5rem; opacity: 0.9;">Paquetes perdidos en Correos. No es error
-                de dedo.</p>
-
-            <div
-                style="background: #f59e0b; color: black; display: inline-block; padding: 6px 16px; border-radius: 4px; font-size: 0.85rem; font-weight: 800; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);">
-                ACCIÓN: MANTENER Y ANALIZAR
-            </div>
-        </div>
-
-    </div>
-
-</div>            </div>
-        </div>
-
-<!-- SLIDE 13: Advanced Visualization -->
-<div class="slide">
-    <div class="card" style="padding: 3rem; display: flex; flex-direction: column;">
-        <h2 style="margin-bottom: 2rem;">3. Visualización Multidimensional</h2>
-
-        <div class="grid-2" style="gap: 4rem; align-items: start;">
-
-            <!-- LEFT: Narrative Context -->
-            <div class="bento-box"
-                style="justify-content: flex-start; text-align: left; padding: 2.5rem; background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.1);">
-                <h3 style="color: var(--secondary); margin-bottom: 1.5rem; font-size: 1.4rem;">Hipótesis: Peso vs Precio
-                </h3>
-                <p style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem; opacity: 0.9;">
-                    "¿Pesar más hace que el envío sea más caro siempre?" <br>
-                    <em style="opacity: 0.7;">Sentido común, ¿cierto?</em>
+                <!-- Header (only shown initially) -->
+                <p id="quoteHeader"
+                    style="font-size: 1.05rem; color: var(--accent-secondary); text-align: center; margin-bottom: 1.2rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; position: relative; z-index: 2;">
+                    Enseñanza de Confucio
                 </p>
 
-                <div
-                    style="background: rgba(139, 92, 246, 0.1); padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--secondary);">
-                    <strong style="color: var(--secondary); display: block; margin-bottom: 0.5rem;">El
-                        Hallazgo:</strong>
-                    <p style="font-size: 1rem; margin: 0;">Los datos muestran puntos del <strong>mismo peso</strong> con
-                        precios radicalmente distintos.</p>
-                </div>
-
-                <ul
-                    style="margin-top: 2rem; font-size: 1rem; line-height: 2; padding-left: 1.5rem; color: var(--text-muted);">
-                    <li><strong>Eje X:</strong> Peso (g)</li>
-                    <li><strong>Eje Y:</strong> Valor Flete ($)</li>
-                    <li><strong>Color:</strong> Estado (SP, RJ, MG)</li>
-                </ul>
-            </div>
-
-            <!-- RIGHT: Visual Insight Widget -->
-            <div style="display: flex; flex-direction: column; gap: 2rem;">
-                <!-- Chart Representation -->
-                <div
-                    style="background: rgba(15, 23, 42, 0.6); padding: 2rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); position: relative; height: 300px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                    <!-- Mock Scatter Dots -->
-                    <div
-                        style="position: absolute; width: 6px; height: 6px; background: var(--secondary); border-radius: 50%; top: 40%; left: 20%; box-shadow: 0 0 10px var(--secondary);">
-                    </div>
-                    <div
-                        style="position: absolute; width: 8px; height: 8px; background: var(--rose); border-radius: 50%; top: 30%; left: 25%; opacity: 0.6;">
-                    </div>
-                    <div
-                        style="position: absolute; width: 6px; height: 6px; background: var(--secondary); border-radius: 50%; top: 60%; left: 80%; box-shadow: 0 0 10px var(--secondary);">
-                    </div>
-                    <div
-                        style="position: absolute; width: 10px; height: 10px; background: var(--emerald); border-radius: 50%; top: 20%; left: 60%; opacity: 0.6;">
-                    </div>
-
-                    <div style="text-align: center; z-index: 2;">
-                        <h4 style="font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0.5rem;">LA
-                            DISTANCIA</h4>
-                        <p style="font-size: 1rem; color: var(--text-muted);">Importa más que el peso</p>
-                    </div>
-
-                    <!-- Grid Lines -->
-                    <div
-                        style="position: absolute; bottom: 20px; left: 20px; right: 20px; height: 1px; background: rgba(255,255,255,0.1);">
-                    </div>
-                    <div
-                        style="position: absolute; top: 20px; bottom: 20px; left: 20px; width: 1px; background: rgba(255,255,255,0.1);">
-                    </div>
-                </div>
-
-                <!-- Context Badge -->
-                <div
-                    style="background: rgba(139, 92, 246, 0.1); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--secondary); display: flex; align-items: center; gap: 1rem;">
-                    <div style="font-size: 2rem;">🇧🇷</div>
-                    <div>
-                        <strong
-                            style="color: var(--secondary); display: block; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Contexto
-                            Geográfico</strong>
-                        <p style="font-size: 0.9rem; margin: 0; opacity: 0.8;">"El código postal es el rey del costo".
-                            (Amazonas vs Sao Paulo)</p>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-</div>
-
-<!-- SLIDE 14: Correlations -->
-<div class="slide">
-    <div class="card" style="padding: 3rem; display: flex; flex-direction: column;">
-        <h2 style="margin-bottom: 2rem;">4. Correlaciones (¿Qué importa?)</h2>
-
-        <div class="grid-2" style="gap: 4rem; align-items: start;">
-
-            <!-- LEFT: Tech Matrix -->
-            <div class="bento-box"
-                style="justify-content: flex-start; text-align: left; padding: 2.5rem; background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.1);">
-                <h3 style="color: var(--emerald); margin-bottom: 1.5rem; font-size: 1.4rem;">La Matriz de Verdad</h3>
-                <p style="margin-bottom: 2rem; font-size: 1.1rem; line-height: 1.6; opacity: 0.9;">
-                    Usamos un <strong>Heatmap</strong> (Mapa de Calor) para cruzar todas las variables numéricas y
-                    encontrar relaciones ocultas.
-                </p>
-
-                <div style="display: flex; gap: 2rem;">
-                    <ul
-                        style="font-family: 'Fira Code', monospace; font-size: 0.9rem; color: var(--emerald); line-height: 2; list-style: none; padding: 0;">
-                        <li><i class="fa-solid fa-check" style="margin-right: 8px; opacity: 0.5;"></i>price</li>
-                        <li><i class="fa-solid fa-check" style="margin-right: 8px; opacity: 0.5;"></i>freight_value</li>
-                    </ul>
-                    <ul
-                        style="font-family: 'Fira Code', monospace; font-size: 0.9rem; color: var(--emerald); line-height: 2; list-style: none; padding: 0;">
-                        <li><i class="fa-solid fa-check" style="margin-right: 8px; opacity: 0.5;"></i>photos_qty</li>
-                        <li style="border-bottom: 1px dashed var(--emerald);"><i class="fa-solid fa-star"
-                                style="margin-right: 8px;"></i>review_score</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- RIGHT: Insight Dashboard -->
-            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-
-                <!-- Insight 1: Disappointment -->
-                <div
-                    style="background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--text-muted);">
-                    <h4
-                        style="color: var(--text-muted); font-size: 1rem; margin-bottom: 0.5rem; text-transform: uppercase;">
-                        📉 Decepción de Negocio</h4>
-                    <p style="font-size: 1.1rem;"><code>Price</code> vs <code>Review</code> ≈ 0</p>
-                    <div style="font-size: 0.85rem; opacity: 0.6; margin-top: 0.5rem;">(Ser barato no te compra 5
-                        estrellas)</div>
-                </div>
-
-                <!-- Insight 2: The Truth -->
-                <div
-                    style="background: rgba(244, 63, 94, 0.1); padding: 2rem; border-radius: 12px; border: 1px solid var(--rose); box-shadow: 0 4px 20px rgba(244, 63, 94, 0.15);">
-                    <h4
-                        style="color: var(--rose); font-size: 1.2rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fa-solid fa-heart-crack"></i> Hallazgo Real (-0.4)
-                    </h4>
-                    <p style="font-size: 1.2rem; font-weight: bold; color: #fff; margin-bottom: 0.5rem;">"La gente odia
-                        esperar."</p>
-                    <p style="font-size: 1rem; opacity: 0.9; line-height: 1.5;">Correlación Negativa fuerte entre
-                        <em>Tiempo de Entrega</em> y <em>Score</em>.</p>
-
-                    <div
-                        style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(244, 63, 94, 0.3); color: var(--rose); font-size: 0.9rem; font-weight: 700;">
-                        LOGÍSTICA MATA PRODUCTO
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-</div>
-        <!-- SLIDE 15: Closing / Deliverables -->
-        <div class="slide">
-            <div class="card"
-                style="padding: 3rem; background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(16, 185, 129, 0.1) 100%); display: flex; flex-direction: column;">
-                <h2 style="color: var(--emerald); font-size: 3rem; margin-bottom: 3rem; text-align: center;">Próxima
-                    Semana: El Entregable</h2>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; flex: 1;">
-                    <div>
-                        <h3 style="margin-bottom: 1.5rem; color: #fff;">1. Limpieza de Datos <span class="term"
-                                data-tooltip="Data Cleaning: Proceso de detectar y corregir registros corruptos o inexactos.">(Cleaning)</span>
-                        </h3>
-                        <div
-                            style="background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 10px; margin-bottom: 2.5rem; font-family: 'Fira Code', monospace; line-height: 1.6; border: 1px solid var(--glass-border);">
-                            Originales: 100,000 filas<br>
-                            Finales: 96,000 filas<br>
-                            <span style="color: var(--rose);">Eliminados: 4,000 (Cancelled)</span>
-                        </div>
-
-                        <h3 style="margin-bottom: 1.5rem; color: #fff;">2. Análisis Diagnóstico <span class="term"
-                                data-tooltip="Entender POR QUÉ ocurrió algo (Causa-Efecto).">(Why?)</span></h3>
-                        <ul style="font-size: 1.2rem; line-height: 2; padding-left: 1.5rem; opacity: 0.9;">
-                            <li>Gráfico de Tendencia Temporal (Line).</li>
-                            <li>Gráfico de Relación (Scatter/Heatmap).</li>
-                        </ul>
-                    </div>
-
-                    <div>
-                        <h3 style="margin-bottom: 1.5rem; color: #fff;">3. Análisis Descriptivo <span class="term"
-                                data-tooltip="Resumir QUÉ pasó en el pasado (Historia).">(What?)</span></h3>
-                        <p style="margin-bottom: 2.5rem; font-size: 1.2rem; opacity: 0.9;"><span class="term"
-                                data-tooltip="Gráfico que muestra la distribución de frecuencias (forma de los datos).">Histograma</span>
-                            de Ventas:
-                            ¿Vendemos muchos baratos o pocos caros?</p>
-
-                        <h3 style="margin-bottom: 1.5rem; color: #fff;">4. Conclusiones de Negocio</h3>
-                        <div
-                            style="background: rgba(16, 185, 129, 0.1); padding: 2rem; border-radius: 12px; border-left: 5px solid var(--emerald);">
-                            <p style="font-size: 1.2rem; font-style: italic;">"Recomendamos reforzar stock en Octubre
-                                para prepararse para el pico de Noviembre identificado en el análisis de tendencias."
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    </div>
-    </div>
-    </div>
-
-    </div>
-
-    <!-- MODALS CONTAINER -->
-    <div id="modals_container">
-        <div id="modal-items" class="modal-overlay" onclick="closeModal(event)">
-            <div class="modal-content">
-                <button class="close-modal" onclick="closeModal(null, true)">&times;</button>
-                <h2 style="color: var(--secondary);">Detalle: Items</h2>
-                <p>Aquí es donde vive el producto físico.</p>
-                <ul style="margin-top: 1rem;">
-                    <li><strong>order_item_id:</strong> No es un ID único global. Es un contador (1, 2, 3...) reiniciado
-                        para cada orden.</li>
-                    <li><strong>seller_id:</strong> Ojo, Olist es un "Marketplace" (como MercadoLibre). Una misma orden
-                        de un cliente puede tener productos de vendedor A y vendedor B.</li>
-                </ul>
-            </div>
-        </div>
-
-        <div id="modal-customers" class="modal-overlay" onclick="closeModal(event)">
-            <div class="modal-content">
-                <button class="close-modal" onclick="closeModal(null, true)">&times;</button>
-                <h2 style="color: var(--rose);">Detalle: Customers</h2>
-                <p>Es la tabla de "direcciones de envío" y mapeo de IDs.</p>
-                <p>Imaginen que <code>customer_id</code> es la etiqueta temporal de envío en la caja, y
-                    <code>customer_unique_id</code> es el registro del usuario en la base de datos central.
+                <!-- Quote text -->
+                <p id="quoteText"
+                    style="font-size: 1.6rem; line-height: 1.9; margin: 0; color: #fff; font-weight: 500; text-align: center; position: relative; z-index: 2;">
+                    我听到的会忘记，我看到的会记得，我做过的才理解。
                 </p>
             </div>
-        </div>
 
-        <div id="modal-reviews" class="modal-overlay" onclick="closeModal(event)">
-            <div class="modal-content">
-                <button class="close-modal" onclick="closeModal(null, true)">&times;</button>
-                <h2 style="color: var(--amber);">Detalle: Reviews</h2>
-                <p>Contiene el feedback emocional.</p>
-                <p>Tiene un título (opcional) y un mensaje de texto (comentario). Es oro para análisis de texto (NLP),
-                    pero el 60% de las veces está vacío porque a la gente le da pereza escribir.</p>
-            </div>
-        </div>
+            <style>
+                #quoteContainer:hover {
+                    transform: translateY(-4px);
+                    box-shadow: 0 8px 30px rgba(192, 132, 252, 0.3);
+                    border-color: rgba(192, 132, 252, 0.5);
+                }
+            </style>
 
-        <div id="modal-payments" class="modal-overlay" onclick="closeModal(event)">
-            <div class="modal-content">
-                <button class="close-modal" onclick="closeModal(null, true)">&times;</button>
-                <h2 style="color: var(--emerald);">Detalle: Payments</h2>
-                <p>La tabla financiera.</p>
-                <p>Noten que una sola orden puede tener MÚLTIPLES filas de pago. Ejemplo: El cliente pagó $50 con
-                    tarjeta de crédito y $20 con un cupón (voucher). ¡Tendrán 2 filas para la misma orden!</p>
-            </div>
-        </div>
 
-        <!-- Concept Explanation Modal -->
-        <div id="modal-concept" class="modal-overlay" onclick="closeModal(event)">
-            <div class="modal-content" style="max-width: 800px; max-height: 80vh; overflow-y: auto;">
-                <button class="close-modal" onclick="closeModal(null, true)">&times;</button>
-                <h2 id="concept-title" style="margin-bottom: 1.5rem;"></h2>
-                <div id="concept-content" style="line-height: 1.6;"></div>
-            </div>
         </div>
     </div>
 
-    <!-- Pandas Command Modal -->
-    <div id="modal-pandas" class="modal-overlay" onclick="closeModal(event)">
-        <div class="modal-content" style="max-width: 900px; max-height: 85vh; overflow-y: auto;">
-            <button class="close-modal" onclick="closeModal(null, true)">&times;</button>
-            <h2 id="pandas-title" style="margin-bottom: 1.5rem;"></h2>
-            <div id="pandas-content" style="line-height: 1.6;"></div>
-        </div>
     </div>
+
+
 
     <script>
-        let currentSlide = 0;
+        // Slideshow Logic
         const slides = document.querySelectorAll('.slide');
         const progressBar = document.getElementById('progressBar');
+        // Nav elements removed per user request
+        let currentSlide = 0;
+        let quoteInChinese = true;
 
-        // Modal Logic
-        function openModal(id) {
-            const modal = document.getElementById(id);
-            if (modal) modal.classList.add('active');
-        }
+        function toggleQuote() {
+            const quoteText = document.getElementById('quoteText');
+            const quoteHeader = document.getElementById('quoteHeader');
+            const container = document.getElementById('quoteContainer');
 
-        function closeModal(event, force = false) {
-            if (force) {
-                document.querySelectorAll('.modal-overlay').forEach(el => el.classList.remove('active'));
-                return;
-            }
-            if (event.target.classList.contains('modal-overlay')) {
-                event.target.classList.remove('active');
-            }
-        }
+            // Add animation
+            container.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                container.style.transform = 'scale(1)';
+            }, 150);
 
-        // Concept Modal Logic
-        function openConceptModal(conceptId) {
-            const modal = document.getElementById('modal-concept');
-            const title = document.getElementById('concept-title');
-            const content = document.getElementById('concept-content');
-
-            const concepts = {
-                bitacora: {
-                    title: 'Bitácora del Sistema',
-                    color: 'var(--primary)',
-                    content: `
-                        <h4 style="color: var(--primary); margin-bottom: 1rem;">¿Qué es la Bitácora del Sistema?</h4>
-                        <p style="margin-bottom: 1rem;">La tabla <code>olist_orders</code> es como el registro de un hotel: cada línea dice "El cliente X llegó el día Y".</p>
-                        
-                        <h4 style="color: var(--primary); margin: 1.5rem 0 1rem;">¿Qué información NO tiene esta tabla?</h4>
-                        <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
-                            <li style="margin-bottom: 0.8rem;"><strong>Productos comprados:</strong> No sabe si el cliente compró una TV o un libro.</li>
-                            <li style="margin-bottom: 0.8rem;"><strong>Precio pagado:</strong> No hay columnas de dinero aquí.</li>
-                            <li style="margin-bottom: 0.8rem;"><strong>Datos personales:</strong> Solo tiene IDs (como números de ticket).</li>
-                        </ul>
-
-                        <h4 style="color: var(--primary); margin: 1.5rem 0 1rem;">¿Para qué sirve entonces?</h4>
-                        <p style="margin-bottom: 1rem;">Es el <strong>punto de partida</strong> de tu análisis. Desde aquí haces JOIN con otras tablas para obtener:</p>
-                        <ul style="margin-left: 1.5rem;">
-                            <li style="margin-bottom: 0.8rem;">Los productos (tabla <code>items</code>)</li>
-                            <li style="margin-bottom: 0.8rem;">El dinero (tabla <code>payments</code>)</li>
-                            <li style="margin-bottom: 0.8rem;">La ubicación del cliente (tabla <code>customers</code> → <code>geolocation</code>)</li>
-                        </ul>
-
-                        <div style="background: rgba(59, 130, 246, 0.1); padding: 1rem; border-radius: 8px; margin-top: 1.5rem; border-left: 4px solid var(--primary);">
-                            <strong>💡 Analogía:</strong> Es como el recibo de un restaurante que solo dice "Mesa 5 - Comida - $0" sin detallar QUÉ comiste.
-                        </div>
-                    `
-                },
-                importante: {
-                    title: '⚠️ IMPORTANTE: NO SABE',
-                    color: 'var(--rose)',
-                    content: `
-                        <h4 style="color: var(--rose); margin-bottom: 1rem;">¿Por qué es tan importante esto?</h4>
-                        <p style="margin-bottom: 1rem;"><strong>Muchos estudiantes cometen este error:</strong> Intentan sacar métricas de ventas directamente de la tabla <code>orders</code>.</p>
-                        
-                        <div style="background: rgba(244, 63, 94, 0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 4px solid var(--rose);">
-                            <strong>❌ ERROR COMÚN:</strong>
-                            <pre style="margin-top: 0.5rem; background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 4px; overflow-x: auto;">orders[orders['status'] == 'delivered'].shape[0]</pre>
-                            <p style="margin-top: 0.5rem; font-size: 0.9rem;">Esto te da el NÚMERO de pedidos, pero no te dice cuánto dinero se generó.</p>
-                        </div>
-
-                        <h4 style="color: var(--rose); margin: 1.5rem 0 1rem;">¿Qué necesitas hacer?</h4>
-                        <p style="margin-bottom: 1rem;">Siempre debes hacer JOIN con otras tablas:</p>
-                        <ul style="margin-left: 1.5rem; margin-bottom: 1.5rem;">
-                            <li style="margin-bottom: 0.8rem;"><strong>Para ver productos:</strong> JOIN con <code>olist_order_items</code></li>
-                            <li style="margin-bottom: 0.8rem;"><strong>Para ver precios:</strong> JOIN con <code>olist_order_items</code> (columna <code>price</code>)</li>
-                            <li style="margin-bottom: 0.8rem;"><strong>Para ver pagos:</strong> JOIN con <code>olist_order_payments</code></li>
-                        </ul>
-
-                        <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--emerald);">
-                            <strong>✅ CORRECTO:</strong>
-                            <pre style="margin-top: 0.5rem; background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 4px; overflow-x: auto;"># Unir orders con items
-result = pd.merge(orders, items, on='order_id')
-
-# Filtrar solo delivered y sumar precios
-result[result['status'] == 'delivered']['price'].sum()</pre>
-                        </div>
-                    `
-                },
-                regla: {
-                    title: '⭐ Regla de Oro',
-                    color: 'var(--amber)',
-                    content: `
-                        <h4 style="color: var(--amber); margin-bottom: 1rem;">¿Por qué filtrar solo "delivered"?</h4>
-                        <p style="margin-bottom: 1rem;">La tabla <code>orders</code> tiene una columna llamada <code>order_status</code> con varios valores posibles:</p>
-                        
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0;">
-                            <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 8px; border: 1px solid var(--emerald);">
-                                <strong style="color: var(--emerald);">✅ delivered</strong>
-                                <p style="font-size: 0.9rem; margin-top: 0.5rem; opacity: 0.9;">El cliente recibió su producto. <strong>Esto es una venta real.</strong></p>
-                            </div>
-                            <div style="background: rgba(244, 63, 94, 0.1); padding: 1rem; border-radius: 8px; border: 1px solid var(--rose);">
-                                <strong style="color: var(--rose);">❌ cancelled</strong>
-                                <p style="font-size: 0.9rem; margin-top: 0.5rem; opacity: 0.9;">El pedido fue cancelado. <strong>NO es una venta.</strong></p>
-                            </div>
-                            <div style="background: rgba(245, 158, 11, 0.1); padding: 1rem; border-radius: 8px; border: 1px solid var(--amber);">
-                                <strong style="color: var(--amber);">⚠️ shipped</strong>
-                                <p style="font-size: 0.9rem; margin-top: 0.5rem; opacity: 0.9;">Está en camino, pero aún no llegó. <strong>Venta incierta.</strong></p>
-                            </div>
-                            <div style="background: rgba(139, 92, 246, 0.1); padding: 1rem; border-radius: 8px; border: 1px solid var(--secondary);">
-                                <strong style="color: var(--secondary);">⏳ processing</strong>
-                                <p style="font-size: 0.9rem; margin-top: 0.5rem; opacity: 0.9;">Aún se está preparando. <strong>Venta pendiente.</strong></p>
-                            </div>
-                        </div>
-
-                        <h4 style="color: var(--amber); margin: 1.5rem 0 1rem;">¿Qué pasa si NO filtras?</h4>
-                        <div style="background: rgba(244, 63, 94, 0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 4px solid var(--rose);">
-                            <strong>Escenario de Error:</strong>
-                            <p style="margin-top: 0.5rem;">Sin filtro: <code>orders.shape[0]</code> → <strong>100,000 órdenes</strong></p>
-                            <p style="margin-top: 0.3rem;">Con filtro correcto: <code>orders[orders['status'] == 'delivered'].shape[0]</code> → <strong>97,000 órdenes</strong></p>
-                            <p style="margin-top: 0.8rem; font-size: 0.95rem; color: var(--rose);"><strong>Diferencia:</strong> ¡Le reportaste 3,000 ventas fantasma a tu jefe!</p>
-                        </div>
-
-                        <div style="background: rgba(245, 158, 11, 0.1); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--amber);">
-                            <strong>💡 Regla Práctica:</strong>
-                            <pre style="margin-top: 0.5rem; background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 4px; overflow-x: auto;"># Siempre filtra por delivered
-orders_delivered = orders[orders['order_status'] == 'delivered']</pre>
-                            <p style="margin-top: 0.5rem; font-size: 0.9rem;">Esto debe estar en TODAS tus consultas de análisis de ventas.</p>
-                        </div>
-                    `
-                },
-                lifecycle: {
-                    title: 'El Ciclo de Vida del Pedido - 5 Fechas Clave',
-                    color: 'var(--emerald)',
-                    content: `
-                        <h4 style="color: var(--emerald); margin-bottom: 1rem;">¿Por qué son importantes estas 5 fechas?</h4>
-                        <p style="margin-bottom: 1.5rem;">Cada pedido en Olist pasa por <strong>5 momentos críticos</strong> que quedan registrados con timestamps (fecha + hora exacta). Estas fechas son como los "checkpoints" de un videojuego: nos permiten saber dónde está cada pedido y cuánto tiempo tardó en cada etapa.</p>
-
-                        <div style="display: grid; gap: 1rem; margin-bottom: 1.5rem;">
-                            <div style="background: rgba(59, 130, 246, 0.1); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--primary);">
-                                <strong style="color: var(--primary);">📅 1. Purchase (order_purchase_timestamp)</strong>
-                                <p style="margin-top: 0.5rem; font-size: 0.95rem;">El momento exacto en que el cliente hizo clic en "Comprar". Es el inicio de todo.</p>
-                            </div>
-
-                            <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--emerald);">
-                                <strong style="color: var(--emerald);">✅ 2. Approved (order_approved_at)</strong>
-                                <p style="margin-top: 0.5rem; font-size: 0.95rem;">Cuando el pago fue confirmado (tarjeta aprobada, boleto pagado, etc.). Ahora Olist puede procesar el pedido.</p>
-                            </div>
-
-                            <div style="background: rgba(245, 158, 11, 0.1); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--amber);">
-                                <strong style="color: var(--amber);">🚚 3. Carrier (order_delivered_carrier_date)</strong>
-                                <p style="margin-top: 0.5rem; font-size: 0.95rem;">El producto fue entregado al transportista (Correos, DHL, etc.). Ya salió del almacén y está en camino.</p>
-                            </div>
-
-                            <div style="background: rgba(16, 185, 129, 0.15); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--emerald); border: 2px solid var(--emerald);">
-                                <strong style="color: var(--emerald);">🎉 4. Customer (order_delivered_customer_date)</strong>
-                                <p style="margin-top: 0.5rem; font-size: 0.95rem;"><strong>¡La más importante!</strong> El cliente confirmó que recibió su paquete. Esta es la fecha que usamos para calcular métricas.</p>
-                            </div>
-
-                            <div style="background: rgba(139, 92, 246, 0.1); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--secondary);">
-                                <strong style="color: var(--secondary);">⏰ 5. Estimated (order_estimated_delivery_date)</strong>
-                                <p style="margin-top: 0.5rem; font-size: 0.95rem;">La fecha que Olist <em>prometió</em> al cliente. Es la "promesa de entrega" que se mostró al momento de la compra.</p>
-                            </div>
-                        </div>
-
-                        <h4 style="color: var(--emerald); margin: 1.5rem 0 1rem;">¿Cómo usamos estas fechas en análisis?</h4>
-                        <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--emerald);">
-                            <strong>Ejemplo: Calcular tiempo total de entrega</strong>
-                            <pre style="margin-top: 0.5rem; background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 4px; overflow-x: auto; font-size: 0.9rem;"># En pandas:
-orders['delivery_time'] = (orders['order_delivered_customer_date'] - 
-                           orders['order_purchase_timestamp']).dt.days
-
-# Esto nos da cuántos días pasaron desde la compra hasta la entrega</pre>
-                        </div>
-
-                        <div style="background: rgba(245, 158, 11, 0.1); padding: 1rem; border-radius: 8px; margin-top: 1rem; border-left: 4px solid var(--amber);">
-                            <strong>💡 Tip importante:</strong> Algunas fechas pueden ser NULL (vacías). Por ejemplo, si un pedido fue cancelado, no tendrá <code>order_delivered_customer_date</code> porque nunca llegó al cliente.
-                        </div>
-                    `
-                },
-                kpis: {
-                    title: 'KPIs de Experiencia del Cliente',
-                    color: 'var(--emerald)',
-                    content: `
-                        <h4 style="color: var(--emerald); margin-bottom: 1rem;">¿Qué son estos KPIs y por qué los calculamos?</h4>
-                        <p style="margin-bottom: 1.5rem;">Estos indicadores nos permiten <strong>medir la satisfacción del cliente</strong> de forma objetiva. No preguntamos "¿Estás feliz?", sino que medimos hechos: "¿Cumplimos nuestra promesa?" y "¿Cuánto tiempo esperaste realmente?"</p>
-
-                        <h4 style="color: var(--primary); margin: 1.5rem 0 1rem;">📊 KPI 1: Demora Real (Real Wait Time)</h4>
-                        <div style="background: rgba(59, 130, 246, 0.1); padding: 1.2rem; border-radius: 8px; border-left: 4px solid var(--primary); margin-bottom: 1.5rem;">
-                            <div style="font-family: monospace; font-size: 1.1rem; margin-bottom: 1rem; color: var(--primary);">
-                                <strong>delivered - purchase</strong>
-                            </div>
-                            
-                            <h5 style="margin-bottom: 0.8rem;">¿Qué mide exactamente?</h5>
-                            <p style="margin-bottom: 1rem; line-height: 1.6;">
-                                El <strong>tiempo total</strong> desde que el cliente hizo clic en "Comprar" hasta que recibió físicamente su producto. 
-                                Es la experiencia real del cliente, sin importar lo que Olist prometió.
-                            </p>
-
-                            <h5 style="margin-bottom: 0.8rem;">¿Por qué es importante?</h5>
-                            <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
-                                <li style="margin-bottom: 0.5rem;">Nos dice si el proceso logístico es <strong>rápido o lento</strong></li>
-                                <li style="margin-bottom: 0.5rem;">Identifica cuellos de botella (¿tarda mucho en aprobar? ¿en enviar?)</li>
-                                <li style="margin-bottom: 0.5rem;">Permite comparar entre regiones: ¿São Paulo recibe más rápido que Manaus?</li>
-                            </ul>
-
-                            <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 6px;">
-                                <strong>Ejemplo práctico:</strong>
-                                <pre style="margin-top: 0.5rem; background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 4px; font-size: 0.9rem;"># Calcular demora promedio
-orders['demora_real'] = (orders['delivered'] - orders['purchase']).dt.days
-promedio = orders['demora_real'].mean()
-
-print(f"En promedio, los clientes esperan {promedio:.1f} días")</pre>
-                            </div>
-                        </div>
-
-                        <h4 style="color: var(--amber); margin: 1.5rem 0 1rem;">⏱️ KPI 2: Delay / Retraso (Promise Fulfillment)</h4>
-                        <div style="background: rgba(245, 158, 11, 0.1); padding: 1.2rem; border-radius: 8px; border-left: 4px solid var(--amber);">
-                            <div style="font-family: monospace; font-size: 1.1rem; margin-bottom: 1rem; color: var(--amber);">
-                                <strong>delivered - estimated</strong>
-                            </div>
-                            
-                            <h5 style="margin-bottom: 0.8rem;">¿Qué mide exactamente?</h5>
-                            <p style="margin-bottom: 1rem; line-height: 1.6;">
-                                Si Olist <strong>cumplió su promesa de entrega</strong>. Compara cuándo llegó el producto vs. cuándo se prometió que llegaría.
-                            </p>
-
-                            <h5 style="margin-bottom: 0.8rem;">¿Cómo interpretarlo?</h5>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0;">
-                                <div style="background: rgba(244, 63, 94, 0.15); padding: 1rem; border-radius: 6px; border: 1px solid var(--rose);">
-                                    <strong style="color: var(--rose);">📈 Número POSITIVO</strong>
-                                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">
-                                        Llegó <strong>tarde</strong>. Cliente probablemente molesto.
-                                        <br><br>
-                                        <code>+3 días</code> = Llegó 3 días después de lo prometido
-                                    </p>
-                                </div>
-                                <div style="background: rgba(16, 185, 129, 0.15); padding: 1rem; border-radius: 6px; border: 1px solid var(--emerald);">
-                                    <strong style="color: var(--emerald);">📉 Número NEGATIVO</strong>
-                                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">
-                                        Llegó <strong>antes</strong>. Cliente feliz y sorprendido.
-                                        <br><br>
-                                        <code>-2 días</code> = Llegó 2 días antes de lo prometido
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 6px; margin-top: 1rem;">
-                                <strong>Ejemplo de análisis:</strong>
-                                <pre style="margin-top: 0.5rem; background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 4px; font-size: 0.9rem;"># Calcular delay
-orders['delay'] = (orders['delivered'] - orders['estimated']).dt.days
-
-# ¿Cuántos llegaron tarde?
-late = (orders['delay'] > 0).sum()
-early = (orders['delay'] < 0).sum()
-
-print(f"Llegaron tarde: {late} pedidos")
-print(f"Llegaron antes: {early} pedidos (¡bien!)")</pre>
-                            </div>
-                        </div>
-
-                        <div style="background: rgba(59, 130, 246, 0.1); padding: 1rem; border-radius: 8px; margin-top: 1.5rem; border-left: 4px solid var(--primary);">
-                            <strong>💡 Insight clave:</strong> Un "Delay" promedio de <code>0</code> no significa perfección. Puede haber muchos pedidos que llegaron muy tarde (+10 días) compensados por otros que llegaron muy temprano (-10 días). Siempre revisa la <strong>distribución</strong>, no solo el promedio.
-                        </div>
-                    `
-                }
-            };
-
-
-            const concept = concepts[conceptId];
-            if (concept && modal && title && content) {
-                title.innerHTML = concept.title;
-                title.style.color = concept.color;
-                content.innerHTML = concept.content;
-                modal.classList.add('active');
+            if (quoteInChinese) {
+                quoteHeader.style.display = 'none';
+                quoteText.innerHTML = '"Me lo contaron y lo olvidé; lo vi y lo entendí; lo hice y lo aprendí."<br><span style="font-size: 1rem; color: var(--text-muted); font-style: italic; margin-top: 0.8rem; display: block;">— Confucio</span>';
+                quoteInChinese = false;
+            } else {
+                quoteHeader.style.display = 'block';
+                quoteText.textContent = '我听到的会忘记，我看到的会记得，我做过的才理解。';
+                quoteInChinese = true;
             }
         }
 
-        // Pandas Command Modal Logic
-        function openPandasModal(commandId) {
-            const modal = document.getElementById('modal-pandas');
-            const title = document.getElementById('pandas-title');
-            const content = document.getElementById('pandas-content');
-
-            const commands = {
-                select: {
-                    title: 'Seleccionar Columnas',
-                    color: 'var(--primary)',
-                    content: `
-                        <h4 style="color: var(--primary); margin-bottom: 1rem;">¿Cómo seleccionar columnas?</h4>
-                        <pre style="background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 6px; margin-bottom: 1rem; overflow-x: auto;"># Una sola columna (devuelve Series)
-items['product_id']
-
-# Múltiples columnas (devuelve DataFrame)
-items[['product_id', 'price']]</pre>
-
-                        <h4 style="color: var(--primary); margin: 1.5rem 0 1rem;">Ejemplo práctico con Olist:</h4>
-                        <pre style="background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 6px; overflow-x: auto;"># Solo ver IDs y precios
-productos = items[['order_id', 'product_id', 'price']]
-productos.head()</pre>
-
-                        <div style="background: rgba(59, 130, 246, 0.1); padding: 1rem; border-radius: 8px; margin-top: 1.5rem; border-left: 4px solid var(--primary);">
-                            <strong>💡 Tip:</strong> Usa <strong>doble corchete [[]]</strong> para múltiples columnas, single <strong>[]</strong> para una sola.
-                        </div>
-                    `
-                },
-                filter: {
-                    title: 'Filtrar Filas',
-                    color: 'var(--amber)',
-                    content: `
-                        <h4 style="color: var(--amber); margin-bottom: 1rem;">¿Cómo filtrar datos?</h4>
-                        <pre style="background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 6px; margin-bottom: 1rem; overflow-x: auto;"># Condición simple
-delivered = orders[orders['order_status'] == 'delivered']
-
-# Múltiples condiciones (AND)
-recientes = orders[(orders['order_status'] == 'delivered') & 
-                    (orders['order_purchase_timestamp'] > '2018-01-01')]
-
-# Múltiples condiciones (OR)
-problematicos = orders[(orders['order_status'] == 'cancelled') | 
-                        (orders['order_status'] == 'unavailable')]</pre>
-
-                        <h4 style="color: var(--amber); margin: 1.5rem 0 1rem;">Operadores comunes:</h4>
-                        <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
-                            <li style="margin-bottom: 0.5rem;"><code>==</code> igual a</li>
-                            <li style="margin-bottom: 0.5rem;"><code>!=</code> diferente de</li>
-                            <li style="margin-bottom: 0.5rem;"><code>></code>, <code><</code>, <code>>=</code>, <code><=</code> comparaciones numéricas</li>
-                            <li style="margin-bottom: 0.5rem;"><code>&</code> AND lógico</li>
-                            <li style="margin-bottom: 0.5rem;"><code>|</code> OR lógico</li>
-                        </ul>
-
-                        <div style="background: rgba(245, 158, 11, 0.1); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--amber);">
-                            <strong>⚠️ Importante:</strong> Usa <code>&</code> y <code>|</code> (no <code>and</code>/<code>or</code>) y siempre encierra condiciones en paréntesis.
-                        </div>
-                    `
-                },
-                merge: {
-                    title: 'Unir DataFrames (JOIN)',
-                    color: 'var(--emerald)',
-                    content: `
-                        <h4 style="color: var(--emerald); margin-bottom: 1rem;">pd.merge() - El pegamento de pandas</h4>
-                        <pre style="background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 6px; margin-bottom: 1rem; overflow-x: auto;"># INNER JOIN (solo coincidencias)
-result = pd.merge(orders, items, on='order_id', how='inner')
-
-# LEFT JOIN (todas las filas de orders)
-result = pd.merge(orders, items, on='order_id', how='left')
-
-# Columnas con nombres diferentes
-result = pd.merge(df1, df2, left_on='col_a', right_on='col_b')</pre>
-
-                        <h4 style="color: var(--emerald); margin: 1.5rem 0 1rem;">Tipos de JOIN:</h4>
-                        <div style="display: grid; gap: 0.8rem; margin-bottom: 1.5rem;">
-                            <div style="background: rgba(16, 185, 129, 0.1); padding: 0.8rem; border-radius: 6px; border-left: 3px solid var(--emerald);">
-                                <strong>inner:</strong> Solo filas con coincidencias en ambas tablas
-                            </div>
-                            <div style="background: rgba(16, 185, 129, 0.1); padding: 0.8rem; border-radius: 6px; border-left: 3px solid var(--emerald);">
-                                <strong>left:</strong> Todas las filas de la izquierda + coincidencias
-                            </div>
-                            <div style="background: rgba(16, 185, 129, 0.1); padding: 0.8rem; border-radius: 6px; border-left: 3px solid var(--emerald);">
-                                <strong>right:</strong> Todas las filas de la derecha + coincidencias
-                            </div>
-                            <div style="background: rgba(16, 185, 129, 0.1); padding: 0.8rem; border-radius: 6px; border-left: 3px solid var(--emerald);">
-                                <strong>outer:</strong> Todas las filas de ambas tablas
-                            </div>
-                        </div>
-
-                        <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--emerald);">
-                            <strong>✅ Ejemplo Olist:</strong>
-                            <pre style="margin-top: 0.5rem; background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 4px; overflow-x: auto;"># Unir orders con items para ver productos
-full_data = pd.merge(orders, items, on='order_id')
-print(f"Orders: {len(orders)}, Items: {len(items)}, Resultado: {len(full_data)}")</pre>
-                        </div>
-                    `
-                },
-                groupby: {
-                    title: 'Agrupar y Agregar (.groupby)',
-                    color: 'var(--secondary)',
-                    content: `
-                        <h4 style="color: var(--secondary); margin-bottom: 1rem;">¿Para qué sirve groupby()?</h4>
-                        <p style="margin-bottom: 1rem;">Agrupa filas con valores idénticos y aplica funciones de agregación (suma, promedio, conteo, etc.).</p>
-
-                        <pre style="background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 6px; margin-bottom: 1rem; overflow-x: auto;"># Contar clientes por estado
-customers.groupby('customer_state')['customer_id'].count()
-
-# Ventas totales por categoría
-items.groupby('product_category')['price'].sum()
-
-# Múltiples agregaciones
-items.groupby('seller_id').agg({
-    'price': ['sum', 'mean', 'count'],
-    'freight_value': 'sum'
-})</pre>
-
-                        <h4 style="color: var(--secondary); margin: 1.5rem 0 1rem;">Funciones de agregación comunes:</h4>
-                        <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
-                            <li style="margin-bottom: 0.5rem;"><code>.count()</code> - Contar filas</li>
-                            <li style="margin-bottom: 0.5rem;"><code>.sum()</code> - Sumar valores</li>
-                            <li style="margin-bottom: 0.5rem;"><code>.mean()</code> - Promedio</li>
-                            <li style="margin-bottom: 0.5rem;"><code>.min()</code> / <code>.max()</code> - Mínimo/Máximo</li>
-                            <li style="margin-bottom: 0.5rem;"><code>.agg()</code> - Múltiples agregaciones</li>
-                        </ul>
-
-                        <div style="background: rgba(139, 92, 246, 0.1); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--secondary);">
-                            <strong>📊 Ejemplo Olist - Top 5 estados con más clientes:</strong>
-                            <pre style="margin-top: 0.5rem; background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 4px; overflow-x: auto;">top_states = customers.groupby('customer_state')['customer_id'].count().sort_values(ascending=False).head(5)
-print(top_states)</pre>
-                        </div>
-                    `
-                },
-                sort: {
-                    title: 'Ordenar (.sort_values)',
-                    color: 'var(--rose)',
-                    content: `
-                        <h4 style="color: var(--rose); margin-bottom: 1rem;">¿Cómo ordenar un DataFrame?</h4>
-                        <pre style="background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 6px; margin-bottom: 1rem; overflow-x: auto;"># Ordenar por una columna (menor a mayor)
-items_sorted = items.sort_values(by='price')
-
-# Ordenar descendente (mayor a menor)
-items_sorted = items.sort_values(by='price', ascending=False)
-
-# Ordenar por múltiples columnas
-items_sorted = items.sort_values(by=['seller_id', 'price'], 
-                                   ascending=[True, False])</pre>
-
-                        <h4 style="color: var(--rose); margin: 1.5rem 0 1rem;">Parámetros útiles:</h4>
-                        <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
-                            <li style="margin-bottom: 0.5rem;"><code>by</code> - Columna(s) para ordenar</li>
-                            <li style="margin-bottom: 0.5rem;"><code>ascending</code> - True (menor a mayor) o False (mayor a menor)</li>
-                            <li style="margin-bottom: 0.5rem;"><code>inplace</code> - Si True, modifica el DataFrame original</li>
-                        </ul>
-
-                        <div style="background: rgba(244, 63, 94, 0.1); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--rose);">
-                            <strong>🔥 Ejemplo Olist - Productos más caros:</strong>
-                            <pre style="margin-top: 0.5rem; background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 4px; overflow-x: auto;">top_expensive = items.sort_values(by='price', ascending=False).head(10)
-top_expensive[['product_id', 'price']]</pre>
-                        </div>
-                    `
-                },
-                head: {
-                    title: 'Ver Primeras Filas (.head)',
-                    color: '#06b6d4',
-                    content: `
-                        <h4 style="color: #06b6d4; margin-bottom: 1rem;">¿Para qué sirve .head()?</h4>
-                        <p style="margin-bottom: 1rem;">Muestra las primeras N filas de un DataFrame. Ideal para "echar un vistazo" rápido.</p>
-
-                        <pre style="background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 6px; margin-bottom: 1rem; overflow-x: auto;"># Por defecto muestra 5 filas
-orders.head()
-
-# Especificar cantidad
-orders.head(10)
-
-# Ver las últimas filas
-orders.tail(10)</pre>
-
-                        <h4 style="color: #06b6d4; margin: 1.5rem 0 1rem;">Comandos relacionados:</h4>
-                        <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
-                            <li style="margin-bottom: 0.5rem;"><code>. head(n)</code> - Primeras N filas</li>
-                            <li style="margin-bottom: 0.5rem;"><code>.tail(n)</code> - Últimas N filas</li>
-                            <li style="margin-bottom: 0.5rem;"><code>.sample(n)</code> - N filas aleatorias</li>
-                            <li style="margin-bottom: 0.5rem;"><code>.info()</code> - Información del DataFrame</li>
-                            <li style="margin-bottom: 0.5rem;"><code>.describe()</code> - Estadísticas descriptivas</li>
-                        </ul>
-
-                        <div style="background: rgba(6, 182, 212, 0.1); padding: 1rem; border-radius: 8px; border-left: 4px solid #06b6d4;">
-                            <strong>💡 Tip:</strong> Siempre usa <code>.head()</code> después de hacer cambios para verificar que todo se vea bien antes de procesar todo el dataset.
-                        </div>
-                    `
-                }
-            };
-
-            const command = commands[commandId];
-            if (command && modal && title && content) {
-                title.innerHTML = command.title;
-                title.style.color = command.color;
-                content.innerHTML = command.content;
-                modal.classList.add('active');
-            }
-        }
-
-        // Navigation
-        function updateSlide() {
+        function updateSlides() {
             slides.forEach((slide, index) => {
                 if (index === currentSlide) slide.classList.add('active');
                 else slide.classList.remove('active');
             });
+
+            // Update UI
             const progress = ((currentSlide + 1) / slides.length) * 100;
-            progressBar.style.width = progress + '%';
+            progressBar.style.width = `${progress}%`;
+            // slideCounter & buttons updates removed
         }
 
         function nextSlide() {
             if (currentSlide < slides.length - 1) {
                 currentSlide++;
-                updateSlide();
+                updateSlides();
             }
         }
 
         function prevSlide() {
             if (currentSlide > 0) {
                 currentSlide--;
-                updateSlide();
+                updateSlides();
             }
         }
 
+        // Keyboard & Click Navigation
         document.addEventListener('keydown', (e) => {
-            if (['ArrowRight', 'Space'].includes(e.code)) nextSlide();
-            if (['ArrowLeft'].includes(e.code)) prevSlide();
-            if (e.key === 'Escape') closeModal(null, true);
-
-            // F2 to toggle fullscreen
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
             if (e.key === 'F2') {
                 e.preventDefault();
                 if (!document.fullscreenElement) {
                     document.documentElement.requestFullscreen().catch(err => {
-                        console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                        console.log(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
                     });
                 } else {
                     document.exitFullscreen();
@@ -2539,18 +1197,8 @@ orders.tail(10)</pre>
             }
         });
 
-
-        // Loop animation for Nodes
-        setInterval(() => {
-            const nodes = document.querySelectorAll('.node:not(.center)');
-            const random = Math.floor(Math.random() * nodes.length);
-            nodes[random].style.transform = 'scale(1.1)';
-            setTimeout(() => {
-                nodes[random].style.transform = 'scale(1)';
-            }, 500);
-        }, 2000);
-
-        updateSlide();
+        // Initialize
+        updateSlides();
     </script>
 </body>
 
