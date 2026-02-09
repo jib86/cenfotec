@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sesión 3 - Proyecto Integrador IA (SINT-649)</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lato:wght@300;400;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* =========================================
+           CORE VARIABLES & THEME
+           ========================================= */
+        :root {
+            /* Backgrounds */
+            --bg-deep: #020617;
+            --bg-gradient: radial-gradient(circle at 50% 120%, #1e1b4b, #020617);
+
+            /* Text */
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+
+            /* Accents (Neon Palette) */
+            --c-cyan: #22d3ee;
+            --c-purple: #d8b4fe;
+            --c-pink: #f472b6;
+            --c-green: #4ade80;
+            --c-gold: #facc15;
+            --c-danger: #ef4444;
+            --c-blue: #38bdf8;
+
+            /* Glassmorphism */
+            --glass-bg: rgba(15, 23, 42, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.03);
+            --glass-blur: blur(20px);
+            --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 20px rgba(56, 189, 248, 0.15);
+
+            /* Spacing & sizing */
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --container-max: 1400px;
+        }
+
+        /* =========================================
+           RESET & BASIC SETUP
+           ========================================= */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg-deep);
+            background-image:
+                linear-gradient(to bottom, transparent, var(--bg-deep)),
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Ambient Background Orbs */
+        body::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.1), transparent 60%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            bottom: -20%;
+            right: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(192, 132, 252, 0.1), transparent 60%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+            animation: float 25s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(20px, 40px);
+            }
+        }
+
+        /* =========================================
+           SLIDES ARCHITECTURE
+           ========================================= */
+        .slides-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.96) translateY(15px);
+            transition: opacity 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            padding: 40px;
+            pointer-events: none;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateY(0);
+            pointer-events: all;
+            z-index: 10;
+        }
+
+        /* =========================================
+           COMPONENTS: CARDS & CONTAINERS
+           ========================================= */
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-top: 1px solid var(--glass-highlight);
+            border-radius: var(--radius-lg);
+            padding: 3.5rem;
+            width: 100%;
+            max-width: var(--container-max);
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Scrollbar Styling */
+        .card::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .card::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .card::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .card::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Typography */
+        h1 {
+            font-family: 'Lato', sans-serif;
+            font-weight: 900;
+            font-size: clamp(3rem, 5vw, 5.5rem);
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #fff 20%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.03em;
+        }
+
+        h2 {
+            font-family: 'Lato', sans-serif;
+            font-weight: 800;
+            font-size: clamp(2rem, 3.5vw, 3rem);
+            margin-bottom: 2rem;
+            background: linear-gradient(90deg, #fff, var(--c-cyan));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            color: #fff;
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        p,
+        li {
+            font-size: 1.15rem;
+            line-height: 1.7;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        strong {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        ul {
+            margin-left: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        li::marker {
+            color: var(--c-cyan);
+        }
+
+        /* Grids */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 2rem;
+            height: 100%;
+        }
+
+        .split-layout {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 3rem;
+            align-items: start;
+        }
+
+        /* Concept Boxes */
+        .concept-box {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 2rem;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+
+        .concept-box:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* =========================================
+           CODE BLOCK / TERMINAL STYLING
+           ========================================= */
+        .window-interface {
+            background-color: #0f172a;
+            /* Deep Navy Terminal */
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 10px;
+        }
+
+        .window-header {
+            background-color: #1e293b;
+            padding: 12px 16px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .window-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot-red {
+            background-color: #ef4444;
+        }
+
+        .dot-yellow {
+            background-color: #f59e0b;
+        }
+
+        .dot-green {
+            background-color: #22c55e;
+        }
+
+        .filename {
+            margin-left: 10px;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            opacity: 0.8;
+        }
+
+        .code-content {
+            padding: 24px;
+            margin: 0;
+            overflow-x: auto;
+            color: #e2e8f0;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            white-space: pre;
+            /* CRITICAL FIX: Preserves spacing and newlines */
+            tab-size: 4;
+        }
+
+        /* Syntax Highlighting Classes */
+        .kwd {
+            color: var(--c-purple);
+            font-weight: bold;
+        }
+
+        /* Keywords */
+        .func {
+            color: var(--c-gold);
+        }
+
+        /* Functions */
+        .str {
+            color: var(--c-green);
+        }
+
+        /* Strings */
+        .num {
+            color: var(--c-pink);
+        }
+
+        /* Numbers */
+        .cls {
+            color: var(--c-cyan);
+        }
+
+        /* Classes */
+        .cmt {
+            color: #64748b;
+            font-style: italic;
+        }
+
+        /* Comments */
+        .op {
+            color: var(--c-blue);
+        }
+
+        /* Operators */
+
+        /* =========================================
+           NAVIGATION & UTILS
+           ========================================= */
+        .footer-nav {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 100;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: var(--text-main);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: var(--c-cyan);
+            color: #000;
+            transform: scale(1.1);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .slide-counter {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--c-cyan), var(--c-purple));
+            width: 0%;
+            transition: width 0.3s ease;
+            z-index: 200;
+            box-shadow: 0 0 15px var(--c-cyan);
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 1024px) {
+            .split-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 2.5rem;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="progress-bar" id="progressBar"></div>
+
+    <div class="slides-container">
+
+        <!-- ================================================================= -->
+        <!-- BLOQUE 1: INTRODUCCIÓN Y CONTEXTO -->
+        <!-- ================================================================= -->
+
+        <!-- Slide 1: Portada -->
+        <div class="slide active">
+            <div class="card" style="text-align: center; justify-content: center; min-height: 60vh;">
+                <p
+                    style="color: var(--c-cyan); letter-spacing: 3px; text-transform: uppercase; font-size: 0.9rem; font-weight: 700; margin-bottom: 20px;">
+                    SINT-649 | Proyecto Integrador IA
+                </p>
+                <h1>Sesión 3: Calidad de Datos &<br>Ética Tecnológica</h1>
+                <p style="font-size: 1.6rem; color: var(--text-muted); margin-top: 1rem;">
+                    De la Limpieza de Datos a la Responsabilidad Algorítmica.
+                </p>
+
+
+
+                <div
+                    style="margin-top: 3rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; text-align: left; width: 100%; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px;">
+                    <!-- Col 1 -->
+                    <div style="display: flex; gap: 15px; align-items: flex-start;">
+                        <div
+                            style="background: rgba(6,182,212,0.1); padding: 12px; border-radius: 8px; color: var(--c-cyan);">
+                            <i class="fa-solid fa-user-tie"></i>
+                        </div>
+                        <div>
+                            <h4
+                                style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: #64748b; margin: 0 0 5px 0; font-weight: 600;">
+                                Profesor</h4>
+                            <p style="font-size: 1.1rem; color: #fff; margin: 0;">Dr. J. Ignacio Borge</p>
+                            <p style="font-size: 0.9rem; color: var(--c-cyan); margin: 2px 0 0 0; font-style: italic;">
+                                Científico computacional</p>
+                        </div>
+                    </div>
+
+                    <!-- Col 2 -->
+                    <div style="display: flex; gap: 15px; align-items: flex-start;">
+                        <div
+                            style="background: rgba(236,72,153,0.1); padding: 12px; border-radius: 8px; color: var(--c-pink);">
+                            <i class="fa-regular fa-calendar-check"></i>
+                        </div>
+                        <div>
+                            <h4
+                                style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: #64748b; margin: 0 0 5px 0; font-weight: 600;">
+                                Fecha</h4>
+                            <p style="font-size: 1.1rem; color: #fff; margin: 0;">Martes 03 de Febrero</p>
+                            <p style="font-size: 0.9rem; color: var(--text-muted); margin: 2px 0 0 0;">2026</p>
+                        </div>
+                    </div>
+
+                    <!-- Col 3 -->
+                    <div style="display: flex; gap: 15px; align-items: flex-start;">
+                        <div
+                            style="background: rgba(74,222,128,0.1); padding: 12px; border-radius: 8px; color: var(--c-green);">
+                            <i class="fa-solid fa-building-columns"></i>
+                        </div>
+                        <div>
+                            <h4
+                                style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: #64748b; margin: 0 0 5px 0; font-weight: 600;">
+                                Institución</h4>
+                            <p style="font-size: 1.1rem; color: #fff; margin: 0;">Universidad CENFOTEC</p>
+                            <p style="font-size: 0.9rem; color: var(--text-muted); margin: 2px 0 0 0;">Escuela de
+                                Sistemas Inteligente</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: Contexto y Objetivos -->
+        <div class="slide">
+            <div class="card">
+                <h2>Contexto de la Sesión</h2>
+                <p style="margin-bottom: 3rem; max-width: 800px;">En esta sesión integraremos tres dimensiones
+                    fundamentales para la construcción de sistemas de IA robustos y confiables:</p>
+
+                <div class="grid-2">
+                    <div class="concept-box">
+                        <h3 style="color: var(--c-cyan);"><i class="fa-solid fa-database"></i> Técnica</h3>
+                        <p style="margin-bottom: 1rem;"><strong>El "Mise en Place (todo en su lugar)" de la IA.</strong>
+                        </p>
+                        <p style="font-size: 0.95rem; color: var(--text-dim); line-height: 1.5;">
+                            Un chef no cocina con ingredientes sucios. Igual nosotros: antes de entrenar, debemos
+                            limpiar,
+                            ajustar y preparar los datos para que el modelo "no se indigeste".
+                            <br><br>
+                            Sin esto, incluso el mejor algoritmo del mundo fallará (Garbage In, Garbage Out).
+                        </p>
+                    </div>
+
+                    <div class="concept-box">
+                        <h3 style="color: var(--c-green);"><i class="fa-solid fa-code"></i> Práctica</h3>
+                        <p style="margin-bottom: 1.5rem;">Implementación real con bibliotecas estándar:</p>
+
+                        <div style="display: flex; gap: 25px; align-items: center;">
+                            <div style="text-align: center; color: var(--text-main);">
+                                <i class="fa-brands fa-python"
+                                    style="font-size: 2.5rem; color: #306998; filter: drop-shadow(0 0 10px rgba(48, 105, 152, 0.4)); margin-bottom: 5px;"></i>
+                                <div style="font-size: 0.8rem; font-weight: 600;">Python</div>
+                            </div>
+                            <div style="text-align: center; color: var(--text-main);">
+                                <i class="fa-solid fa-brain"
+                                    style="font-size: 2.2rem; color: var(--c-gold); filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.4)); margin-bottom: 5px;"></i>
+                                <div style="font-size: 0.8rem; font-weight: 600;">scikit-learn</div>
+                            </div>
+                            <div style="text-align: center; color: var(--text-main);">
+                                <i class="fa-solid fa-table-columns"
+                                    style="font-size: 2.2rem; color: var(--c-purple); filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.4)); margin-bottom: 5px;"></i>
+                                <div style="font-size: 0.8rem; font-weight: 600;">pandas</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Contexto y Objetivos (continuación) -->
+        <div class="slide">
+            <div class="card">
+                <h2>Contexto de la Sesión</h2>
+                <p style="margin-bottom: 3rem;">Continuación de las dimensiones fundamentales:</p>
+
+                <div class="grid-2">
+                    <div class="concept-box">
+                        <h3 style="color: var(--c-pink);"><i class="fa-solid fa-scale-balanced"></i> Ética-Legal</h3>
+                        <p>Responsabilidad algorítmica, sesgos y marco regulatorio costarricense (Ley 8968).</p>
+                    </div>
+
+                    <div class="concept-box">
+                        <h3 style="color: var(--c-gold);"><i class="fa-solid fa-chart-line"></i> Metodológica</h3>
+                        <p>Ciclo iterativo de validación y documentación de decisiones técnicas para trazabilidad total.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Estrategias de Limpieza - Imputación -->
+        <div class="slide">
+            <div class="card">
+                <h2>Estrategias de Limpieza</h2>
+                <p style="margin-bottom: 3rem;">Tratamiento sistemático de problemas comunes en datasets:</p>
+
+                <div class="grid-2">
+                    <div class="concept-box" style="border-left: 4px solid var(--c-purple);">
+                        <h3>Imputación <span
+                                style="font-size: 0.9rem; opacity: 0.7; font-weight: 400; margin-left: auto;">¿Huecos?</span>
+                        </h3>
+                        <p style="margin-bottom: 1rem; font-size: 0.95rem; color: #fff;">
+                            <strong>Problema:</strong> La mayoría de modelos matemáticos colapsan si encuentran un
+                            espacio vacío (NaN).
+                        </p>
+                        <p style="font-size: 0.95rem; color: var(--text-dim);">
+                            <strong>Solución:</strong> Rellenar ese hueco con un valor inteligente.
+                        </p>
+                        <ul style="margin-top: 0.5rem;">
+                            <li><strong>Media/Promedio:</strong> Úsala si tus datos son "normales".</li>
+                            <li><strong>Mediana:</strong> Úsala si tienes datos locos (outliers) que arruinarían el
+                                promedio (ej. Salario de Elon Musk).</li>
+                            <li><strong>Moda:</strong> Úsala para texto o categorías (ej. rellenar con el color más
+                                común).</li>
+                        </ul>
+                    </div>
+
+                    <div class="concept-box" style="border-left: 4px solid var(--c-cyan);">
+                        <h3>Normalización <span
+                                style="font-size: 0.9rem; opacity: 0.7; font-weight: 400; margin-left: auto;">Escalas</span>
+                        </h3>
+                        <p style="margin-bottom: 1rem; font-size: 0.95rem; color: #fff;">
+                            <strong>Problema:</strong> Si tienes "Edad (0-100)" y "Sueldo (0-1,000,000)", el modelo le
+                            dará toda la importancia al Sueldo solo porque el número es más grande.
+                        </p>
+                        <p style="font-size: 0.95rem; color: var(--text-dim);">
+                            <strong>Solución:</strong> Aplastar todos los números para que jueguen en la misma cancha.
+                        </p>
+                        <ul style="margin-top: 0.5rem;">
+                            <li><strong>Min-Max:</strong> Obliga a todos a estar entre 0 y 1.</li>
+                            <li><strong>StandardScaler:</strong> Transforma los datos para que su centro sea 0. Ideal si
+                                usas modelos complejos (SVM, Logística).</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Estrategias de Limpieza - Encoding y Outliers -->
+        <div class="slide">
+            <div class="card">
+                <h2>Estrategias de Limpieza</h2>
+                <p style="margin-bottom: 3rem;">Transformación de datos para el modelo:</p>
+
+                <div class="grid-2">
+                    <div class="concept-box" style="border-left: 4px solid var(--c-green);">
+                        <h3>Encoding <span
+                                style="font-size: 0.9rem; opacity: 0.7; font-weight: 400; margin-left: auto;">Categóricos</span>
+                        </h3>
+                        <p>Convertir texto a tensores numéricos.</p>
+                        <ul>
+                            <li><strong>One-Hot:</strong> Crea columnas binarias por categoría. (Rojo → [1,0,0]). Ideal
+                                si no hay orden.</li>
+                            <li><strong>Label Encoding:</strong> Asigna enteros (Rojo→1, Azul→2).
+                                <strong>Riesgo:</strong> El modelo puede interpretar falsamente que 2 > 1 (Azul es
+                                "mejor" que Rojo), creando una jerarquía inexistente.
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="concept-box" style="border-left: 4px solid var(--c-danger);">
+                        <h3>Outliers <span
+                                style="font-size: 0.9rem; opacity: 0.7; font-weight: 400; margin-left: auto;">Anomalías</span>
+                        </h3>
+                        <p>Detección y tratamiento.</p>
+                        <ul>
+                            <li><strong>IQR Method:</strong> Rango intercuartil.</li>
+                            <li><strong>Z-Score > 3:</strong> Desviación estándar.</li>
+                            <li><strong>Tratamiento:</strong> Clip (topar), eliminar o transformar logarítmicamente.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Ciclo de Validación -->
+        <div class="slide">
+            <div class="card">
+                <h2>El Ciclo de Validación</h2>
+                <p>La limpieza no es un paso único, sino un proceso <strong>iterativo</strong>.</p>
+
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 50px; border-radius: 20px; margin-top: 3rem; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="text-align: center; flex: 1;">
+                        <div
+                            style="font-size: 4rem; color: var(--c-purple); font-weight: 900; margin-bottom: 10px; opacity: 0.2;">
+                            01</div>
+                        <h3 style="justify-content: center; color: var(--c-purple);">Diagnóstico</h3>
+                        <p style="font-size: 0.95rem;">Detectar Nulos, Duplicados, Tipos erróneos.</p>
+                    </div>
+
+                    <i class="fa-solid fa-arrow-right" style="font-size: 1.5rem; color: var(--text-dim);"></i>
+
+                    <div style="text-align: center; flex: 1;">
+                        <div
+                            style="font-size: 4rem; color: var(--c-cyan); font-weight: 900; margin-bottom: 10px; opacity: 0.2;">
+                            02</div>
+                        <h3 style="justify-content: center; color: var(--c-cyan);">Tratamiento</h3>
+                        <p style="font-size: 0.95rem;">Imputar, Escalar, Codificar.</p>
+                    </div>
+
+                    <i class="fa-solid fa-arrow-right" style="font-size: 1.5rem; color: var(--text-dim);"></i>
+
+                    <div style="text-align: center; flex: 1;">
+                        <div
+                            style="font-size: 4rem; color: var(--c-green); font-weight: 900; margin-bottom: 10px; opacity: 0.2;">
+                            03</div>
+                        <h3 style="justify-content: center; color: var(--c-green);">Verificación</h3>
+                        <p style="font-size: 0.95rem;">Check de estadísticas post-proceso.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- BLOQUE 2: DIMENSIÓN ÉTICA Y LEGAL -->
+        <!-- ================================================================= -->
+
+        <!-- Slide 8: Ética - Marco Legal cr -->
+        <div class="slide">
+            <div class="card">
+                <h2>Ética Aplicada: Marco Legal <span
+                        style="font-size: 0.8em; vertical-align: middle; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 30px; display: inline-flex; align-items: center; gap: 8px;">CR
+                        <img src="https://flagcdn.com/w40/cr.png" alt="Bandera Costa Rica"
+                            style="height: 20px; border-radius: 2px; box-shadow: 0 0 5px rgba(0,0,0,0.3);"></span>
+                </h2>
+
+                <div class="split-layout">
+                    <div>
+                        <p style="margin-bottom: 2rem;">Todo científico de datos debe conocer las reglas del juego.</p>
+                        <ul style="line-height: 1.5; font-size: 0.95rem;">
+                            <li style="margin-bottom: 12px;"><strong>Privacidad por Diseño:</strong> La protección de
+                                datos no es un "parche" final, sino que se integra desde la arquitectura inicial del
+                                sistema.</li>
+                            <li style="margin-bottom: 12px;"><strong>Derecho al Olvido:</strong> La facultad del
+                                ciudadano de solicitar que sus datos obsoletos o irrelevantes sean eliminados de bases
+                                de datos públicas.</li>
+                            <li><strong>Seguridad de la Info:</strong> Garantizar confidencialidad, integridad y
+                                disponibilidad.</li>
+                        </ul>
+                    </div>
+
+                    <div class="concept-box"
+                        style="border: 1px solid var(--c-cyan); background: rgba(34, 211, 238, 0.05);">
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                            <i class="fa-solid fa-book-journal-whills"
+                                style="font-size: 2rem; color: var(--c-cyan);"></i>
+                            <h3 style="color: #fff; margin: 0;">Ley N° 8968</h3>
+                        </div>
+                        <p><strong>Protección de la Persona frente al Tratamiento de sus Datos Personales.</strong></p>
+                        <p style="font-size: 0.95rem; margin-top: 1rem; color: var(--text-main);">
+                            Requiere <strong>Consentimiento Informado</strong> explícito. El usuario debe saber qué
+                            datos se recogen, para qué, y quién es responsable.
+                        </p>
+
+                        <a href="http://www.pgrweb.go.cr/scij/Busqueda/Normativa/Normas/nrm_texto_completo.aspx?param1=NRTC&nValor1=1&nValor2=70975&nValor3=85989&strTipM=TC"
+                            target="_blank"
+                            style="display: inline-block; margin-top: 1rem; color: var(--c-cyan); text-decoration: none; font-weight: 600; font-size: 0.9rem; border-bottom: 1px dotted var(--c-cyan); transition: all 0.3s ease;">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Acá puedes leer la ley
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: Responsabilidad Social -->
+        <div class="slide">
+            <div class="card">
+                <h2>Responsabilidad y Sesgos</h2>
+                <p>Los algoritmos no son neutros; aprenden los prejuicios de los datos.</p>
+
+                <div class="grid-2" style="margin-top: 2rem;">
+                    <div class="concept-box" style="border-top: 4px solid var(--c-danger);">
+                        <h3 style="color: var(--c-danger);">Sesgos Comunes</h3>
+                        <ul style="font-size: 0.9rem;">
+                            <li style="margin-bottom: 8px;"><strong>Representación:</strong> El dataset de entrenamiento
+                                no representa a la población real (ej. un sistema de reconocimiento facial entrenado
+                                solo con hombres blancos fallará con otras demografías).</li>
+                            <li style="margin-bottom: 8px;"><strong>Histórico:</strong> Los datos reflejan prejuicios
+                                humanos del pasado. Si usamos datos históricos de contratación discriminatorios, el
+                                modelo aprenderá a discriminar automáticamente.</li>
+                            <li><strong>Medición y Variables Proxy:</strong> Ocurre al medir mal una característica. Una
+                                <em>"variable proxy"</em> es un dato indirecto usado cuando el real no está disponible
+                                (ej. usar "Código Postal" como proxy de "Riesgo Crediticio" puede esconder un sesgo
+                                racial/económico grave).
+                            </li>
+                        </ul>
+                        </ul>
+                    </div>
+
+                    <div class="concept-box" style="border-top: 4px solid var(--c-green);">
+                        <h3 style="color: var(--c-green);">Transparencia (XAI)</h3>
+                        <p style="margin-bottom: 0.5rem;"><strong>XAI (Explainable Artificial Intelligence):</strong>
+                            Inteligencia Artificial Explicable. Busca hacer que los resultados sean comprensibles para
+                            humanos, evitando "cajas negras".</p>
+                        <ul style="font-size: 0.95rem;">
+                            <li style="margin-bottom: 8px;"><strong>SHAP (SHapley Additive exPlanations):</strong>
+                                Asigna un valor de importancia a cada variable (juego cooperativo) para explicar <em>por
+                                    qué</em> el modelo predijo X.</li>
+                            <li><strong>LIME (Local Interpretable Model-agnostic Explanations):</strong> Explica una
+                                predicción individual aproximándola con un modelo lineal simple y local.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- BLOQUE 3: ACTIVIDAD PRÁCTICA -->
+        <!-- ================================================================= -->
+
+        <!-- Slide 12: Intro Etapa 3 -->
+        <div class="slide">
+            <div class="card" style="text-align: center; justify-content: center;">
+                <h2 style="font-size: 4rem; margin-bottom: 1rem;">Etapa 3</h2>
+                <h3 style="justify-content: center; font-size: 2.5rem; color: var(--c-cyan);">Implementación & Código
+                </h3>
+
+                <div style="margin: 3rem 0;">
+                    <i class="fa-brands fa-python"
+                        style="font-size: 6rem; color: var(--c-blue); filter: drop-shadow(0 0 30px rgba(56, 189, 248, 0.4));"></i>
+                </div>
+
+                <p style="font-size: 1.4rem;">Desarrollo del pipeline de preprocesamiento usando<br><strong
+                        style="color: #fff;">Pandas</strong> y <strong style="color: #fff;">Scikit-Learn</strong>.</p>
+            </div>
+        </div>
+
+        <!-- Slide 14: Paso 1 - Configuración -->
+        <div class="slide">
+            <div class="card">
+                <h2>Paso 1: Configuración</h2>
+                <p>Importación de librerías esenciales.</p>
+
+                <div class="split-layout">
+                    <div style="display: flex; flex-direction: column; justify-content: center;">
+                        <div class="concept-box">
+                            <h3 style="color: var(--c-purple);">Stack Tecnológico</h3>
+                            <ul>
+                                <li><strong>Pandas:</strong> Manipulación tabular.</li>
+                                <li><strong>NumPy:</strong> Operaciones vectoriales.</li>
+                                <li><strong>Sklearn.impute:</strong> Manejo de nulos.</li>
+                                <li><strong>Sklearn.preprocessing:</strong> Escalado.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="window-interface">
+                        <div class="window-header">
+                            <div class="window-dot dot-red"></div>
+                            <div class="window-dot dot-yellow"></div>
+                            <div class="window-dot dot-green"></div>
+                            <span class="filename">main.py</span>
+                        </div>
+                        <pre class="code-content">
+<span class="cmt"># 1. Stack Tecnológico</span>
+<span class="kwd">import</span> pandas <span class="kwd">as</span> pd <span class="cmt"># Estándar industrial para manipulación de DataFrames</span>
+<span class="kwd">import</span> numpy <span class="kwd">as</span> np
+
+<span class="cmt"># Módulos de Scikit-Learn</span>
+<span class="kwd">from</span> sklearn.impute <span class="kwd">import</span> SimpleImputer
+<span class="kwd">from</span> sklearn.preprocessing <span class="kwd">import</span> StandardScaler
+
+<span class="func">print</span>(<span class="str">"✅ Entorno configurado correctamente."</span>)
+</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 15: Paso 2 - Carga -->
+        <div class="slide">
+            <div class="card">
+                <h2>Paso 2: Ingesta de Datos</h2>
+                <p>Lectura del CSV e inspección inicial de estructura.</p>
+
+                <div class="split-layout">
+                    <div>
+                        <div class="concept-box">
+                            <h3 style="color: var(--c-green);">Inspección</h3>
+                            <p>Comandos clave para "sentir" los datos:</p>
+                            <ul style="font-family: 'JetBrains Mono'; font-size: 0.9rem;">
+                                <li>.head()</li>
+                                <li>.info()</li>
+                                <li>.describe()</li>
+                                <li>.isnull().sum()</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="window-interface">
+                        <div class="window-header">
+                            <div class="window-dot dot-red"></div>
+                            <div class="window-dot dot-yellow"></div>
+                            <div class="window-dot dot-green"></div>
+                            <span class="filename">data_loader.py</span>
+                        </div>
+                        <pre class="code-content">
+<span class="cmt"># Ingesta de Datos: Carga el CSV en memoria RAM</span>
+df <span class="op">=</span> pd.<span class="func">read_csv</span>(<span class="str">"datos_proyecto.csv"</span>)
+
+<span class="cmt"># Dimensiones y tipos</span>
+<span class="func">print</span>(<span class="str">"Dimensiones:"</span>, df.shape)
+<span class="func">print</span>(df.<span class="func">info</span>())
+
+<span class="cmt"># Conteo de nulos por columna</span>
+<span class="func">print</span>(df.<span class="func">isnull</span>().<span class="func">sum</span>())
+</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 16: Paso 3 - Transformación -->
+        <div class="slide">
+            <div class="card">
+                <h2>Paso 3: Transformación</h2>
+                <p>El núcleo del preprocesamiento: Limpiar y Escalar.</p>
+
+                <div class="split-layout">
+                    <div>
+                        <ul style="margin-top: 1rem;">
+                            <li>Usamos <strong>Mediana</strong> para edad (robusto a outliers).</li>
+                            <li>Usamos <strong>Z-Score</strong> para ingresos (mejor para modelos lineales).</li>
+                        </ul>
+                        <div class="concept-box" style="margin-top: 2rem; border-color: var(--c-gold);">
+                            <strong style="color: var(--c-gold);">Tip Crítico (Data Leakage):</strong>
+                            <p style="margin-top: 5px; font-size: 0.95rem;">
+                                Siempre ajuste el scaler (<code>.fit()</code>) <strong>SOLO con los datos de
+                                    entrenamiento</strong> (<code>X_train</code>).
+                                <br><br>
+                                Si haces <code>.fit()</code> con todo el dataset, el modelo "aprenderá" estadísticas
+                                (media, varianza) de los datos de test, haciendo trampas. Esto invalida tus métricas de
+                                evaluación.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="window-interface">
+                        <div class="window-header">
+                            <div class="window-dot dot-red"></div>
+                            <div class="window-dot dot-yellow"></div>
+                            <div class="window-dot dot-green"></div>
+                            <span class="filename">preprocessing.py</span>
+                        </div>
+                        <pre class="code-content">
+<span class="cmt"># A. Imputación: Rellenar huecos con Mediana (robusta a outliers)</span>
+imputer <span class="op">=</span> <span class="cls">SimpleImputer</span>(strategy<span class="op">=</span><span class="str">'median'</span>)
+df[<span class="str">'edad'</span>] <span class="op">=</span> imputer.<span class="func">fit_transform</span>(df[[<span class="str">'edad'</span>]])
+
+<span class="cmt"># B. Normalización (Ingresos)</span>
+scaler <span class="op">=</span> <span class="cls">StandardScaler</span>()
+df[<span class="str">'ingreso_s'</span>] <span class="op">=</span> scaler.<span class="func">fit_transform</span>(df[[<span class="str">'ingresos'</span>]])
+
+<span class="cmt"># Verificación rápida</span>
+<span class="func">print</span>(df[[<span class="str">'edad'</span>, <span class="str">'ingreso_s'</span>]].<span class="func">describe</span>())
+</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 17: Paso 4 - Registro de Decisiones -->
+        <div class="slide">
+            <div class="card">
+                <h2>Paso 4: Documentación</h2>
+                <p>La trazabilidad es un requerimiento ético y técnico.</p>
+
+                <div class="split-layout">
+                    <div>
+                        <div class="concept-box"
+                            style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2);">
+                            <h3 style="color: var(--c-gold);"><i class="fa-solid fa-triangle-exclamation"></i> Log de
+                                Decisiones</h3>
+                            <p style="font-size: 1rem;">Cada transformación debe quedar registrada. Si un modelo falla
+                                en producción, necesitamos saber cómo se manipularon los datos originales.</p>
+                        </div>
+                    </div>
+
+                    <div class="window-interface">
+                        <div class="window-header">
+                            <div class="window-dot dot-red"></div>
+                            <div class="window-dot dot-yellow"></div>
+                            <div class="window-dot dot-green"></div>
+                            <span class="filename">decision_log.json</span>
+                        </div>
+                        <pre class="code-content">
+decision_log <span class="op">=</span> {
+    <span class="str">"fecha"</span>: <span class="str">"2026-02-03"</span>,
+    <span class="str">"version"</span>: <span class="str">"1.0.0"</span>,
+    <span class="str">"transformaciones"</span>: {
+        <span class="str">"edad"</span>: {
+            <span class="str">"metodo"</span>: <span class="str">"Imputación Mediana"</span>,
+            <span class="str">"razon"</span>: <span class="str">"Se detectaron valores extremos (outliers) que sesgarían el promedio simple"</span>
+        },
+        <span class="str">"ingresos"</span>: {
+            <span class="str">"metodo"</span>: <span class="str">"StandardScaler"</span>,
+            <span class="str">"razon"</span>: <span class="str">"Algoritmo SVM requiere varianza unitaria"</span>
+        }
+    }
+}
+</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 20: Cierre -->
+        <div class="slide">
+            <div class="card" style="text-align: center; justify-content: center;">
+                <h2>Siguiente Fase: El Corazón del Proyecto</h2>
+                <p
+                    style="font-size: 1.3rem; color: var(--text-muted); margin-bottom: 3rem; max-width: 800px; margin-left: auto; margin-right: auto;">
+                    El modelaje no es solo código, es dar vida a los datos. Pero cuidado: un corazón no late en el
+                    vacío.
+                </p>
+
+                <div class="grid-2" style="gap: 4rem; text-align: left; align-items: start;">
+
+                    <!-- The Heart (Model) -->
+                    <div class="concept-box"
+                        style="border-top: 4px solid var(--c-pink); position: relative; height: 100%;">
+                        <div
+                            style="position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background: var(--bg-dark); padding: 10px; border-radius: 50%; border: 1px solid var(--c-pink); box-shadow: 0 0 20px rgba(244, 114, 182, 0.2);">
+                            <i class="fa-solid fa-heart-pulse" style="font-size: 2.5rem; color: var(--c-pink);"></i>
+                        </div>
+                        <h3 style="text-align: center; margin-top: 1.5rem; color: var(--c-pink); font-size: 1.8rem;">El
+                            Corazón (Modelaje)</h3>
+                        <p style="text-align: center; color: #fff; margin-bottom: 2rem;">Es el motor que bombea
+                            predicciones.</p>
+
+                        <ul style="font-size: 1rem; line-height: 1.8;">
+                            <li><strong style="color: var(--c-pink);">Entrenar & Comparar:</strong> No te cases con el
+                                primer algoritmo. Prueba varios (Árboles, Regresión, Redes).</li>
+                            <li><strong style="color: var(--c-pink);">Seleccionar:</strong> ¿Cuál gana? Explícame
+                                <em>por qué</em> es mejor (Métricas vs Interpretabilidad).
+                            </li>
+                            <li><strong style="color: var(--c-pink);">Predecir:</strong> Generar resultados futuros
+                                basados en lo aprendido.</li>
+                        </ul>
+                    </div>
+
+                    <!-- The Body (Context) -->
+                    <div class="concept-box"
+                        style="border-top: 4px solid var(--c-cyan); position: relative; height: 100%;">
+                        <div
+                            style="position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background: var(--bg-dark); padding: 10px; border-radius: 50%; border: 1px solid var(--c-cyan); box-shadow: 0 0 20px rgba(34, 211, 238, 0.2);">
+                            <i class="fa-solid fa-user-astronaut" style="font-size: 2.5rem; color: var(--c-cyan);"></i>
+                        </div>
+                        <h3 style="text-align: center; margin-top: 1.5rem; color: var(--c-cyan); font-size: 1.8rem;">El
+                            Cuerpo (Contexto)</h3>
+                        <p style="text-align: center; color: #fff; margin-bottom: 2rem;">El órgano que da sentido al
+                            latido.</p>
+
+                        <p style="font-size: 1rem; line-height: 1.6; text-align: justify; color: var(--text-muted);">
+                            Un modelo perfecto matemático puede ser inútil en la vida real.
+                            <br><br>
+                            Debes contextualizar todo:
+                            <span
+                                style="display: block; margin-top: 10px; font-style: italic; color: var(--c-cyan); text-align: center;">
+                                "¿Qué significa este error para el negocio? ¿Cómo afecta el entorno a esta predicción?"
+                            </span>
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Slide 12: Summary (Ported) -->
+    <div class="slide">
+        <div class="card" style="text-align: center; justify-content: center; align-items: center;">
+            <h2 style="font-size: 4rem;">¿Preguntas?</h2>
+            <p style="font-size: 1.5rem; max-width: 600px; color: var(--text-muted);">
+                El EDA es un arte. No tengas miedo de ensuciarte las manos con los datos.
+            </p>
+
+            <!-- Interactive Chinese Quote -->
+            <div id="quoteContainer" onclick="toggleQuote()" style="margin: 2.5rem auto; padding: 2.5rem 3rem; max-width: 850px; min-height: 200px;
+                    background: linear-gradient(135deg, rgba(192, 132, 252, 0.1) 0%, rgba(56, 189, 248, 0.1) 100%);
+                    border: 2px solid rgba(192, 132, 252, 0.3); border-radius: 20px;
+                    cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden;
+                    display: flex; flex-direction: column; justify-content: center;">
+
+                <!-- Background decoration -->
+                <div
+                    style="position: absolute; top: -20px; right: -20px; font-size: 8rem; opacity: 0.05; font-family: 'Lato', sans-serif; font-weight: 900; pointer-events: none; color: #fff;">
+                    引
+                </div>
+
+                <!-- Header (only shown initially) -->
+                <p id="quoteHeader"
+                    style="font-size: 1.05rem; color: var(--accent-secondary); text-align: center; margin-bottom: 1.2rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; position: relative; z-index: 2;">
+                    Enseñanza de Confucio
+                </p>
+
+                <!-- Quote text -->
+                <p id="quoteText"
+                    style="font-size: 1.6rem; line-height: 1.9; margin: 0; color: #fff; font-weight: 500; text-align: center; position: relative; z-index: 2;">
+                    我听到的会忘记，我看到的会记得，我做过的才理解。
+                </p>
+            </div>
+
+            <style>
+                #quoteContainer:hover {
+                    transform: translateY(-4px);
+                    box-shadow: 0 8px 30px rgba(192, 132, 252, 0.3);
+                    border-color: rgba(192, 132, 252, 0.5);
+                }
+            </style>
+
+
+        </div>
+    </div>
+
+    </div>
+
+
+
+    <script>
+        // Slideshow Logic
+        const slides = document.querySelectorAll('.slide');
+        const progressBar = document.getElementById('progressBar');
+        // Nav elements removed per user request
+        let currentSlide = 0;
+        let quoteInChinese = true;
+
+        function toggleQuote() {
+            const quoteText = document.getElementById('quoteText');
+            const quoteHeader = document.getElementById('quoteHeader');
+            const container = document.getElementById('quoteContainer');
+
+            // Add animation
+            container.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                container.style.transform = 'scale(1)';
+            }, 150);
+
+            if (quoteInChinese) {
+                quoteHeader.style.display = 'none';
+                quoteText.innerHTML = '"Me lo contaron y lo olvidé; lo vi y lo entendí; lo hice y lo aprendí."<br><span style="font-size: 1rem; color: var(--text-muted); font-style: italic; margin-top: 0.8rem; display: block;">— Confucio</span>';
+                quoteInChinese = false;
+            } else {
+                quoteHeader.style.display = 'block';
+                quoteText.textContent = '我听到的会忘记，我看到的会记得，我做过的才理解。';
+                quoteInChinese = true;
+            }
+        }
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                if (index === currentSlide) slide.classList.add('active');
+                else slide.classList.remove('active');
+            });
+
+            // Update UI
+            const progress = ((currentSlide + 1) / slides.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            // slideCounter & buttons updates removed
+        }
+
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                updateSlides();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlides();
+            }
+        }
+
+        // Keyboard & Click Navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+            if (e.key === 'F2') {
+                e.preventDefault();
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.log(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+        });
+
+        // Initialize
+        updateSlides();
+    </script>
+</body>
+
+</html>
