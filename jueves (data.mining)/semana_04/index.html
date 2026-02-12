@@ -1,0 +1,2056 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Presentación</title>
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lato:wght@300;400;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- MathJax -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        /* =========================================
+           CORE VARIABLES & THEME
+           ========================================= */
+        :root {
+            /* Backgrounds */
+            --bg-deep: #020617;
+            --bg-gradient: radial-gradient(circle at 50% 120%, #1e1b4b, #020617);
+
+            /* Text */
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+
+            /* Accents (Neon Palette) */
+            --c-cyan: #22d3ee;
+            --c-purple: #d8b4fe;
+            --c-pink: #f472b6;
+            --c-green: #4ade80;
+            --c-gold: #facc15;
+            --c-danger: #ef4444;
+            --c-blue: #38bdf8;
+
+            /* Glassmorphism */
+            --glass-bg: rgba(15, 23, 42, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.03);
+            --glass-blur: blur(20px);
+            --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 20px rgba(56, 189, 248, 0.15);
+
+            /* Spacing & sizing */
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --container-max: 1400px;
+        }
+
+        /* =========================================
+           RESET & BASIC SETUP
+           ========================================= */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg-deep);
+            background-image:
+                linear-gradient(to bottom, transparent, var(--bg-deep)),
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Ambient Background Orbs */
+        body::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.1), transparent 60%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            bottom: -20%;
+            right: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(192, 132, 252, 0.1), transparent 60%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+            animation: float 25s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(20px, 40px);
+            }
+        }
+
+        /* MASTER SLIDE TYPOGRAPHY & ANIMATION */
+        .master-title {
+            font-size: 4rem;
+            font-weight: 900;
+            line-height: 1.1;
+            background: linear-gradient(135deg, #fff 0%, var(--c-cyan) 50%, var(--c-purple) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1.5rem;
+            letter-spacing: -2px;
+            filter: drop-shadow(0 0 30px rgba(34, 211, 238, 0.3));
+        }
+
+        .master-tagline {
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            font-weight: 300;
+            letter-spacing: 1px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .constellation-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: twinkle 4s infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+
+            0%,
+            100% {
+                opacity: 0.2;
+                transform: scale(0.8);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: scale(1.2);
+            }
+        }
+
+        /* =========================================
+           SLIDES ARCHITECTURE
+           ========================================= */
+        .slides-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+            /* Ensure centering */
+            align-items: center;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.96) translateY(15px);
+            transition: opacity 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            padding: 20px;
+            /* Reduced padding */
+            pointer-events: none;
+            height: 100vh;
+            /* Full viewport height */
+            width: 100vw;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateY(0);
+            pointer-events: all;
+            z-index: 10;
+        }
+
+        /* =========================================
+           COMPONENTS: CARDS & CONTAINERS
+           ========================================= */
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-top: 1px solid var(--glass-highlight);
+            border-radius: var(--radius-lg);
+            padding: 2.5rem;
+            /* Reduced from 3.5rem */
+            width: 100%;
+            max-width: var(--container-max);
+            max-height: 95vh;
+            /* Allow slightly more height */
+            overflow-y: auto;
+            /* Keep as fallback, but aim to avoid */
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Scrollbar */
+        .card::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .card::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .card::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .card::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Typography */
+        h1 {
+            font-family: 'Lato', sans-serif;
+            font-weight: 900;
+            font-size: clamp(2.5rem, 4vw, 4.5rem);
+            /* Reduced max size */
+            line-height: 1.1;
+            margin-bottom: 1rem;
+            /* Reduced margin */
+            background: linear-gradient(135deg, #fff 20%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.03em;
+        }
+
+        h2 {
+            font-family: 'Lato', sans-serif;
+            font-weight: 800;
+            font-size: clamp(1.8rem, 3vw, 2.8rem);
+            /* Reduced max size */
+            margin-bottom: 1.5rem;
+            /* Reduced margin */
+            background: linear-gradient(90deg, #fff, var(--c-cyan));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            /* Reduced from 1.4rem */
+            color: #fff;
+            margin-bottom: 0.6rem;
+            /* Reduced margin */
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            /* Reduced gap */
+        }
+
+        p,
+        li {
+            font-size: 1rem;
+            /* Reduced from 1.15rem */
+            line-height: 1.6;
+            /* Reduced line height */
+            color: var(--text-muted);
+            margin-bottom: 0.8rem;
+            /* Reduced margin */
+        }
+
+        strong {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        ul {
+            margin-left: 1.2rem;
+            margin-bottom: 1rem;
+            /* Reduced margin */
+        }
+
+        li::marker {
+            color: var(--c-cyan);
+        }
+
+        /* Grids */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            /* Reduced min width */
+            gap: 1.5rem;
+            /* Reduced gap */
+            height: 100%;
+        }
+
+        .split-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            height: 100%;
+            align-items: center;
+        }
+
+        .grid-2x2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 1.5rem;
+            height: 100%;
+            width: 100%;
+        }
+
+        /* Concept Boxes */
+        .concept-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            /* Reduced padding */
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        .concept-box:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Code/Terminal */
+        .window-interface {
+            background-color: #0f172a;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 8px;
+        }
+
+        .window-header {
+            background-color: #1e293b;
+            padding: 8px 12px;
+            /* Reduced padding */
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .window-dot {
+            width: 10px;
+            /* Smaller dots */
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .dot-red {
+            background-color: #ef4444;
+        }
+
+        .dot-yellow {
+            background-color: #f59e0b;
+        }
+
+        .dot-green {
+            background-color: #22c55e;
+        }
+
+        .filename {
+            margin-left: 10px;
+            font-size: 0.8rem;
+            /* Smaller font */
+            color: #94a3b8;
+            opacity: 0.8;
+        }
+
+        .code-content {
+            padding: 16px;
+            /* Reduced from 24px */
+            margin: 0;
+            overflow-x: auto;
+            color: #e2e8f0;
+            font-size: 0.9rem;
+            /* Reduced font */
+            line-height: 1.5;
+            white-space: pre;
+            tab-size: 4;
+        }
+
+        /* Nav */
+        .footer-nav {
+            position: fixed;
+            bottom: 20px;
+            /* Moved up slightly or kept similar */
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 20px;
+            /* Reduced padding */
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            /* Reduced gap */
+            z-index: 100;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: var(--text-main);
+            width: 40px;
+            /* Smaller buttons */
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: var(--c-cyan);
+            color: #000;
+            transform: scale(1.1);
+        }
+
+        .slide-counter {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            /* Smaller font */
+            letter-spacing: 1px;
+        }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--c-cyan), var(--c-purple));
+            width: 0%;
+            transition: width 0.3s ease;
+            z-index: 200;
+            box-shadow: 0 0 15px var(--c-cyan);
+        }
+
+        @media (max-width: 1024px) {
+            .split-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 1.5rem;
+                /* Even smaller padding on mobile */
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <!-- Prism.js for Syntax Highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+    <style>
+        /* Mac Window Style for Code */
+        .mac-window {
+            background: #1e1e1e;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            font-family: 'JetBrains Mono', monospace;
+            border: 1px solid #333;
+            max-height: 65vh;
+            /* Ensure it doesn't overflow slide */
+            overflow-y: auto;
+            /* Allow scrolling if absolutely necessary */
+        }
+
+        /* Scrollbar for code window */
+        .mac-window::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .mac-window::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+
+        .mac-window::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+
+        .mac-header {
+            background: #2d2d2d;
+            padding: 8px 15px;
+            /* Reduced vertical padding */
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #333;
+            position: sticky;
+            /* Keep header visible if scrolling */
+            top: 0;
+            z-index: 10;
+        }
+
+        .mac-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .mac-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .close {
+            background: #ff5f56;
+        }
+
+        .minimize {
+            background: #ffbd2e;
+        }
+
+        .maximize {
+            background: #27c93f;
+        }
+
+        .mac-title {
+            color: #999;
+            font-size: 0.8rem;
+            margin-left: 15px;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        /* Prism overrides - Compact View */
+        pre[class*="language-"] {
+            margin: 0 !important;
+            border-radius: 0 !important;
+            padding: 1rem !important;
+            /* Reduced padding */
+            background: #1e1e1e !important;
+            text-shadow: none !important;
+            font-size: 0.8rem !important;
+            /* Smaller font */
+            line-height: 1.4 !important;
+            /* Tighter lines */
+        }
+
+        code[class*="language-"] {
+            font-family: 'JetBrains Mono', monospace !important;
+        }
+
+        /* =========================================
+           INTERACTIVE COMPONENTS
+           ========================================= */
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            cursor: items;
+            border-bottom: 1px dotted var(--c-cyan);
+        }
+
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.95);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .tooltip:hover::after {
+            opacity: 1;
+            visibility: visible;
+            bottom: 140%;
+        }
+
+        /* Flip Cards (Bento Style) */
+        .flip-card {
+            background-color: transparent;
+            perspective: 1000px;
+            height: 280px;
+            /* Greatly increased height */
+            cursor: pointer;
+        }
+
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flip-card-front,
+        .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: var(--radius-md);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .flip-card-front {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background 0.3s;
+        }
+
+        .flip-card:hover .flip-card-front {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .flip-card-back {
+            background: var(--bg-deep);
+            /* Solid background to hide front */
+            border: 1px solid var(--c-cyan);
+            transform: rotateY(180deg);
+            text-align: left;
+            align-items: flex-start;
+            .overflow-y: auto;
+            z-index: 2;
+        }
+
+        /* Specific Styles for Card Types */
+        .flip-card.gold .flip-card-front {
+            border-color: var(--c-gold);
+            background: rgba(250, 204, 21, 0.05);
+        }
+
+        .flip-card.gold .flip-card-back {
+            border-color: var(--c-gold);
+            background: #1a1600;
+        }
+
+        .flip-card.purple .flip-card-front {
+            border-color: var(--c-purple);
+            background: rgba(216, 180, 254, 0.05);
+        }
+
+        .flip-card.purple .flip-card-back {
+            border-color: var(--c-purple);
+            background: #180d26;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--c-gold);
+            padding: 3rem;
+            border-radius: var(--radius-lg);
+            max-width: 800px;
+            width: 90%;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            font-size: 2rem;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-modal:hover {
+            color: #fff;
+        }
+    </style>
+    <script>
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.add('active');
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        // Close on click outside
+        window.onclick = function (event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.classList.remove('active');
+            }
+        }
+    </script>
+</head>
+
+<body>
+
+    <div class="progress-bar" id="progressBar"></div>
+
+    <div class="slides-container">
+        <!-- Slides will go here -->
+
+        <!-- Slide 1: Portada Master Class -->
+        <div class="slide active">
+            <!-- Constellation Background -->
+            <div class="constellation-bg">
+                <!-- Manually placed stars for 'network' effect -->
+                <div class="star" style="top: 20%; left: 20%; width: 4px; height: 4px; animation-delay: 0s;"></div>
+                <div class="star" style="top: 30%; left: 70%; width: 3px; height: 3px; animation-delay: 1s;"></div>
+                <div class="star"
+                    style="top: 70%; left: 30%; width: 5px; height: 5px; animation-delay: 2s; background: var(--c-cyan);">
+                </div>
+                <div class="star"
+                    style="top: 80%; left: 80%; width: 4px; height: 4px; animation-delay: 3s; background: var(--c-purple);">
+                </div>
+                <div class="star" style="top: 10%; left: 90%; width: 2px; height: 2px; animation-delay: 1.5s;"></div>
+                <div class="star"
+                    style="top: 50%; left: 50%; width: 6px; height: 6px; animation-delay: 0.5s; box-shadow: 0 0 15px var(--c-cyan);">
+                </div>
+                <!-- Connecting lines (simplified via CSS borders on pseudo-elements or just implicit logic) -->
+            </div>
+
+            <div class="card"
+                style="text-align: center; justify-content: center; min-height: 70vh; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.05);">
+                <div style="margin-bottom: 30px;">
+                    <span
+                        style="background: rgba(34, 211, 238, 0.1); color: var(--c-cyan); padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; border: 1px solid rgba(34, 211, 238, 0.2);">
+                        SINT-201 | SEMANA 04
+                    </span>
+                </div>
+
+                <h1 class="master-title">
+                    Análisis de<br>Componentes Principales
+                </h1>
+
+                <p class="master-tagline">
+                    <i class="fa-solid fa-code-branch" style="color: var(--c-purple); margin-right: 10px;"></i>
+                    Desvelando la Estructura Latente de los Datos
+                </p>
+
+                <div
+                    style="margin-top: 3rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; text-align: left; width: 100%; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px;">
+                    <!-- Col 1 -->
+                    <div style="display: flex; gap: 15px; align-items: flex-start;">
+                        <div
+                            style="background: rgba(6,182,212,0.1); padding: 12px; border-radius: 8px; color: var(--c-cyan);">
+                            <i class="fa-solid fa-user-tie"></i>
+                        </div>
+                        <div>
+                            <h4
+                                style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: #64748b; margin: 0 0 5px 0; font-weight: 600;">
+                                Profesor</h4>
+                            <p style="font-size: 1.1rem; color: #fff; margin: 0;">Dr. J. Ignacio Borge</p>
+                            <p style="font-size: 0.9rem; color: var(--c-cyan); margin: 2px 0 0 0; font-style: italic;">
+                                Científico computacional</p>
+                        </div>
+                    </div>
+
+                    <!-- Col 2 -->
+                    <div style="display: flex; gap: 15px; align-items: flex-start;">
+                        <div
+                            style="background: rgba(236,72,153,0.1); padding: 12px; border-radius: 8px; color: var(--c-pink);">
+                            <i class="fa-regular fa-calendar-check"></i>
+                        </div>
+                        <div>
+                            <h4
+                                style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: #64748b; margin: 0 0 5px 0; font-weight: 600;">
+                                Fecha</h4>
+                            <p style="font-size: 1.1rem; color: #fff; margin: 0;">Jueves 12 de Febrero</p>
+                            <p style="font-size: 0.9rem; color: var(--text-muted); margin: 2px 0 0 0;">2026</p>
+                        </div>
+                    </div>
+
+                    <!-- Col 3 -->
+                    <div style="display: flex; gap: 15px; align-items: flex-start;">
+                        <div
+                            style="background: rgba(74,222,128,0.1); padding: 12px; border-radius: 8px; color: var(--c-green);">
+                            <i class="fa-solid fa-building-columns"></i>
+                        </div>
+                        <div>
+                            <h4
+                                style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: #64748b; margin: 0 0 5px 0; font-weight: 600;">
+                                Institución</h4>
+                            <p style="font-size: 1.1rem; color: #fff; margin: 0;">Universidad CENFOTEC</p>
+                            <p style="font-size: 0.9rem; color: var(--text-muted); margin: 2px 0 0 0;">Escuela de
+                                Sistemas Inteligentes</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Slide 2: Guía de Clase -->
+    <div class="slide">
+        <div class="card">
+            <h2>Guía de Clase: Semana 04</h2>
+            <p style="margin-bottom: 2rem; color: var(--text-dim);">Módulo 2: Datos Generales de la Sesión.</p>
+
+            <div class="grid-2x2">
+                <!-- Card 1: Tema Principal -->
+                <div class="concept-box" style="border-top: 4px solid var(--c-cyan);">
+                    <h3 style="color: var(--c-cyan); font-size: 1.2rem; margin-bottom: 0.8rem;">
+                        <i class="fa-solid fa-layer-group" style="margin-right: 8px;"></i> Tema Principal
+                    </h3>
+                    <p style="font-size: 0.95rem; line-height: 1.5;">
+                        Análisis de Componentes Principales (PCA), reducción de dimensionalidad e interpretación de
+                        resultados.
+                    </p>
+                </div>
+
+                <!-- Card 2: Distribución de Horas -->
+                <div class="concept-box" style="border-top: 4px solid var(--c-purple);">
+                    <h3 style="color: var(--c-purple); font-size: 1.2rem; margin-bottom: 0.8rem;">
+                        <i class="fa-regular fa-clock" style="margin-right: 8px;"></i> Distribución de Horas
+                    </h3>
+                    <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.95rem; line-height: 1.6;">
+                        <li><strong>2 horas</strong> de teoría (100 min).</li>
+                        <li><strong>1 hora</strong> de laboratorio práctico (50 min).</li>
+                        <li
+                            style="margin-top: 8px; font-size: 0.85rem; color: var(--text-dim); border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px;">
+                            Total: 3 Horas Académicas
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Card 3: Conexión Previa -->
+                <div class="concept-box" style="border-top: 4px solid var(--c-green);">
+                    <h3 style="color: var(--c-green); font-size: 1.2rem; margin-bottom: 0.8rem;">
+                        <i class="fa-solid fa-link" style="margin-right: 8px;"></i> Conexión Previa
+                    </h3>
+                    <p style="font-size: 0.95rem; line-height: 1.5;">
+                        Se basa en la identificación de correlaciones y relaciones entre variables abordadas en la
+                        <strong style="color: var(--c-green);">Semana 03</strong>.
+                    </p>
+                </div>
+
+                <!-- Card 4: Objetivo -->
+                <div class="concept-box" style="border-top: 44px solid var(--c-gold);">
+                    <h3 style="color: var(--c-gold); font-size: 1.2rem; margin-bottom: 0.8rem;">
+                        <i class="fa-solid fa-bullseye" style="margin-right: 8px;"></i> Objetivo
+                    </h3>
+                    <p style="font-size: 0.95rem; line-height: 1.5;">
+                        Desarrollar un análisis exploratorio que permita obtener una visión general del comportamiento
+                        de las variables y hallar <strong style="color: var(--c-gold);">patrones ocultos</strong>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 3: Introduction & Context -->
+    <div class="slide">
+        <div class="card">
+            <h2>Reducción de Dimensionalidad y PCA</h2>
+            <p style="margin-bottom: 3rem;">Introducción y Contextualización.</p>
+
+            <div class="split-layout">
+                <div>
+                    <div class="concept-box" style="margin-bottom: 2rem;">
+                        <h3 style="color: var(--c-cyan);"><i class="fa-solid fa-road"></i> El Camino Hasta Aquí</h3>
+                        <p>En las semanas 1 a 3 nos enfocamos en:</p>
+                        <ul>
+                            <li>Limpieza y Preprocesamiento.</li>
+                            <li>Transformación de Datos.</li>
+                            <li>Identificación de Correlaciones Iniciales.</li>
+                        </ul>
+                    </div>
+
+                    <div class="concept-box" style="border-left: 4px solid var(--c-danger);">
+                        <h3 style="color: var(--c-danger);"><i class="fa-solid fa-triangle-exclamation"></i> La
+                            "Maldición de la Dimensionalidad"</h3>
+                        <p>Al trabajar con grandes volúmenes de datos, nos enfrentamos a un fenómeno crítico:</p>
+                        <p style="font-size: 0.95rem; margin-top: 10px;">
+                            A medida que aumenta el número de características (dimensiones), la cantidad de datos
+                            necesarios para generalizar correctamente crece exponencialmente. Demasiadas variables
+                            pueden oscurecer los patrones importantes, aumentar el ruido y hacer que los modelos sean
+                            computacionalmente ineficientes.
+                        </p>
+                    </div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div
+                        style="background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 2rem; text-align: center; border: 1px solid rgba(255, 255, 255, 0.1);">
+                        <i class="fa-solid fa-cube"
+                            style="font-size: 3rem; color: var(--c-cyan); margin-bottom: 1rem;"></i>
+                        <h4 style="margin-bottom: 0.5rem; font-size: 1.1rem;">Alta Dimensionalidad</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-dim);">Dificultad para encontrar patrones</p>
+                        <i class="fa-solid fa-arrow-down"
+                            style="font-size: 1.2rem; color: var(--text-dim); margin: 0.8rem 0;"></i>
+                        <h4 style="margin-bottom: 0.5rem; color: var(--c-purple); font-size: 1.1rem;">Espacio Latente
+                        </h4>
+                        <p style="font-size: 0.85rem; color: var(--text-dim);">Simplificación Inteligente</p>
+                    </div>
+
+                    <div class="concept-box"
+                        style="background: rgba(216, 180, 254, 0.05); border: 1px solid var(--c-purple); padding: 1.25rem;">
+                        <h3 style="color: var(--c-purple); font-size: 1.3rem; margin-bottom: 0.5rem;">¿Qué es PCA?</h3>
+                        <p style="font-size: 0.95rem; color: #fff; margin-bottom: 0.8rem;">
+                            <strong>A</strong>nálisis de <strong>C</strong>omponentes <strong>P</strong>rincipales
+                        </p>
+                        <div
+                            style="background: rgba(216, 180, 254, 0.1); padding: 10px; border-radius: 8px; border-left: 3px solid var(--c-purple); margin-bottom: 0.8rem;">
+                            <p style="line-height: 1.5; margin: 0; font-size: 0.9rem;">
+                                Técnica para <strong>reducir dimensiones</strong> transformando variables
+                                correlacionadas en
+                                <strong>componentes principales</strong> no correlacionados, conservando la información.
+                            </p>
+                        </div>
+                        <div style="text-align: center; margin-top: 0.5rem;">
+                            <i class="fa-solid fa-compress-arrows-alt"
+                                style="font-size: 1.5rem; color: var(--c-purple); opacity: 0.8;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: Mathematical Foundations -->
+    <div class="slide">
+        <div class="card">
+            <h2>Fundamentos Matemáticos</h2>
+            <p>El PCA busca <strong>maximizar la varianza proyectada</strong> de los datos. Veamos las matemáticas
+                detrás de la magia:</p>
+
+            <!-- Refactored Layout for Slide 4: Centered Top Row, Full Bottom Row -->
+            <div style="margin-top: 2rem; display: flex; flex-direction: column; gap: 2rem;">
+
+                <!-- Top Row: Centered Cards -->
+                <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+                    <!-- Normalization -->
+                    <div class="concept-box" style="flex: 1; min-width: 300px; max-width: 500px;">
+                        <h3 style="color: var(--c-blue);">1. Estandarización</h3>
+                        <p style="font-size: 0.95rem;">PCA es altamente sensible a las escalas de las variables. Se
+                            deben normalizar para que todas contribuyan equitativamente, teniendo media \(\mu = 0\) y
+                            desviación estándar \(\sigma = 1\) (Z-Score):</p>
+                        <div
+                            style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; text-align: center; margin: 15px 0;">
+                            $$z = \frac{x - \mu}{\sigma}$$
+                        </div>
+                    </div>
+
+                    <!-- Covariance -->
+                    <div class="concept-box" style="flex: 1; min-width: 300px; max-width: 500px;">
+                        <h3 style="color: var(--c-gold);">2. Matriz de Covarianza</h3>
+                        <p style="font-size: 0.95rem;">Calculamos la Matriz de Covarianza para entender cómo las
+                            variables varían juntas respecto a la media. Esto captura las relaciones lineales entre
+                            todas las pares de variables:</p>
+                        <div
+                            style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; text-align: center; margin: 15px 0;">
+                            $$Cov(X, Y) = \frac{\sum_{i=1}^{n} (X_i - \bar{X})(Y_i - \bar{Y})}{n-1}$$
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Eigenvectors (Full Width) -->
+                <div class="concept-box">
+                    <h3 style="color: var(--c-pink);">3. Eigenvectors y Eigenvalues</h3>
+                    <div class="split-layout" style="align-items: center; gap: 2rem;">
+                        <div>
+                            <p>Resolvemos la ecuación característica para la matriz de covarianza \(A\):</p>
+                            <div
+                                style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; text-align: center; margin: 15px 0;">
+                                $$det(A - \lambda I) = 0$$
+                            </div>
+                            <p style="font-size: 0.9rem; margin-top: 10px; color: var(--text-dim);">Donde \(\lambda\)
+                                son los eigenvalues e \(I\) es la matriz identidad.</p>
+                        </div>
+                        <div>
+                            <ul style="font-size: 0.95rem;">
+                                <li><strong>Eigenvectors (Autovectores):</strong> Vectores que no cambian de dirección
+                                    durante una transformación lineal. Indican la <em>dirección</em> de los nuevos ejes
+                                    (componentes principales).</li>
+                                <li><strong>Eigenvalues (Autovalores):</strong> Escalares asociados a los autovectores.
+                                    Indican la <em>magnitud</em> de la varianza capturada en esa dirección específica. A
+                                    mayor eigenvalue, mayor información retiene ese componente.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 5: PCA Algorithm -->
+    <div class="slide">
+        <div class="card">
+            <h2>Algoritmo PCA (Paso a Paso)</h2>
+            <p>Entrada: Matriz de datos \(X\) de dimensiones \(n \times m\).</p>
+
+            <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 2rem;">
+
+                <!-- Step 1 -->
+                <div
+                    style="display: flex; align-items: center; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border-left: 4px solid var(--c-cyan);">
+                    <div
+                        style="font-weight: 900; color: var(--c-cyan); font-size: 1.5rem; margin-right: 20px; min-width: 40px;">
+                        01</div>
+                    <div>
+                        <h4 style="margin: 0; color: #fff; margin-bottom: 5px;">Centrado de Datos</h4>
+                        <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;">
+                            <strong>¿Qué hacemos?:</strong> Restamos el promedio a cada variable.<br>
+                            <strong style="color: var(--c-cyan);">¿Qué obtenemos?:</strong> Movemos la nube de puntos al
+                            origen (0,0) para analizar puramente la variabilidad, sin que afecte la posición de los
+                            datos.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div
+                    style="display: flex; align-items: center; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border-left: 4px solid var(--c-purple);">
+                    <div
+                        style="font-weight: 900; color: var(--c-purple); font-size: 1.5rem; margin-right: 20px; min-width: 40px;">
+                        02</div>
+                    <div>
+                        <h4 style="margin: 0; color: #fff; margin-bottom: 5px;">Matriz de Covarianza</h4>
+                        <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;">
+                            <strong>¿Qué hacemos?:</strong> Medimos cómo varía cada variable con respecto a las
+                            demás.<br>
+                            <strong style="color: var(--c-purple);">¿Qué obtenemos?:</strong> Un mapa completo de las
+                            relaciones lineales (correlaciones) entre todas nuestras variables.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div
+                    style="display: flex; align-items: center; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border-left: 4px solid var(--c-pink);">
+                    <div
+                        style="font-weight: 900; color: var(--c-pink); font-size: 1.5rem; margin-right: 20px; min-width: 40px;">
+                        03</div>
+                    <div>
+                        <h4 style="margin: 0; color: #fff; margin-bottom: 5px;">Descomposición (Eigenvalues)</h4>
+                        <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;">
+                            <strong>¿Qué hacemos?:</strong> Descomponemos la matriz de relaciones en direcciones y
+                            fuerzas.<br>
+                            <strong style="color: var(--c-pink);">¿Qué obtenemos?:</strong> Identificamos los <em>ejes
+                                principales</em> donde está la mayor información (varianza) y descartamos el ruido.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div
+                    style="display: flex; align-items: center; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border-left: 4px solid var(--c-green);">
+                    <div
+                        style="font-weight: 900; color: var(--c-green); font-size: 1.5rem; margin-right: 20px; min-width: 40px;">
+                        04</div>
+                    <div>
+                        <h4 style="margin: 0; color: #fff; margin-bottom: 5px;">Proyección Final</h4>
+                        <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;">
+                            <strong>¿Qué hacemos?:</strong> Multiplicamos nuestros datos originales por los componentes
+                            seleccionados.<br>
+                            <strong style="color: var(--c-green);">¿Qué obtenemos?:</strong> Una nueva versión
+                            simplificada de los datos (menos columnas) que preserva la información más importante.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="concept-box"
+                style="margin-top: 2rem; border: 1px dashed var(--text-dim); background: transparent;">
+                <p style="margin: 0; text-align: center; color: var(--text-muted);">
+                    <i class="fa-solid fa-calculator"></i> <strong>Complejidad Computacional:</strong> Generalmente
+                    \(O(m^2 n + m^3)\), donde:
+                    <br>
+                    \(n\) = número de muestras (filas) | \(m\) = número de variables (columnas).
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 6: Transition - Manos a la Obra -->
+    <div class="slide">
+        <div class="card" style="display: flex; align-items: center; justify-content: center; text-align: center;">
+            <div
+                style="background: rgba(45, 212, 191, 0.1); padding: 50px; border-radius: 50%; width: 150px; height: 150px; display: flex; align-items: center; justify-content: center; margin-bottom: 2rem; border: 2px solid var(--c-cyan); box-shadow: 0 0 30px rgba(45, 212, 191, 0.3);">
+                <i class="fa-solid fa-code" style="font-size: 5rem; color: var(--c-cyan);"></i>
+            </div>
+            <h1
+                style="font-size: 4rem; margin-bottom: 1rem; background: linear-gradient(90deg, #fff, var(--c-cyan)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                Manos a la Obra</h1>
+            <h3 style="font-weight: 300; font-size: 1.8rem; color: var(--text-muted);">Implementación Práctica paso a
+                paso</h3>
+            <div
+                style="margin-top: 3rem; background: rgba(255,255,255,0.05); padding: 20px 40px; border-radius: 50px; border: 1px solid var(--c-cyan);">
+                <p style="margin: 0; font-size: 1.2rem; color: #fff;"><i class="fa-solid fa-terminal"
+                        style="margin-right: 15px; color: var(--c-cyan);"></i> Hora de programar</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 7: Practical Implementation -->
+    <div class="slide">
+        <div class="card">
+            <h2>Implementación Profesional con Scikit-Learn</h2>
+            <p style="margin-bottom: 1.5rem;">
+                Utilizaremos el estándar de la industria, <strong>Scikit-learn</strong>, para transformar nuestros
+                datos.
+                <span style="color: var(--c-cyan);">Nota:</span> En producción, este pipeline se integraría en procesos
+                de <span class="tooltip"
+                    data-tooltip="Extract, Transform, Load: Mover datos desde múltiples fuentes a un almacén centralizado.">ETL</span>
+                automatizados.
+            </p>
+
+            <div style="display: flex; gap: 2rem; align-items: flex-start;">
+                <div class="mac-window" style="flex: 1.2;">
+                    <div class="mac-header">
+                        <div class="mac-buttons">
+                            <div class="mac-btn close"></div>
+                            <div class="mac-btn minimize"></div>
+                            <div class="mac-btn maximize"></div>
+                        </div>
+                        <div class="mac-title">pca_pipeline.py</div>
+                    </div>
+                    <div class="code-content">
+                        <pre><code class="language-python">import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+
+# 1. Carga y Preparación (Simulación)
+data = {
+    'monto_compra': [100, 150, 120, 300, 450, 110, 500, 1000],
+    'frecuencia_mensual': [2, 3, 2, 5, 8, 2, 9, 15],
+    'tiempo_en_sitio': [10, 15, 12, 30, 45, 11, 50, 120],
+    'paginas_vistas': [5, 7, 5, 12, 20, 4, 25, 40]
+}
+df = pd.DataFrame(data)
+
+# 2. Estandarización (Obligatorio)
+# Ponemos todas las variables en la misma escala
+scaler = StandardScaler()
+df_scaled = scaler.fit_transform(df)
+
+# 3. Aplicación de PCA 
+pca = PCA(n_components=2) 
+pca_results = pca.fit_transform(df_scaled)
+
+# 4. DataFrame de resultados (Espacio Latente)
+df_pca = pd.DataFrame(data=pca_results, columns=['PC1', 'PC2'])
+print(f"Varianza explicada: {pca.explained_variance_ratio_}")</code></pre>
+                    </div>
+                </div>
+
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 1rem; justify-content: flex-start;">
+
+                    <!-- Flip Card 1: Standardization -->
+                    <div class="flip-card gold" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <i class="fa-solid fa-scale-unbalanced"
+                                    style="font-size: 2.5rem; color: var(--c-gold); margin-bottom: 1rem;"></i>
+                                <h3
+                                    style="color: var(--c-gold); font-size: 1.3rem; margin-bottom: 0.5rem; text-align: center;">
+                                    La Trampa de los Gigantes
+                                </h3>
+                                <p style="font-size: 1rem; margin-top: 5px; color: #fff; text-align: center;">
+                                    ¿Qué pesa más en el análisis: <br>$1,000,000 o 50 años?
+                                </p>
+                                <div style="margin-top: auto; color: var(--text-dim); font-size: 0.9rem;">
+                                    <i class="fa-solid fa-arrow-rotate-right"></i> Click para girar
+                                </div>
+                            </div>
+                            <div class="flip-card-back">
+                                <h4
+                                    style="color: var(--c-gold); font-size: 1.1rem; margin-bottom: 15px; border-bottom: 1px solid rgba(250, 204, 21, 0.3); padding-bottom: 5px; width: 100%;">
+                                    Justicia Matemática (Z-Score)
+                                </h4>
+                                <p style="font-size: 0.95rem; line-height: 1.5; margin-bottom: 10px;">
+                                    Si comparas <strong>Salarios</strong> (millones) con <strong>Edad</strong>
+                                    (decenas), el algoritmo "escuchará" solo al dinero porque el número es más grande.
+                                </p>
+                                <p style="font-size: 0.95rem; line-height: 1.5; color: #fff; font-weight: 500;">
+                                    La estandarización pone a todos en la misma balanza para que cada variable cuente
+                                    por su <em>comportamiento</em>, no por su <em>tamaño</em>.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Flip Card 2: n_components -->
+                    <div class="flip-card purple" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <i class="fa-solid fa-cube"
+                                    style="font-size: 2.5rem; color: var(--c-purple); margin-bottom: 1rem;"></i>
+                                <h3
+                                    style="color: var(--c-purple); font-size: 1.3rem; margin-bottom: 0.5rem; text-align: center;">
+                                    El Poder de `n_components=2`
+                                </h3>
+                                <p style="font-size: 1rem; margin-top: 5px; color: #fff; text-align: center;">
+                                    ¿Por qué elegimos el número 2?
+                                </p>
+                                <div style="margin-top: auto; color: var(--text-dim); font-size: 0.9rem;">
+                                    <i class="fa-solid fa-arrow-rotate-right"></i> Click para girar
+                                </div>
+                            </div>
+                            <div class="flip-card-back">
+                                <h4
+                                    style="color: var(--c-purple); font-size: 1rem; margin-bottom: 15px; border-bottom: 1px solid rgba(216, 180, 254, 0.3); padding-bottom: 5px; width: 100%;">
+                                    La Razón Visual
+                                </h4>
+                                <p style="font-size: 0.9rem; line-height: 1.4; margin-bottom: 8px;">
+                                    <strong style="color: var(--c-purple);">¿Qué es?:</strong> Forzamos al algoritmo a
+                                    resumir todas las variables originales en solo <strong>2 nuevos ejes</strong> (PC1 y
+                                    PC2).
+                                </p>
+                                <p style="font-size: 0.9rem; line-height: 1.4; margin-bottom: 8px;">
+                                    <strong style="color: var(--c-purple);">¿Por qué 2?:</strong> Porque las pantallas y
+                                    el papel son superficies <strong>2D</strong> (planos).
+                                </p>
+                                <p style="font-size: 0.9rem; line-height: 1.4; color: #fff; font-weight: 500;">
+                                    Necesitamos comprimir la complejidad matemática a algo que el ojo humano pueda ver
+                                    en un gráfico X-Y.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 8: Interpretación y Comunicación -->
+    <div class="slide">
+        <div class="card">
+            <h2>Interpretación Estratégica: Del Dato a la Decisión</h2>
+            <p style="margin-bottom: 2rem; max-width: 900px;">
+                En minería de datos, el algoritmo es solo el medio. El fin es la <strong>inteligencia de
+                    negocio</strong>. Transformamos "variables ruidosas" en "dimensiones latentes" de comportamiento.
+            </p>
+
+            <div class="split-layout" style="align-items: stretch;">
+
+                <!-- Interactive Concept Box (Trigger) -->
+                <div class="concept-box"
+                    style="display: flex; flex-direction: column; justify-content: center; cursor: pointer; transition: transform 0.2s;"
+                    onclick="openModal('screeModal')">
+                    <h3 style="color: var(--c-gold); margin-bottom: 1rem;">
+                        <i class="fa-solid fa-chart-area"></i> El "Scree Plot" Mental
+                    </h3>
+                    <p>
+                        No buscamos precisión perfecta, buscamos <strong>eficiencia</strong>. ¿Dónde cortamos?
+                    </p>
+                    <div
+                        style="margin-top: 2rem; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border-left: 3px solid var(--c-gold);">
+                        <p style="margin: 0; font-size: 0.9rem; font-style: italic;">
+                            "Retener el 95% de la varianza con solo 2 componentes significa comprimir la complejidad sin
+                            perder la esencia."
+                        </p>
+                        <p style="margin-top: 10px; font-size: 0.8rem; color: var(--c-gold); text-align: right;">
+                            <i class="fa-solid fa-up-right-from-square"></i> Click para expandir concepto
+                        </p>
+                    </div>
+                </div>
+
+
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div class="concept-box"
+                        style="border-left: 4px solid var(--c-cyan); cursor: pointer; transition: transform 0.2s;"
+                        onclick="openModal('pc1Modal')">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <h4 style="color: var(--c-cyan); margin: 0; font-size: 1.1rem;"><i
+                                    class="fa-solid fa-arrows-left-right"></i> PC1: Índice de Magnitud</h4>
+                            <span
+                                style="font-size: 0.8rem; background: rgba(34, 211, 238, 0.1); padding: 2px 8px; border-radius: 12px; color: var(--c-cyan);">~85%
+                                Varianza</span>
+                        </div>
+                        <p style="font-size: 0.95rem; margin: 0;">
+                            Ya no es solo "monto de compra". Es una variable compuesta que representa el
+                            <strong>"Volumen General de Actividad"</strong>. <br>
+                            <em style="color: var(--text-dim); font-size: 0.85rem;">Alto PC1 = "Cliente VIP / Heavy
+                                User" | Bajo PC1 = "Cliente Esporádico"</em>
+                        </p>
+                        <p style="margin-top: 10px; font-size: 0.8rem; color: var(--c-cyan); text-align: right;">
+                            <i class="fa-solid fa-up-right-from-square"></i> Ver Detalles
+                        </p>
+                    </div>
+
+                    <div class="concept-box"
+                        style="border-left: 4px solid var(--c-purple); cursor: pointer; transition: transform 0.2s;"
+                        onclick="openModal('pc2Modal')">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <h4 style="color: var(--c-purple); margin: 0; font-size: 1.1rem;"><i
+                                    class="fa-solid fa-bezier-curve"></i> PC2: Dimensión de Comportamiento</h4>
+                            <span
+                                style="font-size: 0.8rem; background: rgba(216, 180, 254, 0.1); padding: 2px 8px; border-radius: 12px; color: var(--c-purple);">~Varianza
+                                Restante</span>
+                        </div>
+                        <p style="font-size: 0.95rem; margin: 0;">
+                            Captura matices que la magnitud no explica. Diferencia, por ejemplo, al que compra
+                            <strong>mucho pero barato</strong> del que compra <strong>poco pero caro</strong> (Lujo vs.
+                            Volumen).
+                            <br><em style="color: var(--text-dim); font-size: 0.85rem;">Es la clave para la
+                                micro-segmentación.</em>
+                        </p>
+                        <p style="margin-top: 10px; font-size: 0.8rem; color: var(--c-purple); text-align: right;">
+                            <i class="fa-solid fa-up-right-from-square"></i> Ver Detalles
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 9: Visualización de Patrones (Master Slide) -->
+    <div class="slide">
+        <div class="card">
+            <h2>Visualización de Espacios Latentes</h2>
+            <p style="margin-bottom: 2rem; text-align: center; color: var(--text-muted);">
+                Revelando la estructura oculta del mercado.
+            </p>
+
+            <div class="split-layout" style="align-items: center; gap: 3rem;">
+
+                <!-- Left: Code Window (Narrower) -->
+                <div class="mac-window" style="width: 100%; font-size: 0.85rem;">
+                    <div class="mac-header">
+                        <div class="mac-buttons">
+                            <div class="mac-btn close"></div>
+                            <div class="mac-btn minimize"></div>
+                            <div class="mac-btn maximize"></div>
+                        </div>
+                        <div class="mac-title">latent_space_map.py</div>
+                    </div>
+                    <div class="code-content">
+                        <pre><code class="language-python"># MAPA DEL TESORO (Clusterización)
+import seaborn as sns
+
+plt.figure(figsize=(8, 6))
+
+# Visualizar el Espacio Latente
+sns.scatterplot(
+    x='PC1', y='PC2', 
+    data=df_pca, 
+    s=150, 
+    hue='Cluster', # El descubrimiento
+    palette='viridis',
+    edgecolor='w', 
+    alpha=0.9
+)
+
+# Contexto de Negocio en Ejes
+plt.xlabel(f'Volumen (PC1) - {var_pc1}%')
+plt.ylabel(f'Estilo (PC2) - {var_pc2}%')
+
+plt.title('Mapa de Segmentación', color='white')
+plt.grid(True, alpha=0.1)
+plt.show()</code></pre>
+                    </div>
+                </div>
+
+                <!-- Right: Explanatory Content (Explicit & Clear) -->
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+                    <div class="concept-box" style="border-left: 4px solid var(--c-purple);">
+                        <h3 style="color: var(--c-purple); font-size: 1.2rem; margin-bottom: 0.5rem;">
+                            <i class="fa-solid fa-map-location-dot"></i> ¿Qué es un Espacio Latente?
+                        </h3>
+                        <p style="font-size: 0.95rem; line-height: 1.6;">
+                            Es un <strong>"Mapa Simplificado"</strong> de la realidad.
+                            <br>
+                            En lugar de ver 50 columnas de Excel (imposible de entender), vemos un mapa 2D donde la
+                            <strong>distancia</strong> significa <strong>similitud</strong>.
+                        </p>
+                    </div>
+
+                    <div class="concept-box"
+                        style="background: rgba(250, 204, 21, 0.05); border: 1px solid rgba(250, 204, 21, 0.2);">
+                        <h3 style="color: var(--c-gold); font-size: 1.1rem; margin-bottom: 0.5rem;">
+                            <i class="fa-solid fa-lightbulb"></i> La Analogía del Supermercado
+                        </h3>
+                        <p style="font-size: 0.9rem; line-height: 1.6; color: var(--text-read);">
+                            Imagina un supermercado. No organiza los productos alfabéticamente (Ajo junto a Alfombra).
+                        </p>
+                        <ul style="margin-top: 10px; padding-left: 20px; font-size: 0.9rem; color: var(--text-dim);">
+                            <li style="margin-bottom: 5px;">Organiza por <strong>"Conceptos Latentes"</strong>:
+                                Desayuno, Limpieza, Lácteos.</li>
+                            <li>Productos cercanos en el pasillo = Productos conceptualmente similares.</li>
+                        </ul>
+                        <p style="margin-top: 10px; font-size: 0.9rem; font-weight: 600; color: #fff;">
+                            PCA encuentra esos "Pasillos" (Dimensiones) automáticamente.
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <!-- Slide 10: Transition to Practice (Master Slide) -->
+    <div class="slide">
+        <div class="card"
+            style="text-align: center; justify-content: center; background: radial-gradient(circle at center, rgba(34, 211, 238, 0.05) 0%, transparent 60%); border: 1px solid rgba(255,255,255,0.05);">
+
+            <div style="margin-bottom: 3rem; position: relative; display: inline-block;">
+                <div
+                    style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 150px; height: 150px; background: var(--c-cyan); border-radius: 50%; filter: blur(50px); opacity: 0.2;">
+                </div>
+                <i class="fa-solid fa-gem"
+                    style="font-size: 6rem; color: #fff; text-shadow: 0 0 30px rgba(34, 211, 238, 0.6); animation: float 6s ease-in-out infinite;"></i>
+            </div>
+
+            <h1
+                style="font-size: 4rem; font-weight: 800; margin-bottom: 1rem; letter-spacing: -2px; background: linear-gradient(135deg, #fff 0%, var(--text-muted) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                Esculpiendo el Caos
+            </h1>
+
+            <p
+                style="font-size: 1.5rem; color: var(--c-cyan); font-weight: 300; letter-spacing: 2px; text-transform: uppercase;">
+                Laboratorio Práctico
+            </p>
+
+            <p
+                style="margin-top: 1.5rem; color: var(--text-dim); font-size: 1.1rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+                De la teoría abstracta a la implementación en código.
+            </p>
+
+        </div>
+    </div>
+
+    <!-- Slide 11: The Challenge (Master Class - Boardroom Pitch) -->
+    <div class="slide">
+        <div class="card" style="border-top: 4px solid var(--c-gold);">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+                <div
+                    style="width: 50px; height: 50px; background: rgba(250, 204, 21, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-briefcase" style="font-size: 1.5rem; color: var(--c-gold);"></i>
+                </div>
+                <div>
+                    <h2 style="margin: 0; font-size: 2rem;">El Desafío: Chief Data Officer</h2>
+                    <p style="color: var(--text-muted); margin: 0;">Simulación de Caso Real de Negocio</p>
+                </div>
+            </div>
+
+            <div class="split-layout" style="align-items: center;">
+
+                <!-- Left: The Context -->
+                <div style="padding-right: 2rem; border-right: 1px solid rgba(255,255,255,0.1);">
+                    <p style="font-size: 1.2rem; line-height: 1.6; color: var(--text-read); margin-bottom: 1.5rem;">
+                        <strong style="color: #fff;">El Escenario:</strong><br>
+                        Eres el Director de Datos de un gigante del Retail. Tienes miles de transacciones, pero la
+                        directiva tiene un problema:
+                    </p>
+                    <blockquote
+                        style="border-left: 4px solid var(--c-danger); padding-left: 1rem; margin-bottom: 1.5rem; background: rgba(244, 63, 94, 0.05); padding: 1rem; border-radius: 0 8px 8px 0;">
+                        "Tenemos muchos clientes, pero no los <em>entendemos</em>. Sabemos cuánto gastan, pero no
+                        <em>quiénes son</em>."
+                    </blockquote>
+                    <p style="font-size: 1.1rem; color: var(--text-dim);">
+                        Tu misión no es hacer gráficos bonitos. Es encontrar <strong>clusters accionables</strong> para
+                        salvar la campaña de marketing del Q3.
+                    </p>
+                </div>
+
+                <!-- Right: The Asset -->
+                <div>
+                    <div class="concept-box"
+                        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);">
+                        <h4 style="margin-bottom: 1rem; color: var(--c-cyan);"><i class="fa-solid fa-database"></i> El
+                            Activo: <a
+                                href="https://www.kaggle.com/vjchoudhary7/customer-segmentation-tutorial-in-python"
+                                target="_blank"
+                                style="color: var(--c-cyan); text-decoration: underline;">Mall_Customers.csv</a></h4>
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                                <i class="fa-solid fa-fingerprint" style="color: var(--text-dim); width: 20px;"></i>
+                                <span>CustomerID <span
+                                        style="font-size: 0.8rem; color: var(--text-muted);">(Irrelevante)</span></span>
+                            </li>
+                            <li style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                                <i class="fa-solid fa-venus-mars" style="color: var(--c-purple); width: 20px;"></i>
+                                <span>Género <span
+                                        style="font-size: 0.8rem; color: var(--text-muted);">(Categórico)</span></span>
+                            </li>
+                            <li style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                                <i class="fa-solid fa-cake-candles" style="color: var(--c-green); width: 20px;"></i>
+                                <span>Edad <span
+                                        style="font-size: 0.8rem; color: var(--text-muted);">(Numérico)</span></span>
+                            </li>
+                            <li style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                                <i class="fa-solid fa-money-bill-wave" style="color: var(--c-gold); width: 20px;"></i>
+                                <span>Ingreso Anual (k$) <span
+                                        style="font-size: 0.8rem; color: var(--text-muted);">(Numérico - Escala
+                                        Alta)</span></span>
+                            </li>
+                            <li style="display: flex; align-items: center; gap: 10px;">
+                                <i class="fa-solid fa-star" style="color: var(--c-danger); width: 20px;"></i>
+                                <span>Spending Score (1-100) <span
+                                        style="font-size: 0.8rem; color: var(--text-muted);">(El Objetivo)</span></span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 12: Deliverables (Master Class - The Blueprint) -->
+    <div class="slide">
+        <div class="card">
+            <h2>El Blueprint <span style="font-size: 0.6em; color: var(--text-dim); vertical-align: middle;">(Plano
+                    Arquitectónico Detallado)</span> de la Misión</h2>
+            <p style="margin-bottom: 2rem; color: var(--text-muted);">Hoja de Ruta para una Entrega Profesional</p>
+
+            <div class="split-layout">
+
+                <!-- Module 1: The Engine (Code) -->
+                <div class="concept-box" style="border-top: 4px solid var(--c-cyan); height: 100%;">
+                    <h3 style="color: var(--c-cyan); margin-bottom: 1rem;">
+                        <i class="fa-brands fa-python"></i> El Motor (Script)
+                    </h3>
+                    <p style="font-size: 0.9rem; margin-bottom: 1.5rem; color: var(--text-dim);">
+                        Código limpio, reproducible y "a prueba de balas".
+                    </p>
+
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <div
+                                style="width: 30px; height: 30px; background: rgba(34,211,238,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--c-cyan); font-weight: bold;">
+                                1</div>
+                            <div>
+                                <strong style="display: block;">Limpieza de Datos</strong>
+                                <span style="font-size: 0.85rem; color: var(--text-muted);">Eliminar nulos, codificar
+                                    género.</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <div
+                                style="width: 30px; height: 30px; background: rgba(34,211,238,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--c-cyan); font-weight: bold;">
+                                2</div>
+                            <div>
+                                <strong style="display: block;">Estandarización (CRITICO)</strong>
+                                <span style="font-size: 0.85rem; color: var(--text-muted);">StandardScaler. Sin esto,
+                                    fallas.</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <div
+                                style="width: 30px; height: 30px; background: rgba(34,211,238,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--c-cyan); font-weight: bold;">
+                                3</div>
+                            <div>
+                                <strong style="display: block;">PCA Fit & Transform</strong>
+                                <span style="font-size: 0.85rem; color: var(--text-muted);">Reducción a 2
+                                    componentes.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Module 2: The Story (Report) -->
+                <div class="concept-box" style="border-top: 4px solid var(--c-purple); height: 100%;">
+                    <h3 style="color: var(--c-purple); margin-bottom: 1rem;">
+                        <i class="fa-solid fa-file-signature"></i> La Historia (Informe)
+                    </h3>
+                    <p style="font-size: 0.9rem; margin-bottom: 1.5rem; color: var(--text-dim);">
+                        Convence a la directiva con evidencia e <em>insights</em>.
+                    </p>
+
+                    <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                        <strong
+                            style="color: var(--c-purple); font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Estructura
+                            PDF (3 págs):</strong>
+                        <ul style="padding-left: 1.5rem; font-size: 0.9rem; color: var(--text-read);">
+                            <li><strong>Evidencia:</strong> Gráfico de Codo (Scree Plot). ¿Por qué 2 componentes?</li>
+                            <li><strong>Traducción:</strong> ¿Qué significan PC1 y PC2 en lenguaje humano?</li>
+                            <li><strong>Acción:</strong> 3 Estrategias de Marketing concretas para los grupos hallados.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <!-- Slide 13: Expert Strategy (Master Class - The Golden Rules) -->
+    <div class="slide">
+        <div class="card">
+            <h2>Estrategias de Nivel Experto</h2>
+            <p style="margin-bottom: 2rem; color: var(--text-muted);">Los 3 Pilares del Éxito en PCA</p>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; height: 100%;">
+
+                <!-- Rule 1: The Scale -->
+                <div class="concept-box"
+                    style="border-top: 4px solid var(--c-danger); display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
+                            <i class="fa-solid fa-scale-balanced"
+                                style="font-size: 1.5rem; color: var(--c-danger);"></i>
+                            <h3 style="margin: 0; font-size: 1.2rem; color: var(--c-danger);">La Escala</h3>
+                        </div>
+                        <p style="font-size: 0.95rem; line-height: 1.6; color: var(--text-read);">
+                            PCA "escucha" el volumen de los datos.
+                        </p>
+                        <ul style="margin-top: 1rem; padding-left: 1.2rem; color: var(--text-dim); font-size: 0.9rem;">
+                            <li style="margin-bottom: 0.5rem;">Ingreso (miles) = <strong>GRITA</strong>.</li>
+                            <li>Edad (decenas) = <em>susurra</em>.</li>
+                        </ul>
+                    </div>
+                    <div
+                        style="background: rgba(244, 63, 94, 0.1); padding: 0.8rem; border-radius: 8px; margin-top: 1rem;">
+                        <strong style="color: var(--c-danger); font-size: 0.9rem;">Regla de Oro:</strong>
+                        <p style="margin: 0; font-size: 0.85rem;">Nunca ejecutes PCA sin <code>StandardScaler</code>.
+                            Silencia el ruido, escucha el patrón.</p>
+                    </div>
+                </div>
+
+                <!-- Rule 2: The Elbow -->
+                <div class="concept-box"
+                    style="border-top: 4px solid var(--c-cyan); display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
+                            <i class="fa-solid fa-turn-down" style="font-size: 1.5rem; color: var(--c-cyan);"></i>
+                            <h3 style="margin: 0; font-size: 1.2rem; color: var(--c-cyan);">El Codo</h3>
+                        </div>
+                        <p style="font-size: 0.95rem; line-height: 1.6; color: var(--text-read);">
+                            Más componentes no siempre es mejor. Es solo más ruido.
+                        </p>
+                        <p style="font-size: 0.9rem; color: var(--text-dim); margin-top: 1rem;">
+                            Buscamos la <strong>caída drástica</strong> de varianza explicada.
+                        </p>
+                    </div>
+                    <div
+                        style="background: rgba(34, 211, 238, 0.1); padding: 0.8rem; border-radius: 8px; margin-top: 1rem;">
+                        <strong style="color: var(--c-cyan); font-size: 0.9rem;">Regla de Oro:</strong>
+                        <p style="margin: 0; font-size: 0.85rem;">Detente donde la señal muere. Si 2 componentes
+                            explican el 80%, has ganado.</p>
+                    </div>
+                </div>
+
+                <!-- Rule 3: The Name -->
+                <div class="concept-box"
+                    style="border-top: 4px solid var(--c-gold); display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
+                            <i class="fa-solid fa-tag" style="font-size: 1.5rem; color: var(--c-gold);"></i>
+                            <h3 style="margin: 0; font-size: 1.2rem; color: var(--c-gold);">El Nombre</h3>
+                        </div>
+                        <p style="font-size: 0.95rem; line-height: 1.6; color: var(--text-read);">
+                            A la directiva no le importa "PC1" o "Vector Propio".
+                        </p>
+                        <p style="font-size: 0.9rem; color: var(--text-dim); margin-top: 1rem;">
+                            Le importa "Clientes de Alto Valor" o "Cazadores de Ofertas".
+                        </p>
+                    </div>
+                    <div
+                        style="background: rgba(250, 204, 21, 0.1); padding: 0.8rem; border-radius: 8px; margin-top: 1rem;">
+                        <strong style="color: var(--c-gold); font-size: 0.9rem;">Regla de Oro:</strong>
+                        <p style="margin: 0; font-size: 0.85rem;">Traduce las variables latentes a <strong>conceptos de
+                                negocio</strong>.</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 14: The Managerial Explanation (Master Class - Elevator Pitch) -->
+    <div class="slide">
+        <div class="card">
+            <h2>Explicación de Elevador (30s)</h2>
+            <p style="margin-bottom: 2rem; color: var(--text-muted);">¿Cómo se lo explicas al CEO en lo que sube el
+                ascensor?</p>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; align-items: stretch;">
+
+                <!-- Step 1: Compression -->
+                <div
+                    style="text-align: center; background: rgba(255,255,255,0.02); padding: 2rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div
+                        style="width: 80px; height: 80px; background: rgba(34, 211, 238, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; border: 1px solid rgba(34, 211, 238, 0.3);">
+                        <i class="fa-solid fa-blender" style="font-size: 2rem; color: var(--c-cyan);"></i>
+                    </div>
+                    <h3 style="color: #fff; margin-bottom: 1rem;">1. El Jugo (Compresión)</h3>
+                    <p style="font-size: 0.95rem; color: var(--text-dim); line-height: 1.6;">
+                        "Imagina que tienes 10 frutas (Variables). PCA es la licuadora."
+                    </p>
+                    <p style="font-size: 0.9rem; color: var(--c-cyan); margin-top: 10px; font-weight: 600;">
+                        Obtenemos un vaso de esencia pura, sin la cáscara (Ruido).
+                    </p>
+                </div>
+
+                <!-- Step 2: Projection -->
+                <div
+                    style="text-align: center; background: rgba(255,255,255,0.02); padding: 2rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div
+                        style="width: 80px; height: 80px; background: rgba(216, 180, 254, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; border: 1px solid rgba(216, 180, 254, 0.3);">
+                        <i class="fa-solid fa-person-walking" style="font-size: 2rem; color: var(--c-purple);"></i>
+                    </div>
+                    <h3 style="color: #fff; margin-bottom: 1rem;">2. La Sombra (Proyección)</h3>
+                    <p style="font-size: 0.95rem; color: var(--text-dim); line-height: 1.6;">
+                        "Es como mirar la sombra de un objeto 3D en la pared."
+                    </p>
+                    <p style="font-size: 0.9rem; color: var(--c-purple); margin-top: 10px; font-weight: 600;">
+                        La sombra (2D) nos dice el 90% de la forma del objeto real.
+                    </p>
+                </div>
+
+                <!-- Step 3: Action -->
+                <div
+                    style="text-align: center; background: rgba(255,255,255,0.02); padding: 2rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div
+                        style="width: 80px; height: 80px; background: rgba(250, 204, 21, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; border: 1px solid rgba(250, 204, 21, 0.3);">
+                        <i class="fa-solid fa-bullseye" style="font-size: 2rem; color: var(--c-gold);"></i>
+                    </div>
+                    <h3 style="color: #fff; margin-bottom: 1rem;">3. El Tiro (Acción)</h3>
+                    <p style="font-size: 0.95rem; color: var(--text-dim); line-height: 1.6;">
+                        "No disparamos a todo el aire. Apuntamos a las sombras."
+                    </p>
+                    <p style="font-size: 0.9rem; color: var(--c-gold); margin-top: 10px; font-weight: 600;">
+                        Atacamos nichos específicos con mensajes personalizados.
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="footer-nav">
+        <button class="nav-btn" onclick="prevSlide()"><i class="fa-solid fa-chevron-left"></i></button>
+        <span class="slide-counter" id="slideCounter">1 / 1</span>
+        <button class="nav-btn" onclick="nextSlide()"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const progressBar = document.getElementById('progressBar');
+        const slideCounter = document.getElementById('slideCounter');
+        let currentSlide = 0;
+
+        function updateSlides() {
+            // Re-query slides in case we add them dynamically
+            const allSlides = document.querySelectorAll('.slide');
+
+            allSlides.forEach((slide, index) => {
+                if (index === currentSlide) slide.classList.add('active');
+                else slide.classList.remove('active');
+            });
+
+            const progress = ((currentSlide + 1) / allSlides.length) * 100;
+            progressBar.style.width = `${progress}%`;
+
+            if (slideCounter) {
+                slideCounter.textContent = `${currentSlide + 1} / ${allSlides.length}`;
+            }
+        }
+
+        function nextSlide() {
+            const allSlides = document.querySelectorAll('.slide');
+            if (currentSlide < allSlides.length - 1) {
+                currentSlide++;
+                updateSlides();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlides();
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+            if (e.key === 'F2') {
+                e.preventDefault();
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => console.log(err));
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+        });
+
+        updateSlides();
+    </script>
+    <!-- Modal Structure (Moved to Root) -->
+    <div id="screeModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('screeModal')">&times;</span>
+            <h2 style="color: var(--c-gold); margin-bottom: 1.5rem;"><i class="fa-solid fa-mountain"></i> El
+                Concepto de
+                "Scree" (Escombros)</h2>
+
+            <div style="display: flex; gap: 2rem;">
+                <div style="flex: 1;">
+                    <p style="font-size: 1.1rem; line-height: 1.6; color: var(--text-read);">
+                        En geología, el <em>"scree"</em> son las rocas sueltas y escombros que se acumulan en la
+                        base de
+                        un acantilado.
+                    </p>
+                    <p style="font-size: 1.1rem; line-height: 1.6; color: var(--text-read); margin-top: 1rem;">
+                        En PCA, el gráfico de varianza (eigenvalues) siempre tiene forma de montaña:
+                    </p>
+                    <ul style="margin-top: 1rem; list-style: none; padding-left: 0;">
+                        <li style="margin-bottom: 15px; display: flex; align-items: flex-start;">
+                            <div
+                                style="width: 30px; display: flex; justify-content: center; margin-right: 10px; flex-shrink: 0; margin-top: 2px;">
+                                <i class="fa-solid fa-mountain" style="color: var(--c-cyan); font-size: 1.2rem;"></i>
+                            </div>
+                            <div>
+                                <strong style="color: var(--c-cyan); display: block; margin-bottom: 2px;">El
+                                    Acantilado
+                                    (Señal):</strong>
+                                <span style="font-size: 1rem; color: var(--text-read);">Los primeros componentes que
+                                    capturan mucha información (pendiente pronunciada).</span>
+                            </div>
+                        </li>
+                        <li style="display: flex; align-items: flex-start;">
+                            <div
+                                style="width: 30px; display: flex; justify-content: center; margin-right: 10px; flex-shrink: 0; margin-top: 2px;">
+                                <i class="fa-solid fa-cubes" style="color: var(--text-dim); font-size: 1.2rem;"></i>
+                            </div>
+                            <div>
+                                <strong style="color: var(--text-dim); display: block; margin-bottom: 2px;">Los
+                                    Escombros (Ruido):</strong>
+                                <span style="font-size: 1rem; color: var(--text-read);">Los componentes finales que
+                                    aportan muy poco (pendiente plana).</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div
+                    style="flex: 1; background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                    <h4 style="color: #fff; margin-bottom: 1rem;">La Regla del Codo</h4>
+                    <!-- Simple CSS visual for Scree Plot -->
+                    <div
+                        style="display: flex; align-items: flex-end; height: 150px; gap: 10px; padding-bottom: 5px; border-bottom: 2px solid var(--text-dim);">
+                        <div style="width: 30px; height: 90%; background: var(--c-cyan);"></div>
+                        <div style="width: 30px; height: 40%; background: var(--c-cyan);"></div>
+                        <div style="width: 30px; height: 15%; background: var(--text-dim); opacity: 0.5;"></div>
+                        <div style="width: 30px; height: 10%; background: var(--text-dim); opacity: 0.5;"></div>
+                        <div style="width: 30px; height: 5%; background: var(--text-dim); opacity: 0.5;"></div>
+                    </div>
+                    <p style="text-align: center; margin-top: 10px; font-size: 0.9rem;">
+                        Cortamos donde termina el acantilado y empiezan los escombros.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- PC1 Modal ("Magnitud") -->
+    <div id="pc1Modal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('pc1Modal')">&times;</span>
+            <h2 style="color: var(--c-cyan); margin-bottom: 1.5rem;"><i class="fa-solid fa-arrows-left-right"></i>
+                PC1:
+                El Índice de Magnitud</h2>
+
+            <div style="display: flex; gap: 2rem;">
+                <div style="flex: 1;">
+                    <p style="font-size: 1.1rem; line-height: 1.6; color: var(--text-read);">
+                        El <strong>Primer Componente Principal (PC1)</strong> siempre es el "Rey de la Varianza".
+                        Captura la mayor cantidad de información posible en una sola línea.
+                    </p>
+                    <p style="font-size: 1.1rem; line-height: 1.6; color: var(--text-read); margin-top: 1rem;">
+                        <strong style="color: var(--c-cyan);">¿Qué significa en Negocios?</strong>
+                    </p>
+                    <p style="font-size: 1rem; line-height: 1.6; color: var(--text-dim);">
+                        Casi siempre representa el <strong>"Tamaño General"</strong> del cliente.
+                    </p>
+                    <ul style="margin-top: 1rem; list-style: none; padding-left: 0;">
+                        <li style="margin-bottom: 10px; display: flex; align-items: center;">
+                            <i class="fa-solid fa-arrow-up-right-dots"
+                                style="color: var(--c-cyan); margin-right: 10px;"></i>
+                            <strong>Valores Altos:</strong> Clientes "Gigantes" (Gastan mucho, visitan mucho,
+                            compran
+                            mucho).
+                        </li>
+                        <li style="display: flex; align-items: center;">
+                            <i class="fa-solid fa-arrow-down-short-wide"
+                                style="color: var(--text-dim); margin-right: 10px;"></i>
+                            <strong>Valores Bajos:</strong> Clientes "Pequeños" o inactivos.
+                        </li>
+                    </ul>
+                </div>
+                <div
+                    style="flex: 1; background: rgba(0, 255, 255, 0.05); padding: 1.5rem; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid rgba(0, 255, 255, 0.2);">
+                    <h4 style="color: var(--c-cyan); margin-bottom: 1rem;">Analogía Visual</h4>
+                    <i class="fa-solid fa-weight-hanging"
+                        style="font-size: 4rem; color: var(--c-cyan); margin-bottom: 1rem;"></i>
+                    <p style="text-align: center; margin-top: 10px; font-size: 0.95rem; line-height: 1.5;">
+                        Imagina que pesas a tus clientes.<br>
+                        PC1 te dice <strong>cuánto pesan</strong> en total, sin importar si es músculo o grasa.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PC2 Modal ("Comportamiento") -->
+    <div id="pc2Modal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('pc2Modal')">&times;</span>
+            <h2 style="color: var(--c-purple); margin-bottom: 1.5rem;"><i class="fa-solid fa-bezier-curve"></i> PC2:
+                Dimensión de Comportamiento</h2>
+
+            <div style="display: flex; gap: 2rem;">
+                <div style="flex: 1;">
+                    <p style="font-size: 1.1rem; line-height: 1.6; color: var(--text-read);">
+                        El <strong>Segundo Componente (PC2)</strong> captura lo que PC1 ignoró. Es la "personalidad"
+                        o
+                        el "estilo" del dato.
+                    </p>
+                    <p style="font-size: 1.1rem; line-height: 1.6; color: var(--text-read); margin-top: 1rem;">
+                        <strong style="color: var(--c-purple);">¿Qué significa en Negocios?</strong>
+                    </p>
+                    <p style="font-size: 1rem; line-height: 1.6; color: var(--text-dim);">
+                        Distingue a clientes que tienen el mismo "Tamaño" (PC1) pero actúan diferente.
+                    </p>
+                    <div
+                        style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 6px; margin-top: 10px;">
+                        <p style="font-size: 0.9rem; margin: 0; font-style: italic; color: #fff;">
+                            "Dos clientes gastan $1000 al mes (mismo PC1). Pero uno hace 1 compra de $1000 y el otro
+                            100
+                            compras de $10. PC2 captura esa diferencia."
+                        </p>
+                    </div>
+                </div>
+                <div
+                    style="flex: 1; background: rgba(216, 180, 254, 0.05); padding: 1.5rem; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid rgba(216, 180, 254, 0.2);">
+                    <h4 style="color: var(--c-purple); margin-bottom: 1rem;">Analogía Visual</h4>
+                    <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 1rem;">
+                        <i class="fa-solid fa-shapes" style="font-size: 3rem; color: var(--c-purple);"></i>
+                    </div>
+                    <p style="text-align: center; margin-top: 10px; font-size: 0.95rem; line-height: 1.5;">
+                        PC1 es el <strong>Volumen</strong> del paquete.<br>
+                        PC2 es la <strong>Forma</strong> del paquete (largo y fino vs. cuadrado y compacto).
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
