@@ -1,0 +1,2095 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clase 06 - Minería de Datos</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lato:wght@300;400;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* =========================================
+           CORE VARIABLES & THEME
+           ========================================= */
+        :root {
+            /* Backgrounds */
+            --bg-deep: #020617;
+            --bg-gradient: radial-gradient(circle at 50% 120%, #1e1b4b, #020617);
+
+            /* Text */
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+
+            /* Accents (Neon Palette) */
+            --c-cyan: #22d3ee;
+            --c-purple: #d8b4fe;
+            --c-pink: #f472b6;
+            --c-green: #4ade80;
+            --c-gold: #facc15;
+            --c-danger: #ef4444;
+            --c-blue: #38bdf8;
+
+            /* Glassmorphism */
+            --glass-bg: rgba(15, 23, 42, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.03);
+            --glass-blur: blur(20px);
+            --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 20px rgba(56, 189, 248, 0.15);
+
+            /* Spacing & sizing */
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --container-max: 1400px;
+        }
+
+        /* =========================================
+           RESET & BASIC SETUP
+           ========================================= */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg-deep);
+            background-image:
+                linear-gradient(to bottom, transparent, var(--bg-deep)),
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Ambient Background Orbs */
+        body::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.1), transparent 60%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            bottom: -20%;
+            right: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(192, 132, 252, 0.1), transparent 60%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+            animation: float 25s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(20px, 40px);
+            }
+        }
+
+        /* =========================================
+           SLIDES ARCHITECTURE
+           ========================================= */
+        .slides-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.96) translateY(15px);
+            transition: opacity 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            padding: 40px;
+            pointer-events: none;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateY(0);
+            pointer-events: all;
+            z-index: 10;
+        }
+
+        /* =========================================
+           COMPONENTS: CARDS & CONTAINERS
+           ========================================= */
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-top: 1px solid var(--glass-highlight);
+            border-radius: var(--radius-lg);
+            padding: 3.5rem;
+            width: 100%;
+            max-width: var(--container-max);
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Scrollbar Styling */
+        .card::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .card::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .card::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .card::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Typography */
+        h1 {
+            font-family: 'Lato', sans-serif;
+            font-weight: 900;
+            font-size: clamp(3rem, 5vw, 5.5rem);
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #fff 20%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.03em;
+        }
+
+        h2 {
+            font-family: 'Lato', sans-serif;
+            font-weight: 800;
+            font-size: clamp(2rem, 3.5vw, 3rem);
+            margin-bottom: 2rem;
+            background: linear-gradient(90deg, #fff, var(--c-cyan));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            color: #fff;
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        p,
+        li {
+            font-size: 1.15rem;
+            line-height: 1.7;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        strong {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        ul {
+            margin-left: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        li::marker {
+            color: var(--c-cyan);
+        }
+
+        /* Grids */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 2rem;
+            height: 100%;
+        }
+
+        .split-layout {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 3rem;
+            align-items: start;
+        }
+
+        /* Concept Boxes */
+        .concept-box {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 2rem;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+
+        .concept-box:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* =========================================
+           CODE BLOCK / TERMINAL STYLING
+           ========================================= */
+        .window-interface {
+            background-color: #0f172a;
+            /* Deep Navy Terminal */
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 10px;
+        }
+
+        .window-header {
+            background-color: #1e293b;
+            padding: 12px 16px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .window-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot-red {
+            background-color: #ef4444;
+        }
+
+        .dot-yellow {
+            background-color: #f59e0b;
+        }
+
+        .dot-green {
+            background-color: #22c55e;
+        }
+
+        .filename {
+            margin-left: 10px;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            opacity: 0.8;
+        }
+
+        .code-content {
+            padding: 24px;
+            margin: 0;
+            overflow-x: auto;
+            color: #e2e8f0;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            white-space: pre;
+            /* CRITICAL FIX: Preserves spacing and newlines */
+            tab-size: 4;
+        }
+
+        /* Syntax Highlighting Classes */
+        .kwd {
+            color: var(--c-purple);
+            font-weight: bold;
+        }
+
+        /* Keywords */
+        .func {
+            color: var(--c-gold);
+        }
+
+        /* Functions */
+        .str {
+            color: var(--c-green);
+        }
+
+        /* Strings */
+        .num {
+            color: var(--c-pink);
+        }
+
+        /* Numbers */
+        .cls {
+            color: var(--c-cyan);
+        }
+
+        /* Classes */
+        .cmt {
+            color: #64748b;
+            font-style: italic;
+        }
+
+        /* Comments */
+        .op {
+            color: var(--c-blue);
+        }
+
+        /* Operators */
+
+        /* =========================================
+           NAVIGATION & UTILS
+           ========================================= */
+        .footer-nav {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 100;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: var(--text-main);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: var(--c-cyan);
+            color: #000;
+            transform: scale(1.1);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .slide-counter {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--c-cyan), var(--c-purple));
+            width: 0%;
+            transition: width 0.3s ease;
+            z-index: 200;
+            box-shadow: 0 0 15px var(--c-cyan);
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 1024px) {
+            .split-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 2.5rem;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="progress-bar" id="progressBar"></div>
+
+    <div class="slides-container">
+
+
+        <!-- Slide 1: Portada -->
+        <div class="slide active">
+            <div class="card" style="text-align: center; justify-content: center; min-height: 60vh;">
+                <p
+                    style="color: var(--c-cyan); letter-spacing: 3px; text-transform: uppercase; font-size: 0.9rem; font-weight: 700; margin-bottom: 20px;">
+                    Minería de Datos | Clase 06
+                </p>
+                <h1>Introducción a los Modelos de Minería de Datos</h1>
+                <p style="font-size: 1.6rem; color: var(--text-muted); margin-top: 1rem;">
+                    Construyendo Inteligencia a partir de Datos
+                </p>
+
+                <div
+                    style="margin-top: 3rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; text-align: left; width: 100%; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px;">
+                    <!-- Case Study Info -->
+                    <div style="display: flex; gap: 15px; align-items: flex-start;">
+                        <div
+                            style="background: rgba(6,182,212,0.1); padding: 12px; border-radius: 8px; color: var(--c-cyan);">
+                            <i class="fa-solid fa-shop"></i>
+                        </div>
+                        <div>
+                            <h4
+                                style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: #64748b; margin: 0 0 5px 0; font-weight: 600;">
+                                Caso de Estudio</h4>
+                            <p style="font-size: 1.1rem; color: #fff; margin: 0;">TiendaOnline</p>
+                            <p style="font-size: 0.9rem; color: var(--c-cyan); margin: 2px 0 0 0; font-style: italic;">
+                                E-commerce ficticio</p>
+                        </div>
+                    </div>
+
+                    <!-- Duration -->
+                    <div style="display: flex; gap: 15px; align-items: flex-start;">
+                        <div
+                            style="background: rgba(236,72,153,0.1); padding: 12px; border-radius: 8px; color: var(--c-pink);">
+                            <i class="fa-regular fa-clock"></i>
+                        </div>
+                        <div>
+                            <h4
+                                style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: #64748b; margin: 0 0 5px 0; font-weight: 600;">
+                                Duración</h4>
+                            <p style="font-size: 1.1rem; color: #fff; margin: 0;">2 horas 30 min</p>
+                        </div>
+                    </div>
+                    <!-- Bloque -->
+                    <div style="display: flex; gap: 15px; align-items: flex-start;">
+                        <div
+                            style="background: rgba(74,222,128,0.1); padding: 12px; border-radius: 8px; color: var(--c-green);">
+                            <i class="fa-solid fa-layer-group"></i>
+                        </div>
+                        <div>
+                            <h4
+                                style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: #64748b; margin: 0 0 5px 0; font-weight: 600;">
+                                Bloque 1</h4>
+                            <p style="font-size: 1.1rem; color: #fff; margin: 0;">Fundamentos y Regresión</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: El Caso TiendaOnline -->
+        <div class="slide">
+            <div class="card">
+                <h2>Caso Transversal: TiendaOnline</h2>
+                <p style="margin-bottom: 3rem; max-width: 800px;">
+                    Para entender la minería de datos, trabajaremos con un caso práctico durante toda la clase.
+                    <br>Nuestro trabajo será <strong>ayudar a TiendaOnline a tomar mejores decisiones</strong>
+                    construyendo modelos.
+                </p>
+
+                <div class="grid-2">
+                    <div class="concept-box">
+                        <h3 style="color: var(--c-gold);"><i class="fa-solid fa-store"></i> ¿Qué es TiendaOnline?</h3>
+                        <p style="margin-bottom: 1rem;">Un e-commerce masivo que vende de todo.</p>
+                        <ul style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <li><i class="fa-solid fa-laptop" style="color: var(--c-cyan);"></i> Electrónica</li>
+                            <li><i class="fa-solid fa-shirt" style="color: var(--c-purple);"></i> Ropa</li>
+                            <li><i class="fa-solid fa-book" style="color: var(--c-pink);"></i> Libros</li>
+                            <li><i class="fa-solid fa-burger" style="color: var(--c-green);"></i> Comida</li>
+                        </ul>
+                    </div>
+
+                    <div class="concept-box">
+                        <h3 style="color: var(--c-blue);"><i class="fa-solid fa-database"></i> Los Datos Disponibles
+                        </h3>
+                        <p style="margin-bottom: 1rem;">Tenemos acceso total a su base de datos:</p>
+                        <ul>
+                            <li><strong>Clientes:</strong> Quiénes son, edad, ubicación.</li>
+                            <li><strong>Compras:</strong> Qué compraron, cuánto gastaron.</li>
+                            <li><strong>Tiempo:</strong> Cuándo ocurrieron las transacciones.</li>
+                            <li><strong>Geografía:</strong> Desde qué ciudad se conectan.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Slide 3: ¿Qué es un Modelo? -->
+        <div class="slide">
+            <div class="card">
+                <h2>1.2. ¿Qué es un Modelo?</h2>
+                <p style="margin-bottom: 2rem; max-width: 900px;">
+                    <i class="fa-solid fa-map-location-dot" style="color: var(--c-cyan); margin-right: 10px;"></i>
+                    "El mapa no es el territorio".
+                </p>
+
+                <div class="split-layout" style="align-items: center;">
+                    <div>
+                        <div class="concept-box" style="border-left: 4px solid var(--c-purple);">
+                            <h3 style="color: var(--c-purple);">Analogy: Waze / Google Maps</h3>
+                            <p style="font-size: 1rem; line-height: 1.6;">
+                                Imagina que vas de la U al centro de Chepe. Usas Waze.
+                                <br><br>
+                                Lo que ves en la pantalla <strong>no es la ciudad real</strong>. No tiene los baches, ni
+                                el perro que cruza la calle.
+                                <br><br>
+                                Es una <strong>simplificación</strong>. Pero tiene lo suficiente para:
+                            </p>
+                            <ul style="margin-top: 10px;">
+                                <li>Guiarte (Entender).</li>
+                                <li>Predecir tu hora de llegada (Predicción).</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center;">
+                        <div
+                            style="background: rgba(255,255,255,0.03); padding: 30px; border-radius: 50%; display: inline-block; margin-bottom: 20px; border: 1px dashed var(--c-cyan);">
+                            <i class="fa-solid fa-layer-group" style="font-size: 5rem; color: var(--c-cyan);"></i>
+                        </div>
+                        <p style="font-size: 1.3rem; color: #fff;">
+                            Un modelo es una<br> <strong style="color: var(--c-cyan);">simplificación útil</strong> de
+                            la realidad.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Tipos de Modelos -->
+        <div class="slide">
+            <div class="card">
+                <h2>Los 3 Tipos de Modelos</h2>
+                <p style="margin-bottom: 3rem;">Hoy veremos tres formas de usar los datos de TiendaOnline:</p>
+
+                <div class="grid-2" style="grid-template-columns: repeat(3, 1fr);">
+                    <!-- Regresión -->
+                    <div class="concept-box" style="border-top: 4px solid var(--c-green);">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <i class="fa-solid fa-chart-line" style="font-size: 3rem; color: var(--c-green);"></i>
+                        </div>
+                        <h3 style="justify-content: center; color: var(--c-green);">Regresión</h3>
+                        <p style="text-align: center; color: var(--text-muted); font-size: 0.95rem;">Predicen <strong
+                                style="color: #fff;">Números</strong></p>
+                        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;">
+                        <p style="font-size: 0.9rem; text-align: center;">
+                            <em>"¿Cuánto venderemos el próximo mes?"</em>
+                        </p>
+                    </div>
+
+                    <!-- Clasificación -->
+                    <div class="concept-box" style="border-top: 4px solid var(--c-purple);">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <i class="fa-solid fa-tags" style="font-size: 3rem; color: var(--c-purple);"></i>
+                        </div>
+                        <h3 style="justify-content: center; color: var(--c-purple);">Clasificación</h3>
+                        <p style="text-align: center; color: var(--text-muted); font-size: 0.95rem;">Predicen <strong
+                                style="color: #fff;">Categorías</strong></p>
+                        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;">
+                        <p style="font-size: 0.9rem; text-align: center;">
+                            <em>"¿Este cliente comprará sí o no?"</em>
+                        </p>
+                    </div>
+
+                    <!-- Clustering -->
+                    <div class="concept-box" style="border-top: 4px solid var(--c-pink);">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <i class="fa-solid fa-people-group" style="font-size: 3rem; color: var(--c-pink);"></i>
+                        </div>
+                        <h3 style="justify-content: center; color: var(--c-pink);">Agrupamiento</h3>
+                        <p style="text-align: center; color: var(--text-muted); font-size: 0.95rem;">Descubren <strong
+                                style="color: #fff;">Patrones</strong></p>
+                        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;">
+                        <p style="font-size: 0.9rem; text-align: center;">
+                            <em>"¿Quiénes son nuestros clientes VIP?"</em>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Slide 5a: Regresión - Introducción y Gasto -->
+        <div class="slide">
+            <div class="card">
+                <h2>1.3. Modelo de Regresión (Parte 1)</h2>
+
+                <p style="margin-bottom: 2rem;">
+                    El primer tipo de modelo se llama <strong>Regresión</strong>. La palabra suena complicada, pero el
+                    concepto es muy sencillo: <strong style="color: var(--c-green);">predecir un número</strong>.
+                </p>
+
+                <p style="margin-bottom: 2rem;">Vamos a poner varios ejemplos con <strong>TiendaOnline</strong>:</p>
+
+                <!-- Ejemplo 1 -->
+                <div class="concept-box" style="border-left: 4px solid var(--c-green);">
+                    <h3><i class="fa-solid fa-money-bill-wave" style="color: var(--c-green);"></i> Ejemplo 1: Gasto del
+                        cliente</h3>
+                    <p>
+                        El dueño de TiendaOnline quiere saber <strong>cuánto dinero va a gastar un cliente el próximo
+                            mes</strong>. Si puede predecir eso, puede enviarle ofertas especiales justo antes de que
+                        gaste.
+                        <br><br>
+                        El modelo de regresión analiza el historial de ese cliente (cuánto ha gastado antes, qué ha
+                        comprado, cada cuánto compra) y nos dice:
+                    </p>
+                    <div
+                        style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-top: 10px; border-left: 2px solid var(--c-cyan);">
+                        <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; margin: 0;">
+                            <i class="fa-solid fa-robot" style="margin-right: 10px;"></i>
+                            "Este cliente, que se llama Juan, el mes que viene gastará aproximadamente <strong>55.000
+                                colones</strong>."
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5b: Regresión - Stock y LTV -->
+        <div class="slide">
+            <div class="card">
+                <h2>1.3. Modelo de Regresión (Parte 2)</h2>
+                <div style="display: flex; flex-direction: column; gap: 2rem;">
+
+                    <!-- Ejemplo 2 -->
+                    <div class="concept-box" style="border-left: 4px solid var(--c-gold);">
+                        <h3><i class="fa-solid fa-boxes-stacked" style="color: var(--c-gold);"></i> Ejemplo 2: Stock de
+                            producto</h3>
+                        <p>
+                            TiendaOnline vende un celular muy popular. Si se quedan sin stock, pierden ventas. Si piden
+                            demasiados, gastan dinero en almacenarlos.
+                            <br><br>
+                            Un modelo de regresión puede predecir:
+                        </p>
+                        <div
+                            style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-top: 10px; border-left: 2px solid var(--c-cyan);">
+                            <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; margin: 0;">
+                                <i class="fa-solid fa-robot" style="margin-right: 10px;"></i>
+                                "El próximo mes se venderán <strong>150 unidades</strong> de este celular."
+                            </p>
+                        </div>
+                        <p style="margin-top: 10px; font-size: 1rem;">Así pueden pedir justo los que necesitan.</p>
+                    </div>
+
+                    <!-- Ejemplo 3 -->
+                    <div class="concept-box" style="border-left: 4px solid var(--c-purple);">
+                        <h3><i class="fa-solid fa-user-clock" style="color: var(--c-purple);"></i> Ejemplo 3: Valor de
+                            vida del cliente</h3>
+                        <p>
+                            Este es un concepto muy usado en marketing. ¿Cuánto dinero dejará un cliente en TiendaOnline
+                            durante todo el tiempo que sea cliente?
+                            <br><br>
+                            Si sabemos que un cliente nuevo va a dejarnos <strong>500.000 colones</strong> en los
+                            próximos 3 años, podemos decidir invertir hoy en darle un descuento para fidelizarlo.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5c: Regresión - Cómo funciona -->
+        <div class="slide">
+            <div class="card">
+                <h2>1.3. Regresión: ¿Cómo funciona?</h2>
+
+                <div
+                    style="margin-top: 1rem; padding: 30px; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.15);">
+                    <h3 style="color: var(--text-main); font-size: 1.4rem; margin-bottom: 1.5rem;">
+                        <i class="fa-solid fa-chart-line" style="color: var(--c-green); margin-right: 10px;"></i>
+                        La Línea de Tendencia
+                    </h3>
+                    <p style="font-size: 1.2rem; margin-bottom: 2rem;">
+                        Sin entrar en matemáticas complicadas, imaginemos un gráfico. En un eje ponemos el tiempo, en
+                        otro eje ponemos el gasto del cliente. Cada compra es un punto.
+                    </p>
+
+                    <div style="display: flex; gap: 40px; align-items: center; justify-content: center;">
+                        <div
+                            style="min-width: 250px; height: 180px; position: relative; border-left: 3px solid #fff; border-bottom: 3px solid #fff;">
+                            <!-- Improved Chart Animation for larger view -->
+                            <div
+                                style="position: absolute; bottom: 30px; left: 30px; width: 10px; height: 10px; background: var(--c-cyan); border-radius: 50%;">
+                            </div>
+                            <div
+                                style="position: absolute; bottom: 60px; left: 80px; width: 10px; height: 10px; background: var(--c-cyan); border-radius: 50%;">
+                            </div>
+                            <div
+                                style="position: absolute; bottom: 100px; left: 140px; width: 10px; height: 10px; background: var(--c-cyan); border-radius: 50%;">
+                            </div>
+                            <!-- Prediction Point -->
+                            <div
+                                style="position: absolute; bottom: 140px; left: 200px; width: 10px; height: 10px; background: var(--c-pink); border-radius: 50%; opacity: 0.5; animation: pulse 2s infinite;">
+                            </div>
+
+                            <!-- Line -->
+                            <div
+                                style="position: absolute; bottom: 30px; left: 20px; width: 230px; height: 3px; background: var(--c-green); transform: rotate(-30deg); transform-origin: left bottom; box-shadow: 0 0 15px var(--c-green);">
+                            </div>
+                        </div>
+                        <p style="font-size: 1.1rem; max-width: 400px;">
+                            El modelo de regresión dibuja una <strong
+                                style="color: var(--c-green); font-size: 1.2rem;">línea</strong> que pasa lo más cerca
+                            posible de todos esos puntos.
+                            <br><br>
+                            Esa línea es la que nos permite mirar hacia adelante y decir: <br>
+                            <em
+                                style="color: var(--c-cyan); background: rgba(34, 211, 238, 0.1); padding: 2px 8px; border-radius: 4px;">"En
+                                el mes 6, el gasto será este."</em>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Slide 6: Actividad Rápida -->
+        <div class="slide">
+            <div class="card">
+                <h2>1.4. Actividad rápida: Lluvia de ideas</h2>
+
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <div
+                        style="display: inline-block; background: rgba(56, 189, 248, 0.1); padding: 20px; border-radius: 50%; margin-bottom: 1rem; border: 1px solid var(--c-cyan);">
+                        <i class="fa-regular fa-lightbulb" style="font-size: 3rem; color: var(--c-cyan);"></i>
+                    </div>
+                </div>
+
+                <div class="concept-box" style="border-left: 4px solid var(--c-cyan); margin-bottom: 2rem;">
+                    <h3 style="color: var(--c-cyan);">Instrucciones:</h3>
+                    <ol style="margin-left: 1.5rem; margin-bottom: 1.5rem; color: #fff;">
+                        <li style="margin-bottom: 0.8rem;">
+                            <strong>Formen Parejas:</strong> Busquen a un compañero.
+                        </li>
+                        <li style="margin-bottom: 0.8rem;">
+                            <strong>Lluvia de Ideas:</strong> Piensen en problemas de negocio de <em>TiendaOnline</em>.
+                        </li>
+                        <li style="margin-bottom: 0.8rem;">
+                            <strong>Selección:</strong> Elijan <strong>3 números</strong> específicos que les gustaría
+                            predecir para resolver esos problemas.
+                        </li>
+                    </ol>
+                    <p style="font-size: 1rem; color: var(--text-muted);">
+                        <i class="fa-solid fa-triangle-exclamation"
+                            style="color: var(--c-gold); margin-right: 5px;"></i>
+                        No vale repetir los ejemplos que ya dimos.
+                    </p>
+                    <div
+                        style="background: rgba(255,255,255,0.05); padding: 10px 15px; border-radius: 6px; display: inline-block; margin-top: 10px;">
+                        <i class="fa-regular fa-clock" style="color: var(--c-pink); margin-right: 8px;"></i>
+                        <span
+                            style="font-family: 'JetBrains Mono', monospace; font-weight: bold; color: var(--c-pink);">05:00
+                            minutos</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6b: Actividad rápida - Resultados y Chart -->
+        <div class="slide">
+            <div class="card">
+                <h2>1.4. Actividad rápida: Resultados</h2>
+
+                <div class="step">
+                    <h4
+                        style="margin-bottom: 1rem; color: var(--text-dim); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 2px;">
+                        Posibles Respuestas (Enter para revelar)
+                    </h4>
+                    <ul
+                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; list-style: none; margin: 0; padding: 0;">
+                        <li
+                            style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fa-solid fa-chart-simple" style="color: var(--c-green);"></i> Visitas a la web
+                            mañana
+                        </li>
+                        <li
+                            style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fa-solid fa-percent" style="color: var(--c-purple);"></i> Probabilidad de clic en
+                            banner (0-1)
+                        </li>
+                        <li
+                            style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fa-regular fa-calendar" style="color: var(--c-blue);"></i> Días hasta próxima
+                            compra
+                        </li>
+                        <li
+                            style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fa-solid fa-rotate-left" style="color: var(--c-danger);"></i> Cantidad de
+                            devoluciones
+                        </li>
+                    </ul>
+                </div>
+
+                <div
+                    style="margin-top: 2rem; width: 100%; height: 250px; display: flex; align-items: center; justify-content: center;">
+                    <canvas id="regressionChart"></canvas>
+                </div>
+
+                <div class="step"
+                    style="margin-top: 1rem; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem;">
+                    <p style="font-size: 1.1rem; color: var(--c-green); font-style: italic;">
+                        "Buen trabajo. Han dado en el clavo. Recuerden: todo lo que sea un número, es candidato para
+                        un modelo de regresión."
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- BRIDGE SLIDE 1: Regresión -> Clasificación -->
+        <div class="slide">
+            <div style="text-align: center;">
+                <div style="margin-bottom: 2rem;">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size: 4rem; color: var(--c-purple);"></i>
+                </div>
+                <h2
+                    style="font-family: 'JetBrains Mono', monospace; font-size: 2rem; color: var(--c-purple); margin-bottom: 1rem;">
+                    CARGANDO MÓDULO 2...
+                </h2>
+                <p style="font-family: 'JetBrains Mono', monospace; color: var(--text-muted);">
+                    <span style="color: var(--c-green);">SUCCESS:</span> Regresión Completada.<br>
+                    <span style="color: var(--c-cyan);">LOADING:</span> Clasificación...
+                </p>
+                <div class="step" style="margin-top: 2rem;">
+                    <p
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--text-dim); animation: blink 2s infinite;">
+                        [ PRESIONA ENTER PARA CONTINUAR ]
+                    </p>
+                </div>
+            </div>
+        </div>
+        <!-- Slide 7a: Clasificación - Introducción y Compras -->
+        <div class="slide">
+            <div class="card">
+                <h2>2.1. Modelo tipo 2: Clasificación (Parte 1)</h2>
+
+                <p style="margin-bottom: 2rem;">
+                    Pasamos al segundo tipo de modelo: <strong>Clasificación</strong>.
+                </p>
+                <div
+                    style="background: rgba(192, 132, 252, 0.1); padding: 20px; border-radius: 10px; border-left: 4px solid var(--c-purple); margin-bottom: 2rem;">
+                    <p style="font-size: 1.1rem; margin: 0;">
+                        Si la regresión predecía números, la clasificación predice <strong
+                            style="color: var(--c-purple);">etiquetas o categorías</strong>.
+                        <br>
+                        La pregunta que responde no es <em>"cuánto"</em>, sino <em>"qué tipo"</em> o <em>"qué
+                            opción"</em>.
+                    </p>
+                </div>
+
+                <!-- Ejemplo 1 -->
+                <div class="concept-box" style="border-left: 4px solid var(--c-purple);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <h3><i class="fa-solid fa-cart-shopping" style="color: var(--c-purple);"></i> Ejemplo 1:
+                            ¿Comprará o no?</h3>
+                        <div class="tooltip-container">
+                            <i class="fa-solid fa-circle-user" style="color: var(--c-cyan); font-size: 1.5rem;"></i>
+                            <span class="tooltip-text">
+                                Edad: 25<br>
+                                Historial: 0<br>
+                                Sesión: 2m
+                            </span>
+                        </div>
+                    </div>
+                    <p>
+                        Un cliente llega a TiendaOnline, busca un producto, lo pone en el carrito... y ahí se queda.
+                        ¿Va a comprar o va a abandonar el carrito?
+                        <br><br>
+                        El modelo de clasificación analiza su comportamiento y dice:
+                    </p>
+                    <div style="margin-top: 15px; display: flex; gap: 15px;">
+                        <div class="step"
+                            style="background: rgba(255,255,255,0.05); padding: 10px 15px; border-radius: 6px; border-left: 2px solid var(--c-green); flex: 1;">
+                            <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; margin: 0;">
+                                <i class="fa-solid fa-check" style="color: var(--c-green); margin-right: 5px;"></i>
+                                "Este cliente tiene un <strong>90%</strong> de probabilidades de pertenecer a la
+                                categoría <strong>'Comprador'</strong>."
+                            </p>
+                        </div>
+                        <div class="step"
+                            style="background: rgba(255,255,255,0.05); padding: 10px 15px; border-radius: 6px; border-left: 2px solid var(--c-danger); flex: 1;">
+                            <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; margin: 0;">
+                                <i class="fa-solid fa-xmark" style="color: var(--c-danger); margin-right: 5px;"></i>
+                                "Este otro tiene un <strong>95%</strong> de probabilidades de ser <strong>'No
+                                    Comprador'</strong>."
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7b: Clasificación - Sentimiento y Categorías -->
+        <div class="slide">
+            <div class="card">
+                <h2>2.1. Modelo tipo 2: Clasificación (Parte 2)</h2>
+                <div style="display: flex; flex-direction: column; gap: 2rem;">
+
+                    <!-- Ejemplo 2 -->
+                    <div class="concept-box" style="border-left: 4px solid var(--c-cyan);">
+                        <h3><i class="fa-regular fa-face-smile" style="color: var(--c-cyan);"></i> Ejemplo 2:
+                            Análisis de sentimiento</h3>
+                        <p>
+                            Los clientes escriben reseñas de los productos. Imagina que TiendaOnline recibe 10.000
+                            reseñas al día. Es imposible leerlas todas.
+                            <br><br>
+                            Un modelo de clasificación puede leerlas y etiquetarlas automáticamente como:
+                        </p>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <span
+                                style="background: rgba(74, 222, 128, 0.2); color: #4ade80; padding: 5px 15px; border-radius: 20px; font-weight: 700;">Positiva</span>
+                            <span
+                                style="background: rgba(148, 163, 184, 0.2); color: #cbd5e1; padding: 5px 15px; border-radius: 20px; font-weight: 700;">Neutral</span>
+                            <span
+                                style="background: rgba(248, 113, 113, 0.2); color: #f87171; padding: 5px 15px; border-radius: 20px; font-weight: 700;">Negativa</span>
+                        </div>
+                        <p style="margin-top: 10px; font-size: 0.9rem;">Así los dueños pueden atender solo las
+                            quejas urgentes.</p>
+                    </div>
+
+                    <!-- Ejemplo 3 -->
+                    <div class="concept-box" style="border-left: 4px solid var(--c-gold);">
+                        <h3><i class="fa-solid fa-shapes" style="color: var(--c-gold);"></i> Ejemplo 3: Más de dos
+                            opciones</h3>
+                        <p>
+                            No siempre es sí o no. A veces hay múltiples categorías. Por ejemplo, un modelo puede
+                            clasificar las fotos de los productos en:
+                        </p>
+                        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
+                            <div
+                                style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; text-align: center; width: 80px;">
+                                <i class="fa-solid fa-shoe-prints"
+                                    style="display: block; font-size: 1.2rem; margin-bottom: 5px;"></i>
+                                <span style="font-size: 0.8rem;">Zapatos</span>
+                            </div>
+                            <div
+                                style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; text-align: center; width: 80px;">
+                                <i class="fa-solid fa-shirt"
+                                    style="display: block; font-size: 1.2rem; margin-bottom: 5px;"></i>
+                                <span style="font-size: 0.8rem;">Camisas</span>
+                            </div>
+                            <div
+                                style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; text-align: center; width: 80px;">
+                                <i class="fa-solid fa-glasses"
+                                    style="display: block; font-size: 1.2rem; margin-bottom: 5px;"></i>
+                                <span style="font-size: 0.8rem;">Accesorios</span>
+                            </div>
+                        </div>
+                        <p style="margin-top: 10px; font-size: 0.9rem;">Así la tienda puede organizar su catálogo
+                            automáticamente.</p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7c: Clasificación vs Regresión -->
+        <div class="slide">
+            <div class="card">
+                <h2>Diferencia Clave</h2>
+
+                <div
+                    style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: stretch; height: 100%;">
+                    <!-- Regresión Summary -->
+                    <div class="step"
+                        style="background: rgba(0,0,0,0.3); border: 1px solid var(--c-green); border-radius: 15px; padding: 30px; display: flex; flex-direction: column; align-items: center; text-align: center; justify-content: center;">
+                        <h3 style="color: var(--c-green); font-size: 2rem; margin-bottom: 1.5rem;">REGRESIÓN</h3>
+                        <div style="font-size: 4rem; margin-bottom: 1.5rem;">
+                            <i class="fa-solid fa-hashtag" style="color: var(--c-green);"></i>
+                        </div>
+                        <p style="font-size: 1.3rem;">
+                            Si la respuesta es un <strong
+                                style="color: var(--c-green); text-decoration: underline;">NÚMERO</strong>
+                        </p>
+                        <ul style="text-align: left; margin-top: 2rem; color: var(--text-muted); font-size: 1rem;">
+                            <li>55.000 colones</li>
+                            <li>150 unidades</li>
+                            <li>3.5 años</li>
+                        </ul>
+                    </div>
+
+                    <!-- Clasificación Summary -->
+                    <div class="step"
+                        style="background: rgba(0,0,0,0.3); border: 1px solid var(--c-purple); border-radius: 15px; padding: 30px; display: flex; flex-direction: column; align-items: center; text-align: center; justify-content: center;">
+                        <h3 style="color: var(--c-purple); font-size: 2rem; margin-bottom: 1.5rem;">CLASIFICACIÓN
+                        </h3>
+                        <div style="font-size: 4rem; margin-bottom: 1.5rem;">
+                            <i class="fa-solid fa-tags" style="color: var(--c-purple);"></i>
+                        </div>
+                        <p style="font-size: 1.3rem;">
+                            Si la respuesta es una <strong
+                                style="color: var(--c-purple); text-decoration: underline;">ETIQUETA</strong>
+                        </p>
+                        <ul style="text-align: left; margin-top: 2rem; color: var(--text-muted); font-size: 1rem;">
+                            <li>Comprador / No Comprador</li>
+                            <li>Positivo / Negativo</li>
+                            <li>Gato / Perro</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BRIDGE SLIDE 2: Clasificación -> Asociación -->
+        <div class="slide">
+            <div style="text-align: center;">
+                <div style="margin-bottom: 2rem;">
+                    <i class="fa-solid fa-microchip"
+                        style="font-size: 4rem; color: var(--c-cyan); animation: pulse 1s infinite;"></i>
+                </div>
+                <h2
+                    style="font-family: 'JetBrains Mono', monospace; font-size: 2rem; color: var(--c-cyan); margin-bottom: 1rem;">
+                    DETECTANDO PATRONES...
+                </h2>
+                <p style="font-family: 'JetBrains Mono', monospace; color: var(--text-muted);">
+                    Iniciando análisis de cesta de compra.
+                </p>
+                <div
+                    style="width: 200px; height: 4px; background: rgba(255,255,255,0.1); margin: 20px auto; border-radius: 2px; overflow: hidden;">
+                    <div
+                        style="width: 60%; height: 100%; background: var(--c-cyan); animation: loadingBar 2s infinite linear;">
+                    </div>
+                </div>
+                <div class="step" style="margin-top: 2rem;">
+                    <p
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--text-dim); animation: blink 2s infinite;">
+                        [ PRESIONA ENTER PARA INICIAR ]
+                    </p>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Slide 8a: Reglas de Asociación - Intro y Ejemplo Clásico -->
+        <div class="slide">
+            <div class="card">
+                <h2>2.2. Modelo extra: Reglas de Asociación (Parte 1)</h2>
+
+                <p style="margin-bottom: 2rem;">
+                    Hay un tercer tipo de modelo, que no es exactamente de predicción, sino de <strong>descubrimiento de
+                        relaciones</strong>.
+                </p>
+
+                <div
+                    style="background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 2rem; display: flex; align-items: center; gap: 20px;">
+                    <i class="fa-solid fa-basket-shopping" style="font-size: 2.5rem; color: var(--c-cyan);"></i>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.2rem; color: var(--c-cyan);">Market Basket Analysis</h3>
+                        <p style="margin: 5px 0 0 0; font-size: 1rem; color: var(--text-muted);">
+                            La idea es muy simple: <strong>buscar productos que suelen comprarse juntos</strong>.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Ejemplo Clásico -->
+                <div class="concept-box" style="border-left: 4px solid var(--c-pink);">
+                    <h3><i class="fa-solid fa-book-open" style="color: var(--c-pink);"></i> El ejemplo clásico</h3>
+                    <p style="margin-bottom: 1rem;">
+                        un supermercado descubrió algo curioso: los hombres que compraban <strong>pañales</strong> los
+                        viernes por la tarde, también solían comprar <strong>cerveza</strong>.
+                    </p>
+
+                    <div
+                        style="display: flex; align-items: center; justify-content: center; gap: 30px; margin: 20px 0;">
+                        <div style="text-align: center;">
+                            <div
+                                style="background: rgba(255,255,255,0.1); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
+                                <i class="fa-solid fa-baby" style="font-size: 1.5rem; color: #fff;"></i>
+                            </div>
+                            <span style="font-size: 0.9rem;">Pañales</span>
+                        </div>
+                        <i class="fa-solid fa-plus" style="color: var(--text-muted);"></i>
+                        <div style="text-align: center;">
+                            <div
+                                style="background: rgba(255,255,255,0.1); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
+                                <i class="fa-solid fa-beer-mug-empty"
+                                    style="font-size: 1.5rem; color: var(--c-gold);"></i>
+                            </div>
+                            <span style="font-size: 0.9rem;">Cerveza</span>
+                        </div>
+                    </div>
+
+                    <p
+                        style="font-size: 0.9rem; color: var(--text-muted); font-style: italic; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+                        ¿La explicación? Padres jóvenes comprando para el fin de semana. El supermercado los puso juntos
+                        y las ventas dispararon.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8b: Reglas de Asociación - TiendaOnline y Aplicaciones -->
+        <div class="slide">
+            <div class="card">
+                <h2>2.2. Modelo extra: Reglas de Asociación (Parte 2)</h2>
+
+                <!-- Ejemplo TiendaOnline -->
+                <div class="concept-box" style="border-left: 4px solid var(--c-cyan); margin-bottom: 2rem;">
+                    <h3><i class="fa-solid fa-store" style="color: var(--c-cyan);"></i> Ejemplo con TiendaOnline</h3>
+                    <p>Imaginemos que analizamos las compras y encontramos esta regla:</p>
+                    <div
+                        style="background: rgba(34, 211, 238, 0.1); padding: 15px; border-radius: 8px; margin-top: 10px; border: 1px dashed var(--c-cyan); text-align: center;">
+                        <p style="font-family: 'JetBrains Mono', monospace; font-size: 1rem; margin: 0;">
+                            "Si compra <strong>Cámara</strong> <i class="fa-solid fa-arrow-right"
+                                style="margin: 0 10px;"></i> Probable compra <strong>Tarjeta Memoria</strong>"
+                        </p>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                    <div
+                        style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; text-align: center;">
+                        <i class="fa-solid fa-thumbs-up"
+                            style="color: var(--c-green); font-size: 1.5rem; margin-bottom: 10px;"></i>
+                        <h4 style="margin-bottom: 5px; font-size: 1rem;">Recomendaciones</h4>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);">"Quien compró esto también compró..."
+                        </p>
+                    </div>
+                    <div
+                        style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; text-align: center;">
+                        <i class="fa-solid fa-tags"
+                            style="color: var(--c-gold); font-size: 1.5rem; margin-bottom: 10px;"></i>
+                        <h4 style="margin-bottom: 5px; font-size: 1rem;">Ofertas</h4>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);">Packs con descuento conjunto.</p>
+                    </div>
+                    <div
+                        style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; text-align: center;">
+                        <i class="fa-solid fa-arrows-to-eye"
+                            style="color: var(--c-purple); font-size: 1.5rem; margin-bottom: 10px;"></i>
+                        <h4 style="margin-bottom: 5px; font-size: 1rem;">Ubicación</h4>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);">Ponerlos cerca visualmente.</p>
+                    </div>
+                </div>
+
+                <div
+                    style="margin-top: 2rem; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem;">
+                    <p style="font-size: 1.1rem; color: var(--c-cyan); font-weight: 700;">
+                        "No es predicción, es descubrimiento."
+                    </p>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Slide 9a: Actividad Práctica - Contexto -->
+        <div class="slide">
+            <div class="card">
+                <h2>Actividad 2.3: El Carrito de Compras (Contexto)</h2>
+                <div class="concept-box" style="border-left: 4px solid var(--c-green); height: auto;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                        <div
+                            style="width: 60px; height: 60px; background: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--c-green);">
+                            <i class="fa-solid fa-user-secret" style="font-size: 1.8rem; color: var(--c-green);"></i>
+                        </div>
+                        <div>
+                            <h3 style="margin: 0; color: var(--c-green); font-family: 'JetBrains Mono', monospace;">USR:
+                                DATA_MINER</h3>
+                            <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted);">ACCESS LEVEL: ADMIN</p>
+                        </div>
+                    </div>
+                    <p style="font-size: 1.1rem; line-height: 1.6;">
+                        Han hackeado la base de datos de <strong>TiendaOnline</strong>... bueno, en realidad, les he
+                        dado
+                        acceso a los registros de ventas de ayer.
+                    </p>
+                    <p style="font-size: 1.1rem; line-height: 1.6;">
+                        Tienen una tabla con 10 transacciones. Su misión es encontrar la regla de asociación más fuerte.
+                    </p>
+                    <div class="step"
+                        style="margin-top: 2rem; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                        <p style="margin: 0; font-size: 1.2rem; text-align: center;">
+                            <i class="fa-solid fa-magnifying-glass"
+                                style="color: var(--c-gold); margin-right: 10px;"></i>
+                            <strong>Pregunta:</strong> ¿Qué compran las personas que llevan <span
+                                style="color: var(--c-gold);">Cerveza y Papas Fritas</span>?
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9b: Actividad Práctica - Datos (Terminal) -->
+        <div class="slide">
+            <div class="card" style="padding: 2rem;">
+                <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem;">Actividad 2.3: Datos Detectados</h2>
+                <!-- Terminal Pantalla Completa -->
+                <div class="terminal-container" style="height: 100%; overflow-y: hidden;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--c-green);">
+                                <th style="padding: 15px; text-align: center; width: 80px; color: var(--c-green);">#
+                                </th>
+                                <th style="padding: 15px; text-align: left; color: var(--c-green);">
+                                    PRODUCTOS_detectados</th>
+                            </tr>
+                        </thead>
+                        <tbody class="terminal-text">
+                            <tr style="border-bottom: 1px solid rgba(74, 222, 128, 0.2);">
+                                <td style="padding: 12px; text-align: center; color: var(--c-green); opacity: 0.7;">1
+                                </td>
+                                <td style="padding: 12px;">Leche, Pan, Huevos</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(74, 222, 128, 0.2);">
+                                <td style="padding: 12px; text-align: center; color: var(--c-green); opacity: 0.7;">2
+                                </td>
+                                <td style="padding: 12px;">Pan, Mantequilla</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(74, 222, 128, 0.2);">
+                                <td style="padding: 12px; text-align: center; color: var(--c-green); opacity: 0.7;">3
+                                </td>
+                                <td style="padding: 12px;">Leche, Pan, Huevos, Cereales</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(74, 222, 128, 0.2);">
+                                <td style="padding: 12px; text-align: center; color: var(--c-green); opacity: 0.7;">4
+                                </td>
+                                <td style="padding: 12px;"><span style="color: var(--c-gold);">Cerveza</span>, <span
+                                        style="color: var(--c-gold);">Papas Fritas</span></td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(74, 222, 128, 0.2);">
+                                <td style="padding: 12px; text-align: center; color: var(--c-green); opacity: 0.7;">5
+                                </td>
+                                <td style="padding: 12px;">Leche, Huevos</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(74, 222, 128, 0.2);">
+                                <td style="padding: 12px; text-align: center; color: var(--c-green); opacity: 0.7;">6
+                                </td>
+                                <td style="padding: 12px;"><span style="color: var(--c-gold);">Cerveza</span>, <span
+                                        style="color: var(--c-gold);">Papas Fritas</span>, Maní</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(74, 222, 128, 0.2);">
+                                <td style="padding: 12px; text-align: center; color: var(--c-green); opacity: 0.7;">7
+                                </td>
+                                <td style="padding: 12px;">Pan, Mantequilla, Mermelada</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(74, 222, 128, 0.2);">
+                                <td style="padding: 12px; text-align: center; color: var(--c-green); opacity: 0.7;">8
+                                </td>
+                                <td style="padding: 12px;">Leche, Pan, Huevos, Mantequilla</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(74, 222, 128, 0.2);">
+                                <td style="padding: 12px; text-align: center; color: var(--c-green); opacity: 0.7;">9
+                                </td>
+                                <td style="padding: 12px;"><span style="color: var(--c-gold);">Cerveza</span>, <span
+                                        style="color: var(--c-gold);">Papas Fritas</span>, Salsa</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px; text-align: center; color: var(--c-green); opacity: 0.7;">10
+                                </td>
+                                <td style="padding: 12px;">Pan, Mermelada</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9c: Actividad Práctica - Solución -->
+        <div class="slide">
+            <div class="card">
+                <h2>Puesta en común</h2>
+
+                <p style="font-size: 1.2rem; margin-bottom: 2rem; text-align: center;">
+                    <em>"¿Algún grupo quiere compartir lo que encontró?"</em>
+                </p>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem;">
+
+                    <!-- Patron 1 -->
+                    <div class="concept-box step" style="border-top: 4px solid var(--c-cyan);">
+                        <div style="text-align: center; margin-bottom: 10px;">
+                            <i class="fa-solid fa-mug-hot" style="font-size: 2rem; color: var(--c-cyan);"></i>
+                        </div>
+                        <h4 style="text-align: center; color: #fff; margin-bottom: 10px;">Desayuno Completo</h4>
+                        <p
+                            style="font-size: 0.9rem; text-align: center; color: var(--text-muted); margin-bottom: 10px;">
+                            (Leche, Pan, Huevos)
+                        </p>
+                        <div
+                            style="background: rgba(34, 211, 238, 0.1); padding: 8px; border-radius: 6px; text-align: center;">
+                            <span style="font-size: 0.8rem; color: var(--c-cyan);">Crear Pack Ahorro</span>
+                        </div>
+                    </div>
+
+                    <!-- Patron 2 -->
+                    <div class="concept-box step" style="border-top: 4px solid var(--c-gold);">
+                        <div style="text-align: center; margin-bottom: 10px;">
+                            <i class="fa-solid fa-beer-mug-empty" style="font-size: 2rem; color: var(--c-gold);"></i>
+                        </div>
+                        <h4 style="text-align: center; color: #fff; margin-bottom: 10px;">Para el Finde</h4>
+                        <p
+                            style="font-size: 0.9rem; text-align: center; color: var(--text-muted); margin-bottom: 10px;">
+                            (Cerveza, Papas Fritas)
+                        </p>
+                        <div
+                            style="background: rgba(250, 204, 21, 0.1); padding: 8px; border-radius: 6px; text-align: center;">
+                            <span style="font-size: 0.8rem; color: var(--c-gold);">Sección Especial Web</span>
+                        </div>
+                    </div>
+
+                    <!-- Patron 3 -->
+                    <div class="concept-box step" style="border-top: 4px solid var(--c-pink);">
+                        <div style="text-align: center; margin-bottom: 10px;">
+                            <i class="fa-solid fa-bread-slice" style="font-size: 2rem; color: var(--c-pink);"></i>
+                        </div>
+                        <h4 style="text-align: center; color: #fff; margin-bottom: 10px;">Desayuno Rápido</h4>
+                        <p
+                            style="font-size: 0.9rem; text-align: center; color: var(--text-muted); margin-bottom: 10px;">
+                            (Pan, Mantequilla, Mermelada)
+                        </p>
+                        <div
+                            style="background: rgba(244, 114, 182, 0.1); padding: 8px; border-radius: 6px; text-align: center;">
+                            <span style="font-size: 0.8rem; color: var(--c-pink);">Recomendación Cruzada</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step"
+                    style="margin-top: 3rem; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem;">
+                    <p style="font-size: 1.1rem; color: var(--c-green);">
+                        "Buen trabajo. Acaban de hacer <strong>minería de datos real</strong>."
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- BRIDGE SLIDE 3: Asociación -> Clustering -->
+        <div class="slide">
+            <div style="text-align: center;">
+                <div style="margin-bottom: 2rem;">
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <span
+                            style="width: 15px; height: 15px; background: var(--c-pink); border-radius: 50%; animation: bounce 1s infinite 0s;"></span>
+                        <span
+                            style="width: 15px; height: 15px; background: var(--c-pink); border-radius: 50%; animation: bounce 1s infinite 0.2s;"></span>
+                        <span
+                            style="width: 15px; height: 15px; background: var(--c-pink); border-radius: 50%; animation: bounce 1s infinite 0.4s;"></span>
+                    </div>
+                </div>
+                <h2
+                    style="font-family: 'JetBrains Mono', monospace; font-size: 2rem; color: var(--c-pink); margin-bottom: 1rem;">
+                    BUSCANDO GRUPOS...
+                </h2>
+                <p style="font-family: 'JetBrains Mono', monospace; color: var(--text-muted);">
+                    Algoritmo de Agrupamiento: <span style="color: var(--c-green);">ACTIVO</span>
+                </p>
+                <div class="step" style="margin-top: 2rem;">
+                    <p
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--text-dim); animation: blink 2s infinite;">
+                        [ PRESIONA ENTER PARA BUSCAR CLUSTERS ]
+                    </p>
+                </div>
+            </div>
+        </div>
+
+
+
+
+        <!-- Slide 10a: Clustering - Introducción y Concepto -->
+        <div class="slide">
+            <div class="card">
+                <h2>3.1. Modelo tipo 3: Clustering (Parte 1)</h2>
+
+                <p style="margin-bottom: 2rem;">
+                    Llegamos al último modelo de hoy: <strong>Clustering</strong>, o agrupamiento.
+                </p>
+
+                <div
+                    style="background: rgba(255, 255, 255, 0.05); padding: 25px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 2rem; display: flex; align-items: center; gap: 30px;">
+                    <div style="width: 250px; height: 250px; flex-shrink: 0;">
+                        <canvas id="clusteringChart"></canvas>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0 0 10px 0; color: var(--c-pink);">Diferente a los anteriores</h3>
+                        <p style="font-size: 1.1rem; line-height: 1.6;">
+                            En regresión y clasificación, nosotros sabíamos lo que queríamos predecir (un número o
+                            una etiqueta).
+                            <br><br>
+                            <strong style="color: #fff;">En clustering, no sabemos lo que buscamos.</strong>
+                        </p>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 2rem;">
+                    <p style="font-size: 1.2rem; color: var(--text-muted); font-style: italic;">
+                        "Dejamos que el algoritmo nos sorprenda y nos muestre grupos que no sabíamos que existían."
+                    </p>
+                    <div style="margin-top: 20px;">
+                        <i class="fa-solid fa-wand-magic-sparkles"
+                            style="font-size: 2rem; color: var(--c-gold); animation: pulse 2s infinite;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10b: Clustering - TiendaOnline y Segmentos -->
+        <div class="slide">
+            <div class="card">
+                <h2>3.1. Modelo tipo 3: Clustering (Parte 2)</h2>
+
+                <div
+                    style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; border-left: 4px solid var(--c-pink); margin-bottom: 2rem;">
+                    <h3 style="margin: 0; font-size: 1.1rem; color: var(--c-pink);"><i class="fa-solid fa-store"
+                            style="margin-right: 10px;"></i> Ejemplo con TiendaOnline</h3>
+                    <p style="margin: 5px 0 0 0; font-size: 0.9rem;">El dueño nos dice: <em>"No entiendo a mis clientes.
+                            ¿Puedes decirme si hay diferentes tipos?"</em></p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                    <!-- Grupo 1 -->
+                    <div class="concept-box step" style="border-top: 4px solid var(--c-cyan);">
+                        <div style="text-align: center; margin-bottom: 5px;">
+                            <i class="fa-solid fa-bolt" style="font-size: 1.5rem; color: var(--c-cyan);"></i>
+                        </div>
+                        <h4 style="text-align: center; font-size: 1rem; color: #fff; margin-bottom: 5px;">El Rápido</h4>
+                        <p
+                            style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px; height: 60px; overflow: hidden;">
+                            Entran, buscan, compran en 2 min y se van. No miran nada más.
+                        </p>
+                        <div
+                            style="background: rgba(34, 211, 238, 0.1); padding: 8px; border-radius: 6px; text-align: center;">
+                            <span style="font-size: 0.75rem; color: var(--c-cyan); font-weight: bold;">OFRECER ENVÍO
+                                PREMIUM</span>
+                        </div>
+                    </div>
+
+                    <!-- Grupo 2 -->
+                    <div class="concept-box step" style="border-top: 4px solid var(--c-gold);">
+                        <div style="text-align: center; margin-bottom: 5px;">
+                            <i class="fa-solid fa-compass" style="font-size: 1.5rem; color: var(--c-gold);"></i>
+                        </div>
+                        <h4 style="text-align: center; font-size: 1rem; color: #fff; margin-bottom: 5px;">El Explorador
+                        </h4>
+                        <p
+                            style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px; height: 60px; overflow: hidden;">
+                            Navegan horas, comparan todo. Compran poco y devuelven mucho.
+                        </p>
+                        <div
+                            style="background: rgba(250, 204, 21, 0.1); padding: 8px; border-radius: 6px; text-align: center;">
+                            <span style="font-size: 0.75rem; color: var(--c-gold); font-weight: bold;">CUPÓN
+                                DESCUENTO</span>
+                        </div>
+                    </div>
+
+                    <!-- Grupo 3 -->
+                    <div class="concept-box step" style="border-top: 4px solid var(--c-pink);">
+                        <div style="text-align: center; margin-bottom: 5px;">
+                            <i class="fa-solid fa-heart" style="font-size: 1.5rem; color: var(--c-pink);"></i>
+                        </div>
+                        <h4 style="text-align: center; font-size: 1rem; color: #fff; margin-bottom: 5px;">El Fiel</h4>
+                        <p
+                            style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px; height: 60px; overflow: hidden;">
+                            Solo compran una marca. Si no hay, esperan.
+                        </p>
+                        <div
+                            style="background: rgba(244, 114, 182, 0.1); padding: 8px; border-radius: 6px; text-align: center;">
+                            <span style="font-size: 0.75rem; color: var(--c-pink); font-weight: bold;">AVISO DE
+                                STOCK</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step" style="margin-top: 2rem; text-align: center;">
+                    <p style="font-size: 1rem; color: var(--c-green);">
+                        "No le hemos dicho al algoritmo qué buscar. Él ha encontrado los grupos solito."
+                    </p>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Slide 11a: Discusión Final - Problemas 1 y 2 -->
+        <div class="slide">
+            <div class="card">
+                <h2>3.2. Discusión Final: ¿Qué modelo usamos? (Parte 1)</h2>
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <p style="font-size: 1.1rem; color: var(--text-muted);">
+                        "Yo les planteo el problema. Ustedes me dicen: <br>
+                        <strong>Regresión</strong>, <strong>Clasificación</strong>, <strong>Clustering</strong> o
+                        <strong>Asociación</strong>."
+                    </p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+
+                    <!-- Problema 1 -->
+                    <div class="concept-box"
+                        style="display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div
+                                style="background: rgba(255,255,255,0.05); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; font-weight: bold; color: var(--c-gold);">
+                                1</div>
+                            <p style="font-size: 1rem; line-height: 1.6;">
+                                "La tienda quiere crear <strong>cupones de descuento personalizados</strong> para 3
+                                tipos diferentes de clientes (ej: los que gastan mucho, los jóvenes...)."
+                            </p>
+                        </div>
+
+                        <div style="margin-top: 20px;" class="step">
+                            <p
+                                style="font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; margin-bottom: 5px;">
+                                Respuesta (Enter para revelar):</p>
+                            <div class="answer"
+                                style="background: var(--c-pink); color: #fff; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; transition: all 0.5s ease;">
+                                CLUSTERING
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Problema 2 -->
+                    <div class="concept-box"
+                        style="display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div
+                                style="background: rgba(255,255,255,0.05); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; font-weight: bold; color: var(--c-cyan);">
+                                2</div>
+                            <p style="font-size: 1rem; line-height: 1.6;">
+                                "La tienda quiere saber, <strong>en el momento</strong> que un cliente pone un producto
+                                en el carrito, si terminará la compra o lo abandonará."
+                            </p>
+                        </div>
+
+                        <div style="margin-top: 20px;" class="step">
+                            <p
+                                style="font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; margin-bottom: 5px;">
+                                Respuesta (Enter para revelar):</p>
+                            <div class="answer"
+                                style="background: var(--c-purple); color: #fff; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; transition: all 0.5s ease;">
+                                CLASIFICACIÓN
+                            </div>
+                            <p
+                                style="font-size: 0.8rem; margin-top: 5px; color: var(--text-muted); text-align: center;">
+                                (Etiqueta: Compra / Abandona)</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11b: Discusión Final - Problemas 3 y Extra -->
+        <div class="slide">
+            <div class="card">
+                <h2>3.2. Discusión Final: ¿Qué modelo usamos? (Parte 2)</h2>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+
+                    <!-- Problema 3 -->
+                    <div class="concept-box"
+                        style="display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div
+                                style="background: rgba(255,255,255,0.05); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; font-weight: bold; color: var(--c-green);">
+                                3</div>
+                            <p style="font-size: 1rem; line-height: 1.6;">
+                                "La tienda quiere estimar el <strong>costo del envío</strong> para el próximo pedido de
+                                un cliente, basado en el peso de los productos."
+                            </p>
+                        </div>
+
+                        <div style="margin-top: 20px;" class="step">
+                            <p
+                                style="font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; margin-bottom: 5px;">
+                                Respuesta (Enter para revelar):</p>
+                            <div class="answer"
+                                style="background: var(--c-green); color: #fff; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; transition: all 0.5s ease;">
+                                REGRESIÓN
+                            </div>
+                            <p
+                                style="font-size: 0.8rem; margin-top: 5px; color: var(--text-muted); text-align: center;">
+                                (Número: Costo)</p>
+                        </div>
+                    </div>
+
+                    <!-- Problema Extra -->
+                    <div class="concept-box"
+                        style="display: flex; flex-direction: column; justify-content: space-between; border-left: 4px solid var(--c-cyan);">
+                        <div>
+                            <div
+                                style="background: rgba(255,255,255,0.05); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; font-weight: bold; color: #fff; border: 1px solid var(--c-cyan);">
+                                ?</div>
+                            <p style="font-size: 1rem; line-height: 1.6;">
+                                "La tienda quiere saber qué productos poner juntos en la página de inicio para aumentar
+                                las <strong>ventas cruzadas</strong>."
+                            </p>
+                        </div>
+
+                        <div style="margin-top: 20px;" class="step">
+                            <p
+                                style="font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; margin-bottom: 5px;">
+                                Respuesta (Enter para revelar):</p>
+                            <div class="answer"
+                                style="background: linear-gradient(90deg, var(--c-cyan), var(--c-blue)); color: #fff; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; transition: all 0.5s ease;">
+                                ASOCIACIÓN
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Slide 12: Cierre Formal -->
+        <div class="slide">
+            <div class="card">
+                <h2>3.3. Cierre</h2>
+
+                <p style="font-size: 1.2rem; margin-bottom: 2rem;">
+                    Hoy hemos cubierto mucho terreno. Hemos visto:
+                </p>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+
+                    <div
+                        style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; display: flex; align-items: center; gap: 15px;">
+                        <i class="fa-solid fa-chart-line" style="color: var(--c-green); font-size: 1.5rem;"></i>
+                        <div>
+                            <h4 style="margin: 0; color: #fff; font-size: 1rem;">Regresión</h4>
+                            <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted);">Para predecir números.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div
+                        style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; display: flex; align-items: center; gap: 15px;">
+                        <i class="fa-solid fa-tags" style="color: var(--c-purple); font-size: 1.5rem;"></i>
+                        <div>
+                            <h4 style="margin: 0; color: #fff; font-size: 1rem;">Clasificación</h4>
+                            <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted);">Para predecir categorías.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div
+                        style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; display: flex; align-items: center; gap: 15px;">
+                        <i class="fa-solid fa-people-group" style="color: var(--c-pink); font-size: 1.5rem;"></i>
+                        <div>
+                            <h4 style="margin: 0; color: #fff; font-size: 1rem;">Clustering</h4>
+                            <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted);">Para descubrir grupos
+                                ocultos.</p>
+                        </div>
+                    </div>
+
+                    <div
+                        style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; display: flex; align-items: center; gap: 15px;">
+                        <i class="fa-solid fa-basket-shopping" style="color: var(--c-cyan); font-size: 1.5rem;"></i>
+                        <div>
+                            <h4 style="margin: 0; color: #fff; font-size: 1rem;">Asociación</h4>
+                            <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted);">Para encontrar productos
+                                que van juntos.</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div
+                    style="margin-top: 3rem; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem;">
+                    <p style="font-size: 1.4rem; color: var(--text-main); font-weight: 300;">
+                        "Todo esto son herramientas que ponemos al servicio de un negocio para tomar mejores
+                        decisiones."
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: Cita Final Inspiracional -->
+        <div class="slide">
+            <div class="card"
+                style="text-align: center; justify-content: center; background: radial-gradient(circle at center, rgba(34, 211, 238, 0.05) 0%, transparent 70%); border: 1px solid rgba(56, 189, 248, 0.2);">
+                <div style="margin-bottom: 3rem;">
+                    <i class="fa-solid fa-quote-left" style="font-size: 4rem; color: var(--c-cyan); opacity: 0.5;"></i>
+                </div>
+
+                <h1
+                    style="font-size: clamp(2rem, 4vw, 3.5rem); margin-bottom: 2rem; background: linear-gradient(135deg, #fff 0%, var(--c-cyan) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                    "Sin datos, solo eres otra persona con una opinión."
+                </h1>
+
+                <p
+                    style="font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; color: var(--c-cyan); letter-spacing: 2px;">
+                    — W. Edwards Deming
+                </p>
+
+                <div class="step"
+                    style="margin-top: 4rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem;">
+                    <p style="font-size: 1.1rem; color: var(--text-muted); font-style: italic;">
+                        Gracias por su atención. ¿Dudas o preguntas?
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            @keyframes pulse {
+                0% {
+                    transform: scale(1);
+                    opacity: 0.8;
+                }
+
+                50% {
+                    transform: scale(1.1);
+                    opacity: 1;
+                    text-shadow: 0 0 20px var(--c-gold);
+                }
+
+                100% {
+                    transform: scale(1);
+                    opacity: 0.8;
+                }
+            }
+
+            @keyframes bounce {
+
+                0%,
+                100% {
+                    transform: translateY(0);
+                }
+
+                50% {
+                    transform: translateY(-10px);
+                }
+            }
+
+            @keyframes loadingBar {
+                0% {
+                    transform: translateX(-100%);
+                }
+
+                100% {
+                    transform: translateX(100%);
+                }
+            }
+
+            @keyframes blink {
+                50% {
+                    opacity: 0.5;
+                }
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(10px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            /* Terminal Style */
+            .terminal-container {
+                background-color: #0c0c0c;
+                border: 2px solid var(--c-green);
+                font-family: 'JetBrains Mono', monospace;
+                padding: 20px;
+                border-radius: 6px;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .terminal-container::before {
+                content: " ";
+                display: block;
+                position: absolute;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                right: 0;
+                background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+                z-index: 2;
+                background-size: 100% 2px, 3px 100%;
+                pointer-events: none;
+            }
+
+            .terminal-text {
+                color: var(--c-green);
+                text-shadow: 0 0 5px rgba(74, 222, 128, 0.5);
+            }
+
+            /* Tooltip Micro-interactions */
+            .tooltip-container {
+                position: relative;
+                display: inline-block;
+                cursor: help;
+            }
+
+            .tooltip-text {
+                visibility: hidden;
+                width: 120px;
+                background-color: rgba(0, 0, 0, 0.9);
+                color: #fff;
+                text-align: center;
+                border-radius: 6px;
+                padding: 8px 0;
+                position: absolute;
+                z-index: 1;
+                bottom: 125%;
+                /* Position above */
+                left: 50%;
+                margin-left: -60px;
+                opacity: 0;
+                transition: opacity 0.3s;
+                font-size: 0.8rem;
+                border: 1px solid var(--glass-border);
+            }
+
+            .tooltip-container:hover .tooltip-text {
+                visibility: visible;
+                opacity: 1;
+            }
+
+            /* Step-by-step Reveals (Keyboard Controlled) */
+            .step {
+                opacity: 0;
+                transform: translateY(20px);
+                transition: opacity 0.4s ease, transform 0.4s ease;
+                pointer-events: none;
+            }
+
+            .step.visible {
+                opacity: 1;
+                transform: translateY(0);
+                pointer-events: auto;
+            }
+
+            #quoteContainer:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 8px 30px rgba(192, 132, 252, 0.3);
+                border-color: rgba(192, 132, 252, 0.5);
+            }
+        </style>
+
+
+    </div>
+    <!-- End of slides-container -->
+
+    <script>
+        // Slideshow Logic
+        const slides = document.querySelectorAll('.slide');
+        const progressBar = document.getElementById('progressBar');
+        // Nav elements removed per user request
+        let currentSlide = 0;
+        let quoteInChinese = true;
+
+        function toggleQuote() {
+            const quoteText = document.getElementById('quoteText');
+            const quoteHeader = document.getElementById('quoteHeader');
+            const container = document.getElementById('quoteContainer');
+
+            // Add animation
+            container.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                container.style.transform = 'scale(1)';
+            }, 150);
+
+            if (quoteInChinese) {
+                quoteHeader.style.display = 'none';
+                quoteText.innerHTML = '"Me lo contaron y lo olvidé; lo vi y lo entendí; lo hice y lo aprendí."<br><span style="font-size: 1rem; color: var(--text-muted); font-style: italic; margin-top: 0.8rem; display: block;">— Confucio</span>';
+                quoteInChinese = false;
+            } else {
+                quoteHeader.style.display = 'block';
+                quoteText.textContent = '我听到的会忘记，我看到的会记得，我做过的才理解。';
+                quoteInChinese = true;
+            }
+        }
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                if (index === currentSlide) slide.classList.add('active');
+                else slide.classList.remove('active');
+            });
+
+            // Update UI
+            const progress = ((currentSlide + 1) / slides.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            // slideCounter & buttons updates removed
+        }
+
+        function nextSlide() {
+            // Check for hidden steps in the current slide
+            const activeSlide = slides[currentSlide];
+            const hiddenSteps = activeSlide.querySelectorAll('.step:not(.visible)');
+
+            if (hiddenSteps.length > 0) {
+                // Reveal the next step
+                hiddenSteps[0].classList.add('visible');
+            } else if (currentSlide < slides.length - 1) {
+                // Move to next slide if no steps left
+                currentSlide++;
+                updateSlides();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlides();
+            }
+        }
+
+        // Keyboard & Click Navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+            if (e.key === 'F2') {
+                e.preventDefault();
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.log(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+        });
+
+        // Initialize
+        // Initialize
+        updateSlides();
+
+        // --- CHART JS IMPLEMENTATION ---
+
+        // 1. Regression Chart (Slide 5c)
+        const ctxRegression = document.getElementById('regressionChart').getContext('2d');
+        const regressionChart = new Chart(ctxRegression, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Datos Reales',
+                    data: [
+                        { x: 10, y: 20 }, { x: 15, y: 35 }, { x: 20, y: 40 }, { x: 25, y: 60 }, { x: 30, y: 80 },
+                        { x: 35, y: 85 }, { x: 40, y: 100 }, { x: 45, y: 110 }, { x: 50, y: 130 }, { x: 55, y: 150 }
+                    ],
+                    backgroundColor: '#4ade80', // var(--c-green)
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }, {
+                    type: 'line',
+                    label: 'Predicción (Modelo)',
+                    data: [{ x: 10, y: 20 }, { x: 55, y: 150 }],
+                    borderColor: '#f472b6', // var(--c-pink)
+                    borderWidth: 3,
+                    borderDash: [5, 5],
+                    fill: false,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: '#94a3b8' },
+                        title: { display: true, text: 'Gasto en Publicidad ($)', color: '#94a3b8' }
+                    },
+                    y: {
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: '#94a3b8' },
+                        title: { display: true, text: 'Ventas Generadas ($)', color: '#94a3b8' }
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color: '#f8fafc' } }
+                }
+            }
+        });
+
+        // 2. Clustering Chart (Slide 10a)
+        const ctxClustering = document.getElementById('clusteringChart').getContext('2d');
+
+        // Generate random clusters
+        function generateCluster(centerX, centerY, count, spread) {
+            return Array.from({ length: count }, () => ({
+                x: centerX + (Math.random() - 0.5) * spread,
+                y: centerY + (Math.random() - 0.5) * spread
+            }));
+        }
+
+        const dataCluster1 = generateCluster(20, 20, 15, 15);
+        const dataCluster2 = generateCluster(60, 70, 15, 20);
+        const dataCluster3 = generateCluster(80, 20, 15, 15);
+
+        const clusteringChart = new Chart(ctxClustering, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Grupo A (El Rápido)',
+                    data: dataCluster1,
+                    backgroundColor: '#22d3ee', // var(--c-cyan)
+                    pointRadius: 6
+                }, {
+                    label: 'Grupo B (El Explorador)',
+                    data: dataCluster2,
+                    backgroundColor: '#facc15', // var(--c-gold)
+                    pointRadius: 6
+                }, {
+                    label: 'Grupo C (El Fiel)',
+                    data: dataCluster3,
+                    backgroundColor: '#f472b6', // var(--c-pink)
+                    pointRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { display: false },
+                    y: { display: false }
+                },
+                plugins: {
+                    legend: { display: false, labels: { color: '#f8fafc' } },
+                    tooltip: { enabled: false }
+                },
+                animation: {
+                    duration: 2000,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
