@@ -1,0 +1,2255 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Estadística Descriptiva e Inferencial</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+
+    <!-- KaTeX for math formulas if needed -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <style>
+        /* =========================================
+           SISTEMA DE DISEÑO (Master Class Style)
+           ========================================= */
+        :root {
+            --bg-deep: #0f172a;
+            --bg-gradient: radial-gradient(circle at 50% -20%, #1e293b 0%, #0f172a 100%);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+
+            /* Acentos Universales */
+            --accent-primary: #3fa7d0;
+            /* Azul de estadística */
+            --accent-secondary: #1b6b8f;
+            /* Azul profundo */
+            --accent-highlight: #c9452c;
+            /* Warning/Outliers */
+            --accent-success: #2d8a4e;
+
+            /* Efectos Glassmorphism */
+            --glass-bg: rgba(30, 41, 59, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-blur: blur(24px);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-deep);
+            background-image: var(--bg-gradient);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Patrón de fondo (ruido/textura) */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* CONTENEDOR DE DIAPOSITIVAS */
+        #slides-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: scale(0.98);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+            padding: 40px;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: all;
+            transform: scale(1);
+            z-index: 10;
+        }
+
+        .slide-indicator {
+            position: fixed;
+            bottom: 40px;
+            right: 50px;
+            font-family: 'Inter', sans-serif;
+            font-variant-numeric: tabular-nums;
+            color: var(--text-muted);
+            opacity: 0.5;
+            font-size: 0.9rem;
+            z-index: 100;
+            transition: opacity 0.5s;
+        }
+
+        /* CONTENEDOR INTERNO DEL CONTENIDO */
+        .slide-content {
+            width: 100%;
+            max-width: 1400px;
+            height: 90%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* TIPOGRAFÍA BASE */
+        .title-primary {
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: 4rem;
+            line-height: 1.1;
+            background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .title-highlight {
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 2rem;
+            color: var(--text-muted);
+            font-weight: 400;
+            text-align: center;
+        }
+
+        /* COMPONENTES BASE A UTILIZAR */
+        .glass-box {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ANIMACIONES Y EFECTOS ADICIONALES */
+        @keyframes pulse-icon {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: scale(1.15);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+        }
+
+        .flip-card {
+            background-color: transparent;
+            perspective: 1000px;
+            cursor: pointer;
+            flex: 1;
+            display: flex;
+        }
+
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+            flex: 1;
+        }
+
+        .flip-card.flipped .flip-card-inner,
+        .flip-card:hover .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flip-card-front,
+        .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            box-sizing: border-box;
+        }
+
+        .flip-card-back {
+            transform: rotateY(180deg);
+        }
+
+        /* Helpers for Statistical Displays */
+        .formula-block {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: #d4d4d4;
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .blob-line {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 20px;
+            border-radius: 3rem;
+            margin-bottom: 5px;
+        }
+
+        .blob {
+            width: 20px;
+            height: 20px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 4px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .blob.outlier {
+            background: var(--accent-highlight);
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Histogram Bars */
+        .histogram-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            height: 120px;
+            margin-top: 2rem;
+            justify-content: center;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 5px;
+        }
+
+        .bar {
+            background: linear-gradient(180deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            width: 30px;
+            border-radius: 4px 4px 0 0;
+            transition: all 0.3s;
+        }
+
+        .bar.outlier {
+            background: linear-gradient(180deg, var(--accent-highlight) 0%, #a03520 100%);
+        }
+
+        .axis-labels {
+            display: flex;
+            justify-content: space-between;
+            width: 250px;
+            margin: 10px auto;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Box Plot */
+        .boxplot {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 2rem 0;
+        }
+
+        .box-whisker {
+            display: flex;
+            align-items: center;
+            width: 200px;
+            height: 60px;
+            position: relative;
+        }
+
+        .whisker-left,
+        .whisker-right {
+            width: 20px;
+            height: 2px;
+            background: var(--text-muted);
+        }
+
+        .box {
+            width: 100px;
+            height: 40px;
+            background: rgba(63, 167, 208, 0.2);
+            border: 2px solid var(--accent-primary);
+            border-radius: 8px;
+            position: relative;
+            margin: 0 5px;
+        }
+
+        .median-line {
+            width: 4px;
+            height: 44px;
+            background: var(--accent-highlight);
+            position: absolute;
+            left: 48px;
+            top: -4px;
+        }
+
+        /* Time Series */
+        .time-series {
+            display: flex;
+            align-items: flex-end;
+            gap: 5px;
+            height: 80px;
+            margin: 1rem 0;
+            justify-content: center;
+        }
+
+        .ts-point {
+            width: 12px;
+            height: calc(100% * var(--h));
+            background: linear-gradient(180deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            border-radius: 4px 4px 0 0;
+            transition: all 0.3s;
+        }
+
+        .ts-point:hover {
+            filter: brightness(1.3);
+        }
+
+        /* Normal Distribution Visual */
+        .normal-dist-container {
+            position: relative;
+            height: 150px;
+            margin: 1rem 0;
+        }
+
+        .normal-curve {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 100px;
+            background: linear-gradient(180deg, rgba(63, 167, 208, 0.3) 0%, rgba(27, 107, 143, 0.6) 100%);
+            border-radius: 150px 150px 0 0;
+            border: 2px solid var(--accent-primary);
+            border-bottom: none;
+        }
+
+        .sigma-markers {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+
+        .sigma-marker {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .sigma-line {
+            width: 2px;
+            height: 15px;
+            background: var(--text-muted);
+            margin: 0 auto 5px auto;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- INDICADOR -->
+    <div class="slide-indicator" id="slide-indicator">1 / ?</div>
+
+    <div id="slides-container">
+
+        <!-- DIAPOSITIVA 1: Portada Principal -->
+        <div class="slide active" id="slide-1" style="position: relative; overflow: hidden;">
+
+            <!-- Orbes decorativos animados -->
+            <div
+                style="position: absolute; top: -10%; left: -5%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(63,167,208,0.15) 0%, rgba(0,0,0,0) 70%); border-radius: 50%; filter: blur(40px); z-index: 0; animation: pulse-icon 8s infinite alternate; pointer-events: none;">
+            </div>
+            <div
+                style="position: absolute; bottom: -20%; right: -10%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(27,107,143,0.12) 0%, rgba(0,0,0,0) 70%); border-radius: 50%; filter: blur(50px); z-index: 0; animation: pulse-icon 10s infinite alternate-reverse; pointer-events: none;">
+            </div>
+
+            <div class="slide-content"
+                style="align-items: center; justify-content: center; text-align: center; position: relative; z-index: 2;">
+
+                <!-- Badge superior -->
+                <div style="
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 8px 24px;
+                    background: rgba(63, 167, 208, 0.05);
+                    border: 1px solid rgba(63, 167, 208, 0.3);
+                    border-radius: 100px;
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.95rem;
+                    color: var(--accent-primary);
+                    margin-bottom: 40px;
+                    letter-spacing: 0.15em;
+                    box-shadow: 0 0 20px rgba(63, 167, 208, 0.1);
+                    backdrop-filter: blur(10px);
+                ">
+                    <i class="fa-solid fa-chart-line"></i> SERIE VAM &mdash; ESTADÍSTICA
+                </div>
+
+                <!-- Títulos Principales -->
+                <h1 class="title-primary"
+                    style="margin-bottom: 15px; font-size: 5rem; text-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                    Estructura de Datos <span class="title-highlight">Científicos</span>
+                </h1>
+                <h2 class="subtitle"
+                    style="font-size: 2.2rem; margin-bottom: 80px; font-weight: 300; letter-spacing: 0.02em; color: #cbd5e1; font-family: 'Playfair Display', serif;">
+                    Estadística Descriptiva e Inferencial
+                </h2>
+
+                <!-- Metadatos en formato Bento / Glass Dock -->
+                <div class="glass-box"
+                    style="display: flex; gap: 40px; justify-content: space-between; padding: 40px 50px; background: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(255,255,255,0.1); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05); width: 85%; max-width: 1000px; backdrop-filter: blur(20px);">
+
+                    <!-- AUTOR -->
+                    <div style="text-align: left; display: flex; align-items: flex-start; gap: 20px; flex: 1;">
+                        <div
+                            style="background: rgba(63, 167, 208, 0.1); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--accent-primary); border: 1px solid rgba(63, 167, 208, 0.2); flex-shrink: 0;">
+                            <i class="fa-solid fa-flask" style="font-size: 1.4rem;"></i>
+                        </div>
+                        <div>
+                            <span
+                                style="display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.15em; color: var(--accent-primary); margin-bottom: 6px; text-transform: uppercase;">Autor
+                                Base</span>
+                            <span
+                                style="display: block; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.25rem; color: #fff; margin-bottom: 4px;">Shaun
+                                Burke</span>
+                            <span
+                                style="display: block; font-family: 'Inter', sans-serif; font-weight: 400; font-size: 0.95rem; color: var(--text-muted); line-height: 1.4;">RHM
+                                Technology / LGC<br>Artículos para el Científico</span>
+                        </div>
+                    </div>
+
+                    <!-- Divisor Vertical -->
+                    <div
+                        style="width: 1px; background: linear-gradient(to bottom, rgba(255,255,255,0.1), rgba(255,255,255,0.02));">
+                    </div>
+
+                    <!-- REVISIÓN -->
+                    <div style="text-align: left; display: flex; align-items: flex-start; gap: 20px; flex: 1.1;">
+                        <div
+                            style="background: rgba(45, 138, 78, 0.1); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--accent-success); border: 1px solid rgba(45, 138, 78, 0.2); flex-shrink: 0;">
+                            <i class="fa-solid fa-graduation-cap" style="font-size: 1.4rem;"></i>
+                        </div>
+                        <div>
+                            <span
+                                style="display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.15em; color: var(--accent-success); margin-bottom: 6px; text-transform: uppercase;">Adaptación</span>
+                            <span
+                                style="display: block; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.25rem; color: #fff; margin-bottom: 4px;">Dr.
+                                J. Ignacio Borge</span>
+                            <span
+                                style="display: block; font-family: 'Inter', sans-serif; font-weight: 400; font-size: 0.95rem; color: var(--text-muted); line-height: 1.4;">Universidad
+                                Cenfotec</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 2: Hoja de Ruta Analítica -->
+        <div class="slide" id="slide-2">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+
+                <div style="margin-bottom: 30px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Mapa
+                        Mental</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: #fff; margin: 10px 0 0 0; line-height: 1.1;">
+                        Hoja de Ruta <span style="color: var(--accent-primary);">Analítica</span></h2>
+                    <p
+                        style="font-size: 1.15rem; color: var(--text-muted); max-width: 900px; margin-top: 15px; line-height: 1.5;">
+                        Antes de calcular a ciegas, debemos entender la jerarquía del análisis estadístico. Cada bloque
+                        responde a una necesidad específica en la toma de decisiones.
+                    </p>
+                </div>
+
+                <!-- Jerarquía Bento / Flowchart -->
+                <div
+                    style="display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 1100px; margin: 0 auto; position: relative;">
+
+                    <!-- Línea conectora central (Visual hint) -->
+                    <div
+                        style="position: absolute; left: 50%; top: 20px; bottom: 20px; width: 2px; background: linear-gradient(to bottom, var(--accent-primary), transparent); z-index: 0; transform: translateX(-50%); opacity: 0.2;">
+                    </div>
+
+                    <!-- Nivel 1: EDA -->
+                    <div class="glass-box roadmap-node"
+                        style="display: flex; gap: 15px; align-items: center; padding: 12px 25px; border-left: 4px solid var(--accent-primary); z-index: 1;">
+                        <div
+                            style="background: rgba(63, 167, 208, 0.1); width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--accent-primary); border: 1px solid rgba(63, 167, 208, 0.3); flex-shrink: 0;">
+                            <i class="fa-solid fa-eye" style="font-size: 1.4rem;"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <h4 style="color: #fff; font-size: 1.15rem; margin: 0 0 3px 0;">Nivel 1: El Contexto (EDA)
+                            </h4>
+                            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0; line-height: 1.3;">
+                                <strong>Conceptos:</strong> Histogramas, Boxplots, Gráficos Dispersión.<br><strong
+                                    style="color: var(--accent-primary);">¿Por qué importa?</strong> Para conocer la
+                                materia prima <em>antes</em> de modelar.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Nivel 2: Centralidad y Dispersión -->
+                    <div class="glass-box roadmap-node"
+                        style="display: flex; gap: 15px; align-items: center; padding: 12px 25px; border-left: 4px solid var(--accent-secondary); margin-left: 20px; z-index: 1;">
+                        <div
+                            style="background: rgba(245, 158, 11, 0.1); width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--accent-secondary); border: 1px solid rgba(245, 158, 11, 0.3); flex-shrink: 0;">
+                            <i class="fa-solid fa-bullseye" style="font-size: 1.4rem;"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <h4 style="color: #fff; font-size: 1.15rem; margin: 0 0 3px 0;">Nivel 2: El Centro y Radio
+                                de Error</h4>
+                            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0; line-height: 1.3;">
+                                <strong>Conceptos:</strong> Media, Mediana, Desviación Estándar.<br><strong
+                                    style="color: var(--accent-secondary);">¿Por qué importa?</strong> Resume datos en
+                                el blanco y qué tanto fallamos al intentar dar en él.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Nivel 3: La Forma (Skew/Kurt) -->
+                    <div class="glass-box roadmap-node"
+                        style="display: flex; gap: 15px; align-items: center; padding: 12px 25px; border-left: 4px solid #10b981; margin-left: 40px; z-index: 1;">
+                        <div
+                            style="background: rgba(16, 185, 129, 0.1); width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); flex-shrink: 0;">
+                            <i class="fa-solid fa-shapes" style="font-size: 1.4rem;"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <h4 style="color: #fff; font-size: 1.15rem; margin: 0 0 3px 0;">Nivel 3: Validación de la
+                                Forma</h4>
+                            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0; line-height: 1.3;">
+                                <strong>Conceptos:</strong> Asimetría (Skewness) y Curtosis (Kurtosis).<br><strong
+                                    style="color: #10b981;">¿Por qué importa?</strong> Advierte falsos "promedios" por
+                                culpa de sesgos o si existe un alto riesgo de cisnes negros.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Nivel 4: Modelo Ideal -->
+                    <div class="glass-box roadmap-node"
+                        style="display: flex; gap: 15px; align-items: center; padding: 12px 25px; border-left: 4px solid #8b5cf6; margin-left: 60px; z-index: 1;">
+                        <div
+                            style="background: rgba(139, 92, 246, 0.1); width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3); flex-shrink: 0;">
+                            <i class="fa-solid fa-bell" style="font-size: 1.4rem;"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <h4 style="color: #fff; font-size: 1.15rem; margin: 0 0 3px 0;">Nivel 4: El Estándar Oro
+                            </h4>
+                            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0; line-height: 1.3;">
+                                <strong>Conceptos:</strong> La Distribución Normal (Campana de Gauss).<br><strong
+                                    style="color: #8b5cf6;">¿Por qué importa?</strong> Si asimilamos este modelo
+                                matemático abstracto, ganamos poderes predictivos (Regla 68-95-99.7).
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Nivel 5: Inferencia y Decisión -->
+                    <div class="glass-box roadmap-node"
+                        style="display: flex; gap: 15px; align-items: center; padding: 12px 25px; border-left: 4px solid #f43f5e; margin-left: 80px; z-index: 1; background: rgba(30, 41, 59, 0.9);">
+                        <div
+                            style="background: rgba(244, 63, 94, 0.1); width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.3); flex-shrink: 0;">
+                            <i class="fa-solid fa-gavel" style="font-size: 1.4rem;"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <h4 style="color: #fff; font-size: 1.15rem; margin: 0 0 3px 0;">Nivel 5: La Decisión
+                                (Inferencia)</h4>
+                            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0; line-height: 1.3;">
+                                <strong>Conceptos:</strong> t-test, F-test, p-valor, Errores Tipo I/II.<br><strong
+                                    style="color: #f43f5e;">¿Por qué importa?</strong> El juez final. Afirma
+                                probabilísticamente que un efecto observado es <em>real</em> y no mera casualidad.
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 3: Análisis Exploratorio (EDA) - Parte 1 -->
+        <div class="slide" id="slide-3">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+
+                <div style="margin-bottom: 30px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Nivel
+                        1: El Contexto</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: #fff; margin: 10px 0 0 0; line-height: 1.1;">
+                        Análisis Exploratorio de Datos <span
+                            style="color: var(--text-muted); font-weight: 300;">(EDA)</span>
+                    </h2>
+                    <p
+                        style="font-size: 1.15rem; color: var(--text-muted); max-width: 900px; margin-top: 15px; line-height: 1.5;">
+                        <strong style="color:var(--accent-primary);">Regla de oro:</strong> Antes de calcular
+                        estadístico alguno, hay que <em>mirar</em> los datos: distribuciones, valores atípicos
+                        (outliers) y relaciones.
+                    </p>
+                </div>
+
+                <div style="display: flex; gap: 40px; width: 100%; align-items: stretch;">
+
+                    <!-- ECharts Scatter Plot 2D (Business Scenario) -->
+                    <div class="glass-box"
+                        style="flex: 1; border-top: 4px solid var(--accent-primary); display: flex; flex-direction: column; position: relative;">
+                        <h3 style="margin: 0 0 15px 0; font-size: 1.8rem; font-weight: 700; color: #fff;"><i
+                                class="fa-solid fa-chart-line"
+                                style="color: var(--accent-primary); margin-right: 10px;"></i> Relaciones (2D)
+                        </h3>
+                        <p style="font-size: 0.95rem; line-height: 1.5; color: var(--text-main); margin-bottom: 5px;">
+                            Revela la conexión subyacente entre variables de negocio (ej. Inversión vs Ventas). Los
+                            <strong>Outliers</strong> en rojo alertan sobre excepciones que cambian la historia.
+                        </p>
+
+                        <div id="scatter-chart" style="width: 100%; height: 260px; margin-top: auto;"></div>
+
+                        <div
+                            style="margin-top: 5px; padding: 12px 15px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; border-radius: 8px;">
+                            <span
+                                style="display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #3b82f6; margin-bottom: 2px;">HALLAZGO
+                                VISUAL</span>
+                            <span style="font-size: 0.9rem; color: #e2e8f0; line-height: 1.4;">
+                                Existe una clara <strong>correlación positiva</strong>, pero identificamos un cliente
+                                (rojo) con bajo presupuesto y retornos anormalmente altos.
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Los 3 Pilares del EDA -->
+                    <div class="glass-box"
+                        style="flex: 1; border-top: 4px solid var(--accent-secondary); display: flex; flex-direction: column;">
+
+                        <!-- Encabezado -->
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                            <div>
+                                <h3 style="margin: 0; font-size: 1.8rem; font-weight: 700; color: #fff;">
+                                    <i class="fa-solid fa-microscope"
+                                        style="color: var(--accent-secondary); margin-right: 10px;"></i>Radiografía
+                                    Inicial
+                                </h3>
+                                <p
+                                    style="font-size: 1rem; color: var(--accent-secondary); margin: 5px 0 0 0; font-weight: 500;">
+                                    Los 3 Pilares del Análisis Exploratorio
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Explicación Conceptual -->
+                        <p style="font-size: 0.95rem; line-height: 1.5; color: var(--text-muted); margin: 0 0 25px 0;">
+                            Antes de correr algoritmos o probar hipótesis, usamos el EDA para "interrogar" visualmente a
+                            la base de datos. Buscamos respuesta a tres preguntas fundamentales:
+                        </p>
+
+                        <!-- Los 3 Pilares -->
+                        <div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: auto;">
+
+                            <!-- Pilar 1 -->
+                            <div
+                                style="display: flex; gap: 15px; align-items: center; background: rgba(0,0,0,0.2); padding: 15px 20px; border-radius: 12px; border-left: 3px solid #3b82f6;">
+                                <div
+                                    style="width: 40px; height: 40px; border-radius: 8px; background: rgba(59, 130, 246, 0.1); display: flex; align-items: center; justify-content: center; color: #3b82f6; flex-shrink: 0;">
+                                    <i class="fa-solid fa-shapes" style="font-size: 1.2rem;"></i>
+                                </div>
+                                <div>
+                                    <h4 style="margin: 0 0 4px 0; color: #fff; font-size: 1.05rem;">1. Distribuciones
+                                        (La Forma)</h4>
+                                    <p style="margin: 0; font-size: 0.9rem; color: #94a3b8; line-height: 1.4;">¿Cuál es
+                                        la normalidad de nuestro negocio? ¿Cómo se agrupan la mayoría de los clientes?
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Pilar 2 -->
+                            <div
+                                style="display: flex; gap: 15px; align-items: center; background: rgba(0,0,0,0.2); padding: 15px 20px; border-radius: 12px; border-left: 3px solid #f43f5e;">
+                                <div
+                                    style="width: 40px; height: 40px; border-radius: 8px; background: rgba(244, 63, 94, 0.1); display: flex; align-items: center; justify-content: center; color: #f43f5e; flex-shrink: 0;">
+                                    <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.2rem;"></i>
+                                </div>
+                                <div>
+                                    <h4 style="margin: 0 0 4px 0; color: #fff; font-size: 1.05rem;">2. Outliers (Las
+                                        Alertas)</h4>
+                                    <p style="margin: 0; font-size: 0.9rem; color: #94a3b8; line-height: 1.4;">¿Existen
+                                        fraudes, errores de captura o eventos excepcionales ("Cisnes Negros")?</p>
+                                </div>
+                            </div>
+
+                            <!-- Pilar 3 -->
+                            <div
+                                style="display: flex; gap: 15px; align-items: center; background: rgba(0,0,0,0.2); padding: 15px 20px; border-radius: 12px; border-left: 3px solid #10b981;">
+                                <div
+                                    style="width: 40px; height: 40px; border-radius: 8px; background: rgba(16, 185, 129, 0.1); display: flex; align-items: center; justify-content: center; color: #10b981; flex-shrink: 0;">
+                                    <i class="fa-solid fa-link" style="font-size: 1.2rem;"></i>
+                                </div>
+                                <div>
+                                    <h4 style="margin: 0 0 4px 0; color: #fff; font-size: 1.05rem;">3. Relaciones (La
+                                        Conexión)</h4>
+                                    <p style="margin: 0; font-size: 0.9rem; color: #94a3b8; line-height: 1.4;">¿Si
+                                        invierto más en Marketing (X), realmente aumentan mis Ventas (Y)?</p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 4: Análisis Exploratorio (EDA) - Parte 2 -->
+        <div class="slide" id="slide-4">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+
+                <div style="margin-bottom: 30px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Nivel
+                        1: El Contexto</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: #fff; margin: 10px 0 0 0; line-height: 1.1;">
+                        Distribuciones y Cuartiles
+                    </h2>
+                </div>
+
+                <div style="display: flex; gap: 40px; width: 100%; align-items: stretch;">
+
+                    <!-- ECharts Histogram -->
+                    <div class="glass-box"
+                        style="flex: 1; border-top: 4px solid var(--accent-primary); display: flex; flex-direction: column; position: relative;">
+                        <h3 style="margin: 0 0 15px 0; font-size: 1.8rem; font-weight: 700; color: #fff;"><i
+                                class="fa-solid fa-chart-column" style="color: var(--accent-primary);"></i> Histograma
+                            de Frecuencias</h3>
+                        <p style="font-size: 1.05rem; line-height: 1.5; color: var(--text-main); margin-bottom: 10px;">
+                            Visualiza la "huella digital" de la distribución.</p>
+
+                        <div id="histogram-chart" style="width: 100%; height: 260px; margin-top: auto;"></div>
+
+                        <div
+                            style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.25); border-left: 3px solid #f59e0b; border-radius: 8px;">
+                            <span style="font-size: 0.95rem; color: #e2e8f0;">Fíjate en las colas. Esta gráfica sugiere
+                                <strong>skewness positivo</strong> (asimetría hacia la derecha).</span>
+                        </div>
+                    </div>
+
+                    <!-- ECharts Boxplot (Flip Card) -->
+                    <div class="flip-card" style="flex: 1; height: 100%; min-height: 480px;">
+                        <div class="flip-card-inner">
+
+                            <!-- FRONT -->
+                            <div class="flip-card-front glass-box"
+                                style="border-top: 4px solid var(--accent-secondary); position: absolute; padding: 30px; text-align: left; display: flex; flex-direction: column; justify-content: space-between; align-items: stretch; box-sizing: border-box;">
+                                <div>
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                                        <h3 style="margin: 0; font-size: 1.6rem; font-weight: 700; color: #fff;"><i
+                                                class="fa-solid fa-box-open"
+                                                style="color: var(--accent-secondary);"></i> Box &amp;
+                                            Whisker Plot</h3>
+                                        <div style="color: var(--accent-secondary); font-size: 0.8rem; opacity: 0.8;"><i
+                                                class="fa-solid fa-rotate"></i> Girar</div>
+                                    </div>
+                                    <p
+                                        style="font-size: 0.95rem; line-height: 1.4; color: var(--text-main); margin-bottom: 5px;">
+                                        Una "radiografía" robusta. A diferencia del promedio, <strong>ignora el ruido
+                                            extremo</strong> para revelar dónde se concentra realmente la mayoría.
+                                    </p>
+                                </div>
+
+                                <div id="boxplot-chart" style="width: 100%; height: 160px; margin: 10px 0;"></div>
+
+                                <div
+                                    style="background: rgba(0,0,0,0.25); border-left: 3px solid var(--accent-secondary); border-radius: 6px; padding: 12px 15px;">
+                                    <h4
+                                        style="font-size: 0.9rem; color: #fff; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 0.05em;">
+                                        ¿Cómo interpretarlo?</h4>
+                                    <ul
+                                        style="list-style-type: none; padding: 0; margin: 0; font-size: 0.85rem; color: #cbd5e1; line-height: 1.4;">
+                                        <li style="margin-bottom: 4px;"><strong
+                                                style="color: var(--accent-secondary);">La Caja
+                                                (Cuerpo):</strong> Muestra el <strong>50% central</strong> de los datos.
+                                            Su ancho (IQR) indica la variabilidad de lo "típico".</li>
+                                        <li style="margin-bottom: 4px;"><strong
+                                                style="color: var(--accent-secondary);">Mediana:</strong> El punto de
+                                            equilibrio del 50%. Si no está centrado, hay asimetría.</li>
+                                        <li style="margin-bottom: 4px;"><strong
+                                                style="color: var(--accent-secondary);">Bigotes:</strong> El rango
+                                            esperado de valores "normales" dentro de lo estadístico.</li>
+                                        <li><strong style="color: #f59e0b;">Outliers:</strong> Valores tan extremos que
+                                            rompen la barrera matemática (1.5x fuera de la caja).</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- BACK -->
+                            <div class="flip-card-back glass-box"
+                                style="border-top: 4px solid var(--accent-secondary); position: absolute; padding: 30px; text-align: left; background: rgba(15, 23, 42, 0.95); display: flex; flex-direction: column; justify-content: space-between; align-items: stretch; box-sizing: border-box;">
+
+                                <div>
+                                    <h3 style="margin: 0 0 10px 0; font-size: 1.6rem; font-weight: 700; color: #fff;">
+                                        <i class="fa-solid fa-layer-group" style="color: var(--accent-secondary);"></i>
+                                        ¿Qué es un Cuartil?
+                                    </h3>
+                                    <p
+                                        style="font-size: 0.9rem; line-height: 1.4; color: #cbd5e1; margin-bottom: 15px;">
+                                        Imagina 100 clientes ordenados por gasto. Los <strong>Cuartiles</strong> son
+                                        líneas de corte que dividen esa fila en 4 grupos iguales (25 personas por
+                                        grupo).
+                                    </p>
+                                </div>
+
+                                <div style="display: flex; flex-direction: column; gap: 10px;">
+                                    <div
+                                        style="background: rgba(14, 165, 233, 0.1); border-left: 3px solid var(--accent-secondary); padding: 12px; border-radius: 6px;">
+                                        <h4 style="margin: 0 0 3px 0; color: #fff; font-size: 1rem;">Primer Cuartil (Q1)
+                                            - El 25%</h4>
+                                        <p
+                                            style="margin: 0; font-size: 0.85rem; color: var(--text-muted); line-height: 1.3;">
+                                            Deja atrás al 25% de menor gasto (frontera inferior de "la caja").</p>
+                                    </div>
+
+                                    <div
+                                        style="background: rgba(14, 165, 233, 0.15); border-left: 3px solid var(--accent-secondary); padding: 12px; border-radius: 6px;">
+                                        <h4 style="margin: 0 0 3px 0; color: #fff; font-size: 1rem;">Segundo Cuartil
+                                            (Mediana)</h4>
+                                        <p
+                                            style="margin: 0; font-size: 0.85rem; color: var(--text-muted); line-height: 1.3;">
+                                            Corte exacto al 50%. La mitad gastó menos, la otra mitad gastó más.</p>
+                                    </div>
+
+                                    <div
+                                        style="background: rgba(14, 165, 233, 0.1); border-left: 3px solid var(--accent-secondary); padding: 12px; border-radius: 6px;">
+                                        <h4 style="margin: 0 0 3px 0; color: #fff; font-size: 1rem;">Tercer Cuartil (Q3)
+                                            - El 75%</h4>
+                                        <p
+                                            style="margin: 0; font-size: 0.85rem; color: var(--text-muted); line-height: 1.3;">
+                                            Solo el 25% "Top" supera esta marca (frontera superior de "la caja").</p>
+                                    </div>
+                                </div>
+
+                                <p
+                                    style="font-size: 0.85rem; color: var(--accent-secondary); margin: 0; font-weight: 600; text-align: center;">
+                                    El "Músculo" del Boxplot (La Caja) es la distancia Q3 - Q1. ¡Ahí está el 50% de la
+                                    verdad estadística!
+                                </p>
+
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 5: Series Temporales -->
+        <div class="slide" id="slide-5">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+
+                <div style="margin-bottom: 30px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Nivel
+                        1: El Contexto Temporal</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: #fff; margin: 10px 0 0 0; line-height: 1.1;">
+                        Series Temporales <span
+                            style="font-size: 2rem; color: var(--text-muted); font-weight: 300;">(Orden de
+                            Medición)</span>
+                    </h2>
+                    <p
+                        style="font-size: 1.15rem; color: var(--text-muted); max-width: 900px; margin-top: 15px; line-height: 1.5;">
+                        Fundamentales para detectar "tendencias" o cambios de nivel. <strong
+                            style="color:#f59e0b;">Atención:</strong> Si hay un patrón sistemático, los métodos
+                        estadísticos asumen independencia y fallarán.
+                    </p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; width: 100%;">
+
+                    <div class="glass-box"
+                        style="display: flex; flex-direction: column; align-items: center; text-align: center; border-top: 4px solid var(--accent-highlight);">
+                        <span
+                            style="background: rgba(201, 69, 44, 0.15); color: var(--accent-highlight); padding: 0.4rem 1rem; border-radius: 1rem; margin-bottom: 20px; font-weight: 600;"><i
+                                class="fa-solid fa-arrow-trend-up"></i> Tendencia Creciente</span>
+                        <!-- Tendencia EChart -->
+                        <div id="ts-trend-chart" style="width: 100%; height: 120px; margin-bottom: 20px;"></div>
+                        <p style="font-size: 0.95rem; color: var(--text-muted); margin-top: 20px;">
+                            Indica deriva en el instrumento o degradación progresiva de condiciones (ej. reactivos
+                            venciendo).
+                        </p>
+                    </div>
+
+                    <div class="glass-box"
+                        style="display: flex; flex-direction: column; align-items: center; text-align: center; border-top: 4px solid #f59e0b;">
+                        <span
+                            style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; padding: 0.4rem 1rem; border-radius: 1rem; margin-bottom: 20px; font-weight: 600;"><i
+                                class="fa-solid fa-arrows-up-down"></i> Cambio de Nivel</span>
+                        <!-- Cambio Nivel EChart -->
+                        <div id="ts-step-chart" style="width: 100%; height: 120px; margin-bottom: 20px;"></div>
+                        <p style="font-size: 0.95rem; color: var(--text-muted); margin-top: 20px;">
+                            Salto abrupto. Posible cambio repentino de operador, lote nuevo de reactivo o recalibración.
+                        </p>
+                    </div>
+
+                    <div class="glass-box"
+                        style="display: flex; flex-direction: column; align-items: center; text-align: center; border-top: 4px solid var(--accent-success);">
+                        <span
+                            style="background: rgba(45, 138, 78, 0.15); color: var(--accent-success); padding: 0.4rem 1rem; border-radius: 1rem; margin-bottom: 20px; font-weight: 600;"><i
+                                class="fa-solid fa-check"></i> Aleatorio (Ideal)</span>
+                        <!-- Aleatorio EChart -->
+                        <div id="ts-random-chart" style="width: 100%; height: 120px; margin-bottom: 20px;"></div>
+                        <p style="font-size: 0.95rem; color: var(--text-muted); margin-top: 20px;">
+                            Variación aleatoria puramente debida a ruido blanco. Seguro para aplicar estadística de
+                            resumen.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 6: Estadísticos de Resumen -->
+        <div class="slide" id="slide-6">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+
+                <div style="margin-bottom: 30px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-secondary); letter-spacing: 0.1em; text-transform: uppercase;">Nivel
+                        2: El Centro y Radio de Error</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: #fff; margin: 10px 0 0 0; line-height: 1.1;">
+                        Estadísticos de <span style="color: var(--accent-secondary);">Resumen</span>
+                    </h2>
+                </div>
+
+                <div style="display: flex; gap: 40px; width: 100%; align-items: stretch;">
+
+                    <!-- Medidas de Tendencia Central -->
+                    <div class="flip-card" style="flex: 1; min-height: 480px;">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front glass-box"
+                                style="border-top: 4px solid var(--accent-secondary); display: flex; flex-direction: column; justify-content: flex-start; padding: 30px;">
+                                <h3 style="margin: 0 0 20px 0; font-size: 1.8rem; font-weight: 700; color: #fff;"><i
+                                        class="fa-solid fa-bullseye" style="color: var(--accent-secondary);"></i> Centro
+                                    de
+                                    Gravedad</h3>
+
+                                <div style="margin-bottom: 25px;">
+                                    <h4 style="color: #cbd5e1; margin: 0 0 10px 0; font-size: 1.2rem;">Media Aritmética
+                                        (\(
+                                        \bar{x} \))</h4>
+                                    <div class="formula-block">$$ \bar{x} = \frac{\sum x_i}{n} $$</div>
+                                </div>
+
+                                <div>
+                                    <h4 style="color: #cbd5e1; margin: 0 0 10px 0; font-size: 1.2rem;">Mediana</h4>
+                                    <p style="font-size: 1rem; color: var(--text-muted); line-height: 1.5; margin: 0;">
+                                        El punto medio exacto de los datos ordenados. 50% por encima, 50% por debajo.
+                                    </p>
+                                </div>
+                                <div
+                                    style="margin-top: auto; text-align: center; color: var(--accent-secondary); font-size: 0.85rem; font-weight: 600; opacity: 0.8;">
+                                    <i class="fa-solid fa-rotate"></i> Pasa el mouse para la explicación simple
+                                </div>
+                            </div>
+                            <div class="flip-card-back glass-box"
+                                style="border: 2px solid var(--accent-secondary); background: rgba(30, 41, 59, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px;">
+                                <i class="fa-solid fa-lightbulb"
+                                    style="font-size: 2.5rem; color: var(--accent-secondary); margin-bottom: 20px;"></i>
+                                <h4 style="color: #fff; font-size: 1.4rem; margin-bottom: 15px;">En Palabras Simples
+                                </h4>
+                                <p style="font-size: 1.1rem; color: #cbd5e1; line-height: 1.6; margin-bottom: 20px;">
+                                    Piensa en la <strong>Media</strong> como el <em>Promedio</em>. Es la suma de todo.
+                                    Pero cuidado, si llega un valor atípico gigante (un elefante en la báscula), la
+                                    Media enloquece.
+                                </p>
+                                <p style="font-size: 1.1rem; color: #cbd5e1; line-height: 1.6;">
+                                    La <strong>Mediana</strong> es a prueba de bombas. Simplemente hace una fila por
+                                    tamaño y elige al del medio. Un elefante gigante no la afecta.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Medidas de Dispersión -->
+                    <div class="flip-card" style="flex: 1; min-height: 480px;">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front glass-box"
+                                style="border-top: 4px solid var(--accent-primary); display: flex; flex-direction: column; justify-content: flex-start; padding: 30px;">
+                                <h3 style="margin: 0 0 20px 0; font-size: 1.8rem; font-weight: 700; color: #fff;"><i
+                                        class="fa-solid fa-arrows-left-right" style="color: var(--accent-primary);"></i>
+                                    Dispersión</h3>
+
+                                <div style="margin-bottom: 25px;">
+                                    <h4 style="color: #cbd5e1; margin: 0 0 10px 0; font-size: 1.2rem;">Desviación
+                                        Estándar (\(
+                                        \sigma \) o \( s \))</h4>
+                                    <div class="formula-block" style="font-size: 0.95rem; padding: 10px 15px;">
+                                        Población: $$ \sigma = \sqrt{\frac{\sum(x_i-\mu)^2}{n}} $$<br>
+                                        Muestra: $$ s = \sqrt{\frac{\sum(x_i-\bar{x})^2}{n-1}} $$
+                                    </div>
+                                </div>
+
+                                <div
+                                    style="padding: 15px; background: rgba(63, 167, 208, 0.1); border-left: 3px solid var(--accent-primary); border-radius: 8px;">
+                                    <span style="font-size: 0.95rem; color: #e2e8f0;"><i class="fa-solid fa-flask"
+                                            style="color: var(--accent-primary);"></i> <strong>En química:</strong>
+                                        El denominador (\(n-1\)) en "Muestra" penaliza trabajar con pedacitos en lugar
+                                        del todo.</span>
+                                </div>
+                                <div
+                                    style="margin-top: auto; padding-top: 15px; text-align: center; color: var(--accent-primary); font-size: 0.85rem; font-weight: 600; opacity: 0.8;">
+                                    <i class="fa-solid fa-rotate"></i> Pasa el mouse para la explicación simple
+                                </div>
+                            </div>
+                            <div class="flip-card-back glass-box"
+                                style="border: 2px solid var(--accent-primary); background: rgba(30, 41, 59, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px;">
+                                <i class="fa-solid fa-lightbulb"
+                                    style="font-size: 2.5rem; color: var(--accent-primary); margin-bottom: 20px;"></i>
+                                <h4 style="color: #fff; font-size: 1.4rem; margin-bottom: 15px;">En Palabras Simples
+                                </h4>
+                                <p style="font-size: 1.1rem; color: #cbd5e1; line-height: 1.6; margin-bottom: 20px;">
+                                    Visualiza la <strong>Desviación Estándar</strong> como el <em>"Radio de
+                                        Desorden"</em> alrededor del promedio.
+                                </p>
+                                <p style="font-size: 1.1rem; color: #cbd5e1; line-height: 1.6;">
+                                    Un valor pequeño ($s$ bajo) significa que tus flechas cayeron muy juntitas en la
+                                    diana (Mucha Precisión). Un valor grande significa que tus disparos estuvieron
+                                    esparcidos por toda la pared.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 7: Skewness y Kurtosis -->
+        <div class="slide" id="slide-7-skew">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+
+                <div style="margin-bottom: 30px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: #10b981; letter-spacing: 0.1em; text-transform: uppercase;">Nivel
+                        3: Validación de Forma</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: #fff; margin: 10px 0 0 0; line-height: 1.1;">
+                        Asimetría &amp; <span style="color: #10b981;">Curtosis</span>
+                    </h2>
+                </div>
+
+                <div style="display: flex; gap: 40px; width: 100%; align-items: stretch;">
+
+                    <!-- Área de Gráficos (Izquierda) -->
+                    <div class="glass-box"
+                        style="flex: 1.2; display: flex; flex-direction: column; gap: 20px; padding: 30px;">
+                        <div style="flex: 1; display: flex; flex-direction: column;">
+                            <h4 style="color: #cbd5e1; margin: 0 0 10px 0; font-size: 1.2rem; text-align: center;">
+                                Asimetría (Skewness)</h4>
+                            <div id="skewness-chart" style="width: 100%; flex: 1; min-height: 180px;"></div>
+                        </div>
+                        <div
+                            style="flex: 1; display: flex; flex-direction: column; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                            <h4 style="color: #cbd5e1; margin: 0 0 10px 0; font-size: 1.2rem; text-align: center;">
+                                Curtosis (Kurtosis)</h4>
+                            <div id="kurtosis-chart" style="width: 100%; flex: 1; min-height: 180px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Tarjetas de Explicación (Derecha) -->
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 20px;">
+
+                        <!-- Flip Card Skewness -->
+                        <div class="flip-card" style="flex: 1;">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front glass-box"
+                                    style="border-left: 4px solid #10b981; display: flex; flex-direction: column; justify-content: center; padding: 30px;">
+                                    <h3 style="margin: 0 0 15px 0; font-size: 1.6rem; color: #fff;"><i
+                                            class="fa-solid fa-slide" style="color: #10b981;"></i> Skewness</h3>
+                                    <div class="formula-block"
+                                        style="font-size: 1rem; padding: 10px; margin-bottom: 15px;">
+                                        $$ \text{Skew} \approx \frac{\sum (x_i - \bar{x})^3}{(n-1)s^3} $$
+                                    </div>
+                                    <ul
+                                        style="color: var(--text-main); font-size: 0.95rem; margin: 0 0 15px 1.5rem; padding: 0; line-height: 1.5;">
+                                        <li><strong>Skew > 0:</strong> Cola a la derecha.</li>
+                                        <li><strong>Skew < 0:</strong> Cola a la izquierda.</li>
+                                        <li><strong>Skew ≈ 0:</strong> Simétrica.</li>
+                                    </ul>
+                                    <div
+                                        style="margin-top: auto; text-align: center; color: #10b981; font-size: 0.85rem; font-weight: 600; opacity: 0.8;">
+                                        <i class="fa-solid fa-rotate"></i> Girar para explicación
+                                    </div>
+                                </div>
+                                <div class="flip-card-back glass-box"
+                                    style="border: 2px solid #10b981; background: rgba(30, 41, 59, 0.95); display: flex; flex-direction: column; justify-content: center; padding: 30px; text-align: center;">
+                                    <i class="fa-solid fa-lightbulb"
+                                        style="font-size: 2rem; color: #10b981; margin-bottom: 15px;"></i>
+                                    <h4 style="color: #fff; font-size: 1.3rem; margin-bottom: 10px;">El Efecto
+                                        "Millonario"</h4>
+                                    <p style="font-size: 1rem; color: #cbd5e1; line-height: 1.5;">
+                                        Imagina los salarios de un bar. Entra Messi. La cola se estira a la derecha
+                                        (Skew positivo). La <strong>media</strong> se va tras él, abandonando a la
+                                        <strong>mediana</strong>. Importa porque usar la media aquí te engañará sobre la
+                                        realidad de la mayoría.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Flip Card Kurtosis -->
+                        <div class="flip-card" style="flex: 1;">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front glass-box"
+                                    style="border-left: 4px solid #f43f5e; display: flex; flex-direction: column; justify-content: center; padding: 30px;">
+                                    <h3 style="margin: 0 0 15px 0; font-size: 1.6rem; color: #fff;"><i
+                                            class="fa-solid fa-mountain" style="color: #f43f5e;"></i> Curtosis</h3>
+                                    <div class="formula-block"
+                                        style="font-size: 1rem; padding: 10px; margin-bottom: 15px;">
+                                        $$ \text{Kurt} \approx \frac{\sum (x_i - \bar{x})^4}{(n-1)s^4} $$
+                                    </div>
+                                    <ul
+                                        style="color: var(--text-main); font-size: 0.95rem; margin: 0 0 15px 1.5rem; padding: 0; line-height: 1.5;">
+                                        <li><strong>Exceso Kurt > 0:</strong> Leptocúrtica (Colas pesadas).</li>
+                                        <li><strong>Exceso Kurt < 0:</strong> Platicúrtica (Colas ligeras).</li>
+                                        <li><strong>Exceso Kurt ≈ 0:</strong> Mesocúrtica (Normal).</li>
+                                    </ul>
+                                    <div
+                                        style="margin-top: auto; text-align: center; color: #f43f5e; font-size: 0.85rem; font-weight: 600; opacity: 0.8;">
+                                        <i class="fa-solid fa-rotate"></i> Girar para explicación
+                                    </div>
+                                </div>
+                                <div class="flip-card-back glass-box"
+                                    style="border: 2px solid #f43f5e; background: rgba(30, 41, 59, 0.95); display: flex; flex-direction: column; justify-content: center; padding: 30px; text-align: center;">
+                                    <i class="fa-solid fa-lightbulb"
+                                        style="font-size: 2rem; color: #f43f5e; margin-bottom: 15px;"></i>
+                                    <h4 style="color: #fff; font-size: 1.3rem; margin-bottom: 10px;">La Trampa del Cisne
+                                        Negro</h4>
+                                    <p style="font-size: 1rem; color: #cbd5e1; line-height: 1.5;">
+                                        No mide cuán "puntiaguda" es, sino <strong>cuán pesadas son las colas</strong>.
+                                        Alta curtosis significa mayor riesgo de eventos extremos e impredecibles. Asumir
+                                        normalidad aquí te hará subestimar riesgos catastróficos.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 8: Distribución Normal -->
+        <div class="slide" id="slide-8">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+
+                <div style="margin-bottom: 40px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Nivel
+                        4: El Estándar Oro</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: #fff; margin: 10px 0 0 0; line-height: 1.1;">
+                        Distribución <span style="color: var(--accent-primary);">Normal</span>
+                    </h2>
+                    <p
+                        style="font-size: 1.1rem; color: var(--text-muted); max-width: 1000px; margin-top: 10px; line-height: 1.5;">
+                        La icónica "Campana de Gauss" es la herramienta más importante en la estadística. Su
+                        <strong>simetría perfecta</strong> proporciona el marco matemático definitivo (Regla Empírica
+                        del 68-95-99.7) para entender el riesgo, la variabilidad y el control de calidad.
+                    </p>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 20px; width: 100%; align-items: stretch;">
+
+                    <!-- Top Row -->
+                    <div style="display: flex; gap: 20px; width: 100%;">
+                        <!-- Left: ECharts -->
+                        <div class="glass-box"
+                            style="flex: 1.6; padding: 25px; border-top: 4px solid var(--accent-primary); display: flex; flex-direction: column;">
+                            <h3 style="margin: 0 0 10px 0; font-size: 1.5rem; font-weight: 700; color: #fff;"><i
+                                    class="fa-solid fa-chart-area" style="color: var(--accent-primary);"></i> Densidad
+                                de Probabilidad</h3>
+                            <p
+                                style="font-size: 0.95rem; line-height: 1.4; color: var(--text-main); margin-bottom: 5px;">
+                                El caos natural rara vez produce uniformidad; casi siempre converge hacia esta elegante
+                                forma acampanada.</p>
+                            <div id="normal-dist-chart" style="width: 100%; flex: 1; min-height: 250px;"></div>
+                        </div>
+
+                        <!-- Right: Concept -->
+                        <div class="glass-box"
+                            style="flex: 1; padding: 20px 30px; display: flex; flex-direction: column; justify-content: center; background: rgba(30, 64, 175, 0.1);">
+                            <h3 style="margin: 0 0 15px 0; font-size: 1.4rem; color: #fff;"><i class="fa-solid fa-crown"
+                                    style="color: #f59e0b;"></i> El "Estándar Oro"</h3>
+                            <ul
+                                style="padding: 0; margin: 0; font-size: 0.95rem; color: #cbd5e1; line-height: 1.6; list-style-type: none;">
+                                <li style="margin-bottom: 15px;"><i class="fa-solid fa-check"
+                                        style="color: var(--accent-success); margin-right: 8px;"></i>
+                                    <strong>Universalidad:</strong> Modela incontables variables en la naturaleza y
+                                    métricas de negocio.</li>
+                                <li style="margin-bottom: 15px;"><i class="fa-solid fa-check"
+                                        style="color: var(--accent-success); margin-right: 8px;"></i> <strong>Teorema de
+                                        Límite Central:</strong> Al sumar grandes volúmenes de datos, el ruido se
+                                    neutraliza.</li>
+                                <li><i class="fa-solid fa-check"
+                                        style="color: var(--accent-success); margin-right: 8px;"></i>
+                                    <strong>Equilibrio:</strong> La Media, Mediana y Moda son exactamente el mismo punto
+                                    central.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Row: Empirical Rule -->
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%;">
+                        <div class="glass-box" style="padding: 20px; border-left: 3px solid #3b82f6;">
+                            <h4
+                                style="margin: 0 0 8px 0; font-size: 1.1rem; font-family: 'JetBrains Mono', monospace; color: #93c5fd;">
+                                ± 1 Desviación (σ)</h4>
+                            <div style="font-size: 1.8rem; font-weight: 800; color: #fff; margin-bottom: 8px;">~ 68.3%
+                            </div>
+                            <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">La
+                                "normalidad estricta". Comportamiento estándar sin sorpresas operativas.</p>
+                        </div>
+                        <div class="glass-box" style="padding: 20px; border-left: 3px solid #8b5cf6;">
+                            <h4
+                                style="margin: 0 0 8px 0; font-size: 1.1rem; font-family: 'JetBrains Mono', monospace; color: #c4b5fd;">
+                                ± 2 Desviación (σ)</h4>
+                            <div style="font-size: 1.8rem; font-weight: 800; color: #fff; margin-bottom: 8px;">~ 95.5%
+                            </div>
+                            <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">El
+                                famoso <strong>Intervalo de Confianza del 95%</strong>. Límite estándar para alertas en
+                                procesos.</p>
+                        </div>
+                        <div class="glass-box" style="padding: 20px; border-left: 3px solid #f59e0b;">
+                            <h4
+                                style="margin: 0 0 8px 0; font-size: 1.1rem; font-family: 'JetBrains Mono', monospace; color: #fcd34d;">
+                                ± 3 Desviación (σ)</h4>
+                            <div style="font-size: 1.8rem; font-weight: 800; color: #fff; margin-bottom: 8px;">~ 99.7%
+                            </div>
+                            <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">
+                                Prácticamente la totalidad. Cualquier punto fuera de esta frontera es un <strong>Outlier
+                                    severo</strong>.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 8: El Salto a la Inferencia -->
+        <div class="slide" id="slide-8">
+            <div class="slide-content"
+                style="align-items: flex-start; justify-content: flex-start; padding: 40px 80px;">
+
+                <div style="margin-bottom: 15px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: #f59e0b; letter-spacing: 0.1em; text-transform: uppercase;">Nivel
+                        5: El Salto a la Inferencia</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: #fff; margin: 5px 0 0 0; line-height: 1.1;">
+                        Hipótesis &amp; El <span style="color: var(--accent-primary);">p-valor</span>
+                    </h2>
+                    <p
+                        style="font-size: 1.15rem; color: var(--text-muted); max-width: 900px; margin-top: 10px; line-height: 1.4;">
+                        Tomar decisiones basadas en datos requiere traducir el problema a "jerga" estadística y dejar
+                        que el p-valor actúe como juez.
+                    </p>
+                </div>
+
+                <div style="display: flex; gap: 25px; width: 100%; align-items: stretch;">
+
+                    <!-- Left: La Jerga (Flip Cards 2x2) -->
+                    <div style="flex: 1; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                        <!-- H0 -->
+                        <div class="flip-card" style="height: 160px;">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front glass-box"
+                                    style="border-top: 3px solid #f59e0b; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 15px;">
+                                    <h4 style="color: #f59e0b; margin: 0 0 5px 0; font-size: 1.2rem;">H₀ (Nula)</h4>
+                                    <p style="font-size: 0.85rem; color: #e2e8f0; line-height: 1.3; margin: 0;">No hay
+                                        diferencia. Todo es ruido/azar.</p>
+                                    <div style="margin-top: auto; color: #f59e0b; font-size: 0.75rem; opacity: 0.8;"><i
+                                            class="fa-solid fa-rotate"></i> Girar</div>
+                                </div>
+                                <div class="flip-card-back glass-box"
+                                    style="background: rgba(30, 41, 59, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 15px;">
+                                    <span style="font-size: 0.95rem; color: #cbd5e1; font-weight: 600;">"Todo sigue
+                                        igual"</span>
+                                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">Es el
+                                        Status Quo. El experimento fracasó.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- H1 -->
+                        <div class="flip-card" style="height: 160px;">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front glass-box"
+                                    style="border-top: 3px solid var(--accent-success); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 15px;">
+                                    <h4 style="color: var(--accent-success); margin: 0 0 5px 0; font-size: 1.2rem;">H₁
+                                        (Alternativa)</h4>
+                                    <p style="font-size: 0.85rem; color: #e2e8f0; line-height: 1.3; margin: 0;">SÍ
+                                        existe un efecto real y cuantificable.</p>
+                                    <div
+                                        style="margin-top: auto; color: var(--accent-success); font-size: 0.75rem; opacity: 0.8;">
+                                        <i class="fa-solid fa-rotate"></i> Girar
+                                    </div>
+                                </div>
+                                <div class="flip-card-back glass-box"
+                                    style="background: rgba(30, 41, 59, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 15px;">
+                                    <span style="font-size: 0.95rem; color: #cbd5e1; font-weight: 600;">"¡Descubrimos
+                                        algo!"</span>
+                                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">Hay un
+                                        efecto real más allá del azar.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tipo I -->
+                        <div class="flip-card" style="height: 160px;">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front glass-box"
+                                    style="border-top: 3px solid var(--accent-highlight); background: rgba(201, 69, 44, 0.05); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 15px;">
+                                    <h4 style="color: var(--accent-highlight); margin: 0 0 5px 0; font-size: 1.2rem;">
+                                        Error Tipo I (α)</h4>
+                                    <p style="font-size: 0.85rem; color: #e2e8f0; line-height: 1.3; margin: 0;">Falso
+                                        Positivo. Rechazar H₀ siendo verdad.</p>
+                                    <div
+                                        style="margin-top: auto; color: var(--accent-highlight); font-size: 0.75rem; opacity: 0.8;">
+                                        <i class="fa-solid fa-rotate"></i> Girar
+                                    </div>
+                                </div>
+                                <div class="flip-card-back glass-box"
+                                    style="background: rgba(30, 41, 59, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 15px;">
+                                    <span style="font-size: 0.95rem; color: #cbd5e1; font-weight: 600;">"Concluir
+                                        falsamente"</span>
+                                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">Decir que
+                                        descubriste algo, cuando fue suerte.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tipo II -->
+                        <div class="flip-card" style="height: 160px;">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front glass-box"
+                                    style="border-top: 3px solid #f59e0b; background: rgba(245, 158, 11, 0.05); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 15px;">
+                                    <h4 style="color: #f59e0b; margin: 0 0 5px 0; font-size: 1.2rem;">Error Tipo II (β)
+                                    </h4>
+                                    <p style="font-size: 0.85rem; color: #e2e8f0; line-height: 1.3; margin: 0;">Falso
+                                        Negativo. Fallar en detectar la diferencia.</p>
+                                    <div style="margin-top: auto; color: #f59e0b; font-size: 0.75rem; opacity: 0.8;"><i
+                                            class="fa-solid fa-rotate"></i> Girar</div>
+                                </div>
+                                <div class="flip-card-back glass-box"
+                                    style="background: rgba(30, 41, 59, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 15px;">
+                                    <span style="font-size: 0.95rem; color: #cbd5e1; font-weight: 600;">"Ignorar el
+                                        efecto"</span>
+                                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">Tener la
+                                        solución, pero el ruido la ahogó.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: p-valor and Alertas -->
+                    <div style="flex: 1.2; display: flex; flex-direction: column; gap: 15px;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-primary); padding: 25px;">
+                            <h4 style="color: #fff; font-size: 1.4rem; margin: 0 0 10px 0;"><i class="fa-solid fa-gavel"
+                                    style="color:var(--accent-primary);"></i> El Juez: p-valor</h4>
+                            <p
+                                style="font-size: 1.05rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 20px;">
+                                Probabilidad de ver este resultado <strong>si H₀ fuera perfecta</strong>. Software como
+                                Python o Excel (<code>T.TEST</code>) devuelve este número exacto.
+                            </p>
+
+                            <table
+                                style="width: 100%; border-collapse: collapse; font-size: 1rem; color: #cbd5e1; text-align: left;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid rgba(255,255,255,0.1); color: #fff;">
+                                        <th style="padding: 10px;">p-valor</th>
+                                        <th style="padding: 10px;">Significancia</th>
+                                        <th style="padding: 10px;">Veredicto H₀</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                        <td style="padding: 10px;">> 0.05</td>
+                                        <td>No sig.</td>
+                                        <td><strong>No Rechazar</strong> (Fracaso)</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                        <td style="padding: 10px;">
+                                            <= 0.05</td>
+                                        <td style="color:#f59e0b;">* Significativo</td>
+                                        <td><strong style="color:var(--accent-highlight);">Rechazar</strong> (Éxito)
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 10px;">
+                                            <= 0.01</td>
+                                        <td style="color:#f59e0b;">** Muy Sig.</td>
+                                        <td><strong style="color:var(--accent-highlight);">Rechazo fuerte</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="glass-box"
+                            style="border-top: 4px solid var(--accent-highlight); background: rgba(30,30,40,0.5); padding: 15px 25px;">
+                            <h4 style="color: var(--accent-highlight); font-size: 1.1rem; margin: 0 0 10px 0;"><i
+                                    class="fa-solid fa-triangle-exclamation"></i> Limitación Práctica</h4>
+                            <p style="font-size: 0.95rem; color: #cbd5e1; line-height: 1.4; margin: 0;">
+                                <strong>Significancia ≠ Importancia:</strong> Con millones de datos (gran 'n'),
+                                diferencias minúsculas pueden ser "estadísticamente significativas" pero ser
+                                comercialmente inútiles en la vida real.
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 9: Pruebas Clave (t-test & F-test) -->
+        <div class="slide" id="slide-9">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+
+                <div style="margin-bottom: 30px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-secondary); letter-spacing: 0.1em; text-transform: uppercase;">Herramientas
+                        Inferenciales</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: #fff; margin: 10px 0 0 0; line-height: 1.1;">
+                        Las Pruebas <span style="color: var(--accent-secondary);">Fundamentales</span>
+                    </h2>
+                </div>
+
+                <div style="display: flex; gap: 40px; width: 100%; align-items: stretch;">
+
+                    <!-- t-test -->
+                    <div class="flip-card" style="flex: 1; min-height: 480px;">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front glass-box"
+                                style="border-top: 4px solid var(--accent-secondary); display: flex; flex-direction: column; justify-content: flex-start; padding: 30px;">
+                                <h3 style="margin: 0 0 15px 0; font-size: 1.8rem; font-weight: 700; color: #fff;"><i
+                                        class="fa-solid fa-ruler-combined" style="color: var(--accent-secondary);"></i>
+                                    t-test
+                                    (Medias)</h3>
+                                <p
+                                    style="font-size: 1.05rem; line-height: 1.5; color: var(--text-main); margin-bottom: 15px;">
+                                    Compara medias entre grupos o contra un valor de referencia.</p>
+
+                                <ul
+                                    style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.6; margin: 0 0 15px 1.5rem; padding: 0;">
+                                    <li style="margin-bottom: 10px;"><strong>Una muestra:</strong> vs valor teórico
+                                        conocido.<br><span
+                                            style="font-family:'JetBrains Mono', monospace; color:var(--accent-secondary);">t
+                                            =
+                                            (x̄ – μ) / (s/√n)</span></li>
+                                    <li style="margin-bottom: 10px;"><strong>Muestras pareadas:</strong> mismas
+                                        muestras, dos
+                                        métodos.<br><span
+                                            style="font-family:'JetBrains Mono', monospace; color:var(--accent-secondary);">t
+                                            =
+                                            |d̄|·√n / s_d</span></li>
+                                    <li><strong>Muestras independientes:</strong> grupos diferentes.<br><em>Ocupa saber
+                                            si las
+                                            varianzas son iguales o no.</em></li>
+                                </ul>
+
+                                <div
+                                    style="margin-top: auto; padding: 15px; background: rgba(255,255,255,0.05); border-left: 3px solid var(--accent-success); border-radius: 8px;">
+                                    <span style="display: block; font-size: 0.95rem; color: #e2e8f0;"><i
+                                            class="fa-solid fa-gavel" style="color: var(--accent-success);"></i>
+                                        <strong>Decisión:</strong> Si |t<sub>calc</sub>| > t<sub>crit</sub> → Rechazar
+                                        H₀</span>
+                                </div>
+                                <div
+                                    style="margin-top: 15px; text-align: center; color: var(--accent-secondary); font-size: 0.85rem; font-weight: 600; opacity: 0.8;">
+                                    <i class="fa-solid fa-rotate"></i> Pasa el mouse para la explicación simple
+                                </div>
+                            </div>
+                            <div class="flip-card-back glass-box"
+                                style="border: 2px solid var(--accent-secondary); background: rgba(30, 41, 59, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px;">
+                                <i class="fa-solid fa-lightbulb"
+                                    style="font-size: 2.5rem; color: var(--accent-secondary); margin-bottom: 20px;"></i>
+                                <h4 style="color: #fff; font-size: 1.4rem; margin-bottom: 15px;">En Palabras Simples
+                                </h4>
+                                <p style="font-size: 1.1rem; color: #cbd5e1; line-height: 1.6; margin-bottom: 20px;">
+                                    El <strong>t-test</strong> es tu juez de promedios. Te dice si el equipo A es
+                                    legítimamente más alto que el equipo B, o si solo mediste a los más altos por
+                                    casualidad.
+                                </p>
+                                <p style="font-size: 1.1rem; color: #cbd5e1; line-height: 1.6;">
+                                    <strong>¿Cuándo usarlo?</strong> Cuando te pregunten "¿Hay diferencia entre el
+                                    promedio de esto y el promedio de aquello?". Pide t-test.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- F-test -->
+                    <div class="flip-card" style="flex: 1; min-height: 480px;">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front glass-box"
+                                style="border-top: 4px solid var(--accent-primary); display: flex; flex-direction: column; justify-content: flex-start; padding: 30px;">
+                                <h3 style="margin: 0 0 15px 0; font-size: 1.8rem; font-weight: 700; color: #fff;"><i
+                                        class="fa-solid fa-scale-balanced" style="color: var(--accent-primary);"></i>
+                                    F-test
+                                    (Varianzas)</h3>
+                                <p
+                                    style="font-size: 1.05rem; line-height: 1.5; color: var(--text-main); margin-bottom: 15px;">
+                                    Determina si dos muestras tienen <em>dispersiones</em> significativamente
+                                    diferentes.</p>
+
+                                <div class="formula-block"
+                                    style="font-size: 1.2rem; text-align: center; margin-bottom: 15px;">F
+                                    = s₁² / s₂² <span style="font-size:0.8rem; color:var(--text-muted);">(con s₁ ≥
+                                        s₂)</span>
+                                </div>
+
+                                <p style="font-size: 0.95rem; font-weight: 600; color: #fff; margin: 0 0 10px 0;">
+                                    Procedimiento
+                                    Clave:</p>
+                                <ol
+                                    style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.6; margin: 0 0 15px 1.5rem; padding: 0;">
+                                    <li>F calculado siempre es ≥ 1.</li>
+                                    <li>Buscar F crítico en tabla ANOVA.</li>
+                                    <li>Comparar: F<sub>calc</sub> vs F<sub>crit</sub>.</li>
+                                </ol>
+
+                                <div
+                                    style="margin-top: auto; padding: 15px; background: rgba(255,255,255,0.05); border-left: 3px solid #f59e0b; border-radius: 8px;">
+                                    <span style="font-size: 0.95rem; color: #e2e8f0;">F<sub>calc</sub> ≤
+                                        F<sub>crit</sub> →
+                                        Varianzas <strong>NO</strong> difieren.</span>
+                                </div>
+                                <div
+                                    style="margin-top: 15px; text-align: center; color: var(--accent-primary); font-size: 0.85rem; font-weight: 600; opacity: 0.8;">
+                                    <i class="fa-solid fa-rotate"></i> Pasa el mouse para la explicación simple
+                                </div>
+                            </div>
+                            <div class="flip-card-back glass-box"
+                                style="border: 2px solid var(--accent-primary); background: rgba(30, 41, 59, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px;">
+                                <i class="fa-solid fa-lightbulb"
+                                    style="font-size: 2.5rem; color: var(--accent-primary); margin-bottom: 20px;"></i>
+                                <h4 style="color: #fff; font-size: 1.4rem; margin-bottom: 15px;">En Palabras Simples
+                                </h4>
+                                <p style="font-size: 1.1rem; color: #cbd5e1; line-height: 1.6; margin-bottom: 20px;">
+                                    El <strong>F-test</strong> es tu juez de caos y consistencia. Te dice si una máquina
+                                    es legítimamente más errática que otra.
+                                </p>
+                                <p style="font-size: 1.1rem; color: #cbd5e1; line-height: 1.6;">
+                                    <strong>¿Cuándo usarlo?</strong> Cuando te pregunten "¿Cuál método es más
+                                    consistente?" o antes de hacer un t-test para saber si puedes mezclar las dos bolsas
+                                    de datos.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 10: Casos Universales (Bento Grid) -->
+        <div class="slide" id="slide-10">
+            <div class="slide-content"
+                style="align-items: flex-start; justify-content: flex-start; padding: 20px 80px;">
+
+                <div style="margin-bottom: 20px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: #10b981; letter-spacing: 0.1em; text-transform: uppercase;">Práctica
+                        Aplicada</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: #fff; margin: 10px 0 0 0; line-height: 1.1;">
+                        Casos de Uso <span style="color: #10b981;">Empresarial</span>
+                    </h2>
+                    <p
+                        style="font-size: 1.15rem; color: var(--text-muted); max-width: 900px; margin-top: 15px; line-height: 1.4;">
+                        Los estadísticos inferenciales son agnósticos a la industria. Estas son las respuestas que
+                        brindan a preguntas de negocio comunes.
+                    </p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 100%;">
+
+                    <!-- Card 1: Marketing -->
+                    <div class="glass-box" style="border-left: 4px solid var(--accent-primary); padding: 30px;">
+                        <h4 style="color: #fff; font-size: 1.35rem; margin: 0 0 10px 0;"><i class="fa-solid fa-bullhorn"
+                                style="color:var(--accent-primary); margin-right: 8px;"></i> A/B Testing (Marketing)
+                        </h4>
+                        <div
+                            style="background: rgba(59, 130, 246, 0.1); display: inline-block; padding: 4px 10px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--accent-primary); margin-bottom: 15px;">
+                            t-test independiente</div>
+                        <p style="font-size: 0.95rem; color: #cbd5e1; line-height: 1.5; margin: 0;">
+                            <strong>Pregunta:</strong> ¿La Campaña A genera un ticket promedio mayor que la Campaña
+                            B?<br>
+                            <span
+                                style="color: var(--text-muted); display: block; margin-top: 5px;"><strong>Acción:</strong>
+                                Comparamos las medias (x̄_A vs x̄_B) considerando la varianza del gasto de usuarios
+                                únicos para ver si la diferencia supera el ruido de consumo normal.</span>
+                        </p>
+                    </div>
+
+                    <!-- Card 2: IT -->
+                    <div class="glass-box" style="border-left: 4px solid var(--accent-secondary); padding: 30px;">
+                        <h4 style="color: #fff; font-size: 1.35rem; margin: 0 0 10px 0;"><i class="fa-solid fa-server"
+                                style="color:var(--accent-secondary); margin-right: 8px;"></i> Estabilidad de Servidores
+                            (IT)</h4>
+                        <div
+                            style="background: rgba(168, 85, 247, 0.1); display: inline-block; padding: 4px 10px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--accent-secondary); margin-bottom: 15px;">
+                            F-test de varianzas</div>
+                        <p style="font-size: 0.95rem; color: #cbd5e1; line-height: 1.5; margin: 0;">
+                            <strong>Pregunta:</strong> ¿El nuevo proveedor de Cloud produce picos de latencia
+                            impredecibles?<br>
+                            <span
+                                style="color: var(--text-muted); display: block; margin-top: 5px;"><strong>Acción:</strong>
+                                No miramos el promedio, sino la varianza (s²). Identificamos científicamente si un
+                                proveedor es más errático e inestable que otro.</span>
+                        </p>
+                    </div>
+
+                    <!-- Card 3: HR -->
+                    <div class="glass-box" style="border-left: 4px solid var(--accent-success); padding: 30px;">
+                        <h4 style="color: #fff; font-size: 1.35rem; margin: 0 0 10px 0;"><i
+                                class="fa-solid fa-users-gear"
+                                style="color:var(--accent-success); margin-right: 8px;"></i> Impacto Capacitación (HR)
+                        </h4>
+                        <div
+                            style="background: rgba(45, 138, 78, 0.1); display: inline-block; padding: 4px 10px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--accent-success); margin-bottom: 15px;">
+                            t-test pareado</div>
+                        <p style="font-size: 0.95rem; color: #cbd5e1; line-height: 1.5; margin: 0;">
+                            <strong>Pregunta:</strong> ¿Aumentó la productividad real después del entrenamiento
+                            intensivo?<br>
+                            <span
+                                style="color: var(--text-muted); display: block; margin-top: 5px;"><strong>Acción:</strong>
+                                Medimos al mismo empleado "Antes y Después". Aísla el talento individual y prueba
+                                empíricamente si la diferencia neta agregada es positiva.</span>
+                        </p>
+                    </div>
+
+                    <!-- Card 4: Supply Chain -->
+                    <div class="glass-box" style="border-left: 4px solid #f59e0b; padding: 30px;">
+                        <h4 style="color: #fff; font-size: 1.35rem; margin: 0 0 10px 0;"><i
+                                class="fa-solid fa-boxes-packing" style="color:#f59e0b; margin-right: 8px;"></i> Control
+                            Lotes (S. Chain)</h4>
+                        <div
+                            style="background: rgba(245, 158, 11, 0.1); display: inline-block; padding: 4px 10px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #f59e0b; margin-bottom: 15px;">
+                            Medidas de Dispersión (CV)</div>
+                        <p style="font-size: 0.95rem; color: #cbd5e1; line-height: 1.5; margin: 0;">
+                            <strong>Pregunta:</strong> ¿Están todos los envases llenados uniformemente al límite
+                            regulatorio?<br>
+                            <span
+                                style="color: var(--text-muted); display: block; margin-top: 5px;"><strong>Acción:</strong>
+                                Analizamos coeficiente de variación (CV < 5%) del volumen para tomar la decisión legal
+                                    de liberar o rechazar un pedido masivo en aduana.</span>
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- DIAPOSITIVA 13: Glosario y Conclusiones -->
+        <div class="slide" id="slide-13">
+            <div class="slide-content" style="align-items: center; justify-content: center; padding: 40px;">
+
+                <div style="text-align: center; margin-bottom: 40px;">
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: #fff; margin: 0; line-height: 1.1;">
+                        Conclusiones VAM
+                    </h2>
+                    <p style="font-size: 1.15rem; color: var(--text-muted); margin-top: 15px;">
+                        Valid Analytical Measurement: Integridad desde la visualización hasta la decisión.
+                    </p>
+                </div>
+
+                <div
+                    style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; width: 100%; max-width: 1200px; margin-bottom: 40px;">
+
+                    <div class="flip-card" style="height: 140px;">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front glass-box"
+                                style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; border: 1px solid var(--accent-primary);">
+                                <i class="fa-solid fa-eye"
+                                    style="font-size: 2rem; color: var(--accent-primary); margin-bottom: 10px;"></i>
+                                <span style="font-weight: 700;">1. Visualiza Siempre</span>
+                            </div>
+                            <div class="flip-card-back glass-box"
+                                style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; background:var(--accent-primary);">
+                                <span style="font-size: 0.9rem; color: #fff; font-weight: 600;">Los estadísticos son
+                                    ciegos; los gráficos no.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flip-card" style="height: 140px;">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front glass-box"
+                                style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; border: 1px solid var(--accent-secondary);">
+                                <i class="fa-solid fa-bullseye"
+                                    style="font-size: 2rem; color: var(--accent-secondary); margin-bottom: 10px;"></i>
+                                <span style="font-weight: 700;">Exactitud vs Prec.</span>
+                            </div>
+                            <div class="flip-card-back glass-box"
+                                style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; background:var(--accent-secondary);">
+                                <span style="font-size: 0.9rem; color: #fff; font-weight: 600;">Dar en el blanco vs
+                                    Agrupar los tiros. Sesgo vs Dispersión.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flip-card" style="height: 140px;">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front glass-box"
+                                style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; border: 1px solid #f59e0b;">
+                                <i class="fa-solid fa-copy"
+                                    style="font-size: 2rem; color: #f59e0b; margin-bottom: 10px;"></i>
+                                <span style="font-weight: 700;">Repet. vs Reprod.</span>
+                            </div>
+                            <div class="flip-card-back glass-box"
+                                style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; background:#f59e0b;">
+                                <span style="font-size: 0.9rem; color: #fff; font-weight: 600;">Mismo equipo/día vs
+                                    Diferente laboratorio/equipo.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flip-card" style="height: 140px;">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front glass-box"
+                                style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; border: 1px solid var(--accent-highlight);">
+                                <i class="fa-solid fa-brain"
+                                    style="font-size: 2rem; color: var(--accent-highlight); margin-bottom: 10px;"></i>
+                                <span style="font-weight: 700;">Contexto > p-valor</span>
+                            </div>
+                            <div class="flip-card-back glass-box"
+                                style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; background:var(--accent-highlight);">
+                                <span style="font-size: 0.9rem; color: #fff; font-weight: 600;">La química dicta la
+                                    importancia, la estadística evalúa el azar.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div style="text-align: center; color: var(--text-muted); font-size: 0.9rem;">
+                    <p>Fin de la presentación. Serie VAM (Valid Analytical Measurement) · Basado en Shaun Burke.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SCRIPT DE NAVEGACIÓN (Renderizado de KaTeX incluido si se añaden fórmulas) -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            if (typeof renderMathInElement !== 'undefined') {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        { left: '$$', right: '$$', display: true },
+                        { left: '$', right: '$', display: false }
+                    ],
+                    throwOnError: false
+                });
+            }
+
+            const slides = document.querySelectorAll('.slide');
+            const indicator = document.getElementById('slide-indicator');
+            let currentSlide = 0;
+
+            function updateSlides() {
+                if (slides.length === 0) return;
+                slides.forEach((slide, index) => {
+                    if (index === currentSlide) {
+                        slide.classList.add('active');
+                    } else {
+                        slide.classList.remove('active');
+                    }
+                });
+                indicator.textContent = `${currentSlide + 1} / ${slides.length}`;
+            }
+
+            function nextSlide() {
+                if (currentSlide < slides.length - 1) {
+                    currentSlide++;
+                    updateSlides();
+                }
+            }
+
+            function prevSlide() {
+                if (currentSlide > 0) {
+                    currentSlide--;
+                    updateSlides();
+                }
+            }
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' || e.key === 'Space' || e.key === 'PageDown') {
+                    nextSlide();
+                } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                    prevSlide();
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('a') || e.target.closest('button') || e.target.closest('.flip-card')) return;
+                const clickX = e.clientX;
+                const windowWidth = window.innerWidth;
+                if (clickX > windowWidth * 0.7) {
+                    nextSlide();
+                } else if (clickX < windowWidth * 0.3) {
+                    prevSlide();
+                }
+            });
+
+            let wheelTimer;
+            document.addEventListener('wheel', (e) => {
+                if (wheelTimer) return;
+                wheelTimer = setTimeout(() => { wheelTimer = null }, 800);
+                if (e.deltaY > 50) nextSlide();
+                else if (e.deltaY < -50) prevSlide();
+            }, { passive: true });
+
+            updateSlides();
+
+            // ==========================================
+            // ECHARTS INITIALIZATIONS
+            // ==========================================
+
+            // 1. Scatter Plot (Slide 3)
+            const scatterChart = echarts.init(document.getElementById('scatter-chart'));
+            const scatterOption = {
+                grid: { top: 20, right: 30, bottom: 20, left: 30 },
+                xAxis: {
+                    type: 'value',
+                    name: 'Inversión en Marketing (Mix)',
+                    nameLocation: 'middle',
+                    nameGap: 25,
+                    nameTextStyle: { color: '#94a3b8', fontSize: 10, fontFamily: 'Inter' },
+                    splitLine: { show: false },
+                    axisLine: { lineStyle: { color: 'rgba(255,255,255,0.2)' } },
+                    axisLabel: { color: '#94a3b8', fontFamily: 'JetBrains Mono', fontSize: 10 }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Retorno (ROI)',
+                    nameLocation: 'middle',
+                    nameGap: 30,
+                    nameTextStyle: { color: '#94a3b8', fontSize: 10, fontFamily: 'Inter' },
+                    splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } },
+                    axisLine: { show: false },
+                    axisLabel: { color: '#94a3b8', fontFamily: 'JetBrains Mono', fontSize: 10 }
+                },
+                series: [
+                    {
+                        name: 'Tendencia Normal',
+                        type: 'scatter',
+                        symbolSize: 14,
+                        itemStyle: {
+                            color: '#3fa7d0',
+                            shadowBlur: 5,
+                            shadowColor: 'rgba(63, 167, 208, 0.5)'
+                        },
+                        data: [
+                            [1.2, 15], [1.5, 20], [2.1, 28], [2.8, 35], [3.2, 43],
+                            [3.4, 40], [3.9, 55], [4.5, 62], [4.9, 68], [5.2, 75],
+                            [5.9, 81], [6.5, 90], [7.1, 95], [7.8, 110], [8.0, 118]
+                        ]
+                    },
+                    {
+                        name: 'Outlier Sospechoso',
+                        type: 'scatter',
+                        symbolSize: 22,
+                        itemStyle: {
+                            color: '#e11d48', // Tailwind rose-600
+                            shadowBlur: 10,
+                            shadowColor: 'rgba(225, 29, 72, 0.6)',
+                            borderColor: '#fff',
+                            borderWidth: 2
+                        },
+                        data: [[1.8, 105]] // Low investment, insanely high return
+                    }
+                ],
+                tooltip: {
+                    trigger: 'item',
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    textStyle: { color: '#e2e8f0', fontFamily: 'Inter' },
+                    formatter: function (params) {
+                        return `<div style="font-weight:700; margin-bottom:5px; color:${params.color};">${params.seriesName}</div>
+                                Inv: $${params.value[0]}k <br/> Retorno: $${params.value[1]}k`;
+                    }
+                }
+            };
+            scatterChart.setOption(scatterOption);
+
+            // 2. Histogram (Slide 4)
+            const histChart = echarts.init(document.getElementById('histogram-chart'));
+            const histOption = {
+                grid: { top: 20, right: 10, bottom: 20, left: 30 },
+                xAxis: {
+                    type: 'category',
+                    data: ['0.2', '0.3', '0.4', '0.5', '0.6', '0.7'],
+                    axisLine: { lineStyle: { color: 'rgba(255,255,255,0.2)' } },
+                    axisLabel: { color: '#94a3b8', fontFamily: 'JetBrains Mono', fontSize: 10 },
+                    axisTick: { show: false }
+                },
+                yAxis: {
+                    type: 'value',
+                    splitLine: { show: false },
+                    axisLine: { show: false },
+                    axisLabel: { show: false }
+                },
+                series: [{
+                    type: 'bar',
+                    barWidth: '99%',
+                    data: [
+                        { value: 40, itemStyle: { color: '#1b6b8f' } },
+                        { value: 70, itemStyle: { color: '#2780a6' } },
+                        { value: 95, itemStyle: { color: '#3fa7d0' } },
+                        { value: 60, itemStyle: { color: '#2780a6' } },
+                        { value: 30, itemStyle: { color: '#1b6b8f' } },
+                        { value: 20, itemStyle: { color: '#c9452c' } } // Outlier color
+                    ],
+                    itemStyle: {
+                        borderRadius: [4, 4, 0, 0]
+                    }
+                }]
+            };
+            histChart.setOption(histOption);
+
+            // 3. Boxplot (Slide 4)
+            const boxChart = echarts.init(document.getElementById('boxplot-chart'));
+            const boxOption = {
+                grid: { top: 10, right: 10, bottom: 30, left: 10 },
+                xAxis: {
+                    type: 'value',
+                    show: false,
+                    min: 0,
+                    max: 100
+                },
+                yAxis: {
+                    type: 'category',
+                    show: false,
+                    data: ['Datos']
+                },
+                series: [
+                    {
+                        name: 'Boxplot',
+                        type: 'boxplot',
+                        layout: 'horizontal',
+                        boxWidth: [20, 50],
+                        itemStyle: {
+                            color: 'rgba(30, 41, 59, 0.8)',
+                            borderColor: '#3fa7d0',
+                            borderWidth: 2
+                        },
+                        data: [
+                            [10, 30, 50, 70, 90] // min, Q1, median, Q3, max
+                        ]
+                    }
+                ]
+            };
+            boxChart.setOption(boxOption);
+
+            // 4. Time Series (Slide 5)
+            const commonTsOptions = {
+                grid: { top: 10, right: 10, bottom: 20, left: 10 },
+                xAxis: {
+                    type: 'category',
+                    show: false,
+                    data: ['1', '2', '3', '4', '5']
+                },
+                yAxis: {
+                    type: 'value',
+                    min: 0,
+                    max: 10,
+                    splitLine: { show: false },
+                    axisLabel: { show: false }
+                }
+            };
+
+            const tsTrendChart = echarts.init(document.getElementById('ts-trend-chart'));
+            tsTrendChart.setOption({
+                ...commonTsOptions,
+                series: [{
+                    data: [3, 5, 6, 8, 10],
+                    type: 'line',
+                    smooth: true,
+                    symbolSize: 8,
+                    itemStyle: { color: '#c9452c' },
+                    lineStyle: { width: 3 }
+                }]
+            });
+
+            const tsStepChart = echarts.init(document.getElementById('ts-step-chart'));
+            tsStepChart.setOption({
+                ...commonTsOptions,
+                series: [{
+                    data: [7, 7, 3, 3, 3],
+                    type: 'line',
+                    step: 'middle',
+                    symbolSize: 8,
+                    itemStyle: { color: '#f59e0b' },
+                    lineStyle: { width: 3 }
+                }]
+            });
+
+            const tsRandomChart = echarts.init(document.getElementById('ts-random-chart'));
+            tsRandomChart.setOption({
+                ...commonTsOptions,
+                series: [{
+                    data: [5, 8, 4, 7, 3],
+                    type: 'line',
+                    symbolSize: 8,
+                    itemStyle: { color: '#2d8a4e' },
+                    lineStyle: { width: 3 },
+                    smooth: true
+                }]
+            });
+
+            // 5. Normal Distribution (Slide 7)
+            const normalChart = echarts.init(document.getElementById('normal-dist-chart'));
+
+            // Generate standard normal distribution data
+            const normalData = [];
+            const mean = 0;
+            const stdDev = 1;
+            for (let i = -4; i <= 4; i += 0.1) {
+                const x = i;
+                const exponent = -Math.pow(x - mean, 2) / (2 * Math.pow(stdDev, 2));
+                const y = (1 / (stdDev * Math.sqrt(2 * Math.PI))) * Math.pow(Math.E, exponent);
+                normalData.push([x, y]);
+            }
+
+            const normalOption = {
+                grid: { top: 20, right: 20, bottom: 40, left: 20 },
+                xAxis: {
+                    type: 'value',
+                    min: -4,
+                    max: 4,
+                    interval: 1,
+                    axisLabel: {
+                        formatter: function (value) {
+                            if (value === 0) return 'μ';
+                            if (value > 0) return '+' + value + 'σ';
+                            return value + 'σ';
+                        },
+                        color: function (value) {
+                            return value === 0 ? '#c9452c' : '#94a3b8';
+                        },
+                        fontFamily: 'JetBrains Mono',
+                        fontSize: 12,
+                        fontWeight: 'bold'
+                    },
+                    splitLine: { show: false },
+                    axisLine: { lineStyle: { color: 'rgba(255,255,255,0.2)' } }
+                },
+                yAxis: {
+                    type: 'value',
+                    show: false
+                },
+                series: [{
+                    data: normalData,
+                    type: 'line',
+                    smooth: true,
+                    showSymbol: false,
+                    lineStyle: {
+                        width: 4,
+                        color: '#3fa7d0'
+                    },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(63, 167, 208, 0.6)' },
+                            { offset: 1, color: 'rgba(63, 167, 208, 0.0)' }
+                        ])
+                    },
+                    markLine: {
+                        symbol: ['none', 'none'],
+                        label: { show: false },
+                        lineStyle: { type: 'dashed', color: 'rgba(255,255,255,0.3)', width: 1.5 },
+                        data: [
+                            { xAxis: -3 }, { xAxis: -2 }, { xAxis: -1 },
+                            { xAxis: 0, lineStyle: { color: '#c9452c', type: 'solid', width: 2 } },
+                            { xAxis: 1 }, { xAxis: 2 }, { xAxis: 3 }
+                        ]
+                    }
+                }]
+            };
+            normalChart.setOption(normalOption);
+
+            // 6. Skewness
+            const skewnessChart = echarts.init(document.getElementById('skewness-chart'));
+            const skewData = [];
+            for (let i = 0.1; i <= 15; i += 0.1) {
+                const x = i;
+                const pdf = (1 / (x * 0.6 * Math.sqrt(2 * Math.PI))) * Math.exp(-(Math.pow(Math.log(x) - 1.5, 2)) / (2 * 0.36));
+                skewData.push([x, pdf]);
+            }
+            skewData.unshift([0, 0]);
+
+            const skewOption = {
+                grid: { top: 10, right: 10, bottom: 20, left: 10 },
+                xAxis: { type: 'value', show: false, min: 0, max: 15 },
+                yAxis: { type: 'value', show: false },
+                series: [{
+                    data: skewData,
+                    type: 'line',
+                    smooth: true,
+                    showSymbol: false,
+                    lineStyle: { width: 3, color: '#10b981' },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(16, 185, 129, 0.4)' },
+                            { offset: 1, color: 'rgba(16, 185, 129, 0.0)' }
+                        ])
+                    },
+                    markLine: {
+                        symbol: ['none', 'none'],
+                        label: { show: false },
+                        data: [
+                            { xAxis: 5.4, lineStyle: { color: '#f59e0b', width: 2, type: 'dashed' }, name: 'Media' },
+                            { xAxis: 4.5, lineStyle: { color: '#3fa7d0', width: 2, type: 'solid' }, name: 'Mediana' }
+                        ]
+                    }
+                }]
+            };
+            skewnessChart.setOption(skewOption);
+
+            // 7. Kurtosis
+            const kurtosisChart = echarts.init(document.getElementById('kurtosis-chart'));
+            const leptoData = [];
+            const normalKData = [];
+            for (let i = -5; i <= 5; i += 0.1) {
+                const x = i;
+                const lepto = 0.5 * Math.exp(-Math.abs(x) * 1.5);
+                leptoData.push([x, lepto]);
+                const norm = (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5 * x * x);
+                normalKData.push([x, norm]);
+            }
+            const kurtosisOption = {
+                grid: { top: 10, right: 10, bottom: 20, left: 10 },
+                xAxis: { type: 'value', show: false, min: -5, max: 5 },
+                yAxis: { type: 'value', show: false },
+                series: [
+                    {
+                        name: 'Leptocúrtica',
+                        type: 'line',
+                        data: leptoData,
+                        smooth: true,
+                        showSymbol: false,
+                        lineStyle: { width: 3, color: '#f43f5e' },
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: 'rgba(244, 63, 94, 0.4)' },
+                                { offset: 1, color: 'rgba(244, 63, 94, 0.0)' }
+                            ])
+                        }
+                    },
+                    {
+                        name: 'Normal',
+                        type: 'line',
+                        data: normalKData,
+                        smooth: true,
+                        showSymbol: false,
+                        lineStyle: { width: 2, type: 'dashed', color: '#94a3b8' }
+                    }
+                ]
+            };
+            kurtosisChart.setOption(kurtosisOption);
+
+            // Handle Resize
+            window.addEventListener('resize', () => {
+                scatterChart.resize();
+                histChart.resize();
+                boxChart.resize();
+                tsTrendChart.resize();
+                tsStepChart.resize();
+                tsRandomChart.resize();
+                normalChart.resize();
+                skewnessChart.resize();
+                kurtosisChart.resize();
+            });
+
+        });
+    </script>
+</body>
+
+</html>

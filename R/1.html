@@ -1,0 +1,1726 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Introducción a R y Analítica</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+
+    <style>
+        /* =========================================
+           SISTEMA DE DISEÑO (Basado en index.html)
+           ========================================= */
+        :root {
+            --bg-deep: #0f172a;
+            --bg-gradient: radial-gradient(circle at 50% -20%, #1e293b 0%, #0f172a 100%);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+
+            /* Acentos Universales (ajustables a R/Data) */
+            --accent-primary: #22d3ee;
+            --accent-secondary: #a78bfa;
+            --accent-highlight: #fde047;
+
+            /* Efectos Glassmorphism */
+            --glass-bg: rgba(30, 41, 59, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-blur: blur(24px);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-deep);
+            background-image: var(--bg-gradient);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Patrón de fondo (ruido/textura) */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* CONTENEDOR DE DIAPOSITIVAS */
+        #slides-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: scale(0.98);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+            padding: 40px;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: all;
+            transform: scale(1);
+            z-index: 10;
+        }
+
+        .slide-indicator {
+            position: fixed;
+            bottom: 40px;
+            right: 50px;
+            font-family: 'Inter', sans-serif;
+            font-variant-numeric: tabular-nums;
+            color: var(--text-muted);
+            opacity: 0.5;
+            font-size: 0.9rem;
+            z-index: 100;
+            transition: opacity 0.5s;
+        }
+
+        /* CONTENEDOR INTERNO DEL CONTENIDO (Layouts 16:9 safe) */
+        .slide-content {
+            width: 100%;
+            max-width: 1400px;
+            height: 90%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* TIPOGRAFÍA BASE (Reutilizada del diseño maestro) */
+        .title-primary {
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: 4rem;
+            line-height: 1.1;
+            background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .title-highlight {
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 2rem;
+            color: var(--text-muted);
+            font-weight: 400;
+            text-align: center;
+        }
+
+        /* COMPONENTES BASE A UTILIZAR */
+        .glass-box {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ANIMACIONES Y EFECTOS ADICIONALES */
+        @keyframes pulse-icon {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: scale(1.15);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+        }
+
+        /* COMPONENTE FLIP CARD */
+        .flip-card {
+            background-color: transparent;
+            perspective: 1000px;
+            cursor: pointer;
+            flex: 1;
+            display: flex;
+        }
+
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+            flex: 1;
+        }
+
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flip-card-front,
+        .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            box-sizing: border-box;
+        }
+
+        .flip-card-back {
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- INDICADOR -->
+    <div class="slide-indicator" id="slide-indicator">1 / ?</div>
+
+    <div id="slides-container">
+
+        <!-- DIAPOSITIVA 1: Portada Principal -->
+        <div class="slide active" id="slide-1" style="position: relative; overflow: hidden;">
+
+            <!-- Orbes decorativos animados -->
+            <div
+                style="position: absolute; top: -10%; left: -5%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(34,211,238,0.15) 0%, rgba(0,0,0,0) 70%); border-radius: 50%; filter: blur(40px); z-index: 0; animation: pulse-icon 8s infinite alternate; pointer-events: none;">
+            </div>
+            <div
+                style="position: absolute; bottom: -20%; right: -10%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(167,139,250,0.12) 0%, rgba(0,0,0,0) 70%); border-radius: 50%; filter: blur(50px); z-index: 0; animation: pulse-icon 10s infinite alternate-reverse; pointer-events: none;">
+            </div>
+
+            <div class="slide-content"
+                style="align-items: center; justify-content: center; text-align: center; position: relative; z-index: 2;">
+
+                <!-- Badge superior -->
+                <div style="
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 8px 24px;
+                    background: rgba(34, 211, 238, 0.05);
+                    border: 1px solid rgba(34, 211, 238, 0.3);
+                    border-radius: 100px;
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.95rem;
+                    color: var(--accent-primary);
+                    margin-bottom: 40px;
+                    letter-spacing: 0.15em;
+                    box-shadow: 0 0 20px rgba(34, 211, 238, 0.1);
+                    backdrop-filter: blur(10px);
+                ">
+                    <i class="fa-solid fa-code-branch"></i> SINT-604 &mdash; CLASE 01
+                </div>
+
+                <!-- Títulos Principales -->
+                <h1 class="title-primary"
+                    style="margin-bottom: 15px; font-size: 5.5rem; text-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                    Introducción a <span class="title-highlight">R</span>
+                </h1>
+                <h2 class="subtitle"
+                    style="font-size: 2.2rem; margin-bottom: 80px; font-weight: 300; letter-spacing: 0.02em; color: #cbd5e1; font-family: 'Playfair Display', serif;">
+                    y Analítica de Datos
+                </h2>
+
+                <!-- Metadatos en formato Bento / Glass Dock -->
+                <div class="glass-box"
+                    style="display: flex; gap: 40px; justify-content: space-between; padding: 40px 50px; background: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(255,255,255,0.1); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05); width: 85%; max-width: 1000px; backdrop-filter: blur(20px);">
+
+                    <!-- PROFESOR -->
+                    <div style="text-align: left; display: flex; align-items: flex-start; gap: 20px; flex: 1;">
+                        <div
+                            style="background: rgba(34, 211, 238, 0.1); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--accent-primary); border: 1px solid rgba(34, 211, 238, 0.2); flex-shrink: 0;">
+                            <i class="fa-solid fa-user-astronaut" style="font-size: 1.4rem;"></i>
+                        </div>
+                        <div>
+                            <span
+                                style="display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.15em; color: var(--accent-primary); margin-bottom: 6px; text-transform: uppercase;">Profesor</span>
+                            <span
+                                style="display: block; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.25rem; color: #fff; margin-bottom: 4px;">Dr.
+                                J. Ignacio Borge</span>
+                            <span
+                                style="display: block; font-family: 'Inter', sans-serif; font-weight: 400; font-size: 0.95rem; color: var(--text-muted); line-height: 1.4;">Químico
+                                Computacional<br>y Científico de Materiales</span>
+                        </div>
+                    </div>
+
+                    <!-- Divisor Vertical -->
+                    <div
+                        style="width: 1px; background: linear-gradient(to bottom, rgba(255,255,255,0.1), rgba(255,255,255,0.02));">
+                    </div>
+
+                    <!-- LUGAR y FECHA (Agrupados) -->
+                    <div style="text-align: left; display: flex; align-items: flex-start; gap: 20px; flex: 1.1;">
+                        <div
+                            style="background: rgba(167, 139, 250, 0.1); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--accent-secondary); border: 1px solid rgba(167, 139, 250, 0.2); flex-shrink: 0;">
+                            <i class="fa-solid fa-building-columns" style="font-size: 1.4rem;"></i>
+                        </div>
+                        <div>
+                            <span
+                                style="display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.15em; color: var(--accent-secondary); margin-bottom: 6px; text-transform: uppercase;">Institución</span>
+                            <span
+                                style="display: block; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.25rem; color: #fff; margin-bottom: 4px;">Universidad
+                                Cenfotec</span>
+                            <span
+                                style="display: block; font-family: 'Inter', sans-serif; font-weight: 400; font-size: 0.95rem; color: var(--text-muted); line-height: 1.4;">San
+                                José, Costa Rica</span>
+                        </div>
+                    </div>
+
+                    <!-- Divisor Vertical -->
+                    <div
+                        style="width: 1px; background: linear-gradient(to bottom, rgba(255,255,255,0.1), rgba(255,255,255,0.02));">
+                    </div>
+
+                    <!-- FECHA -->
+                    <div style="text-align: left; display: flex; align-items: flex-start; gap: 20px; flex: 0.9;">
+                        <div
+                            style="background: rgba(253, 224, 71, 0.1); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--accent-highlight); border: 1px solid rgba(253, 224, 71, 0.2); flex-shrink: 0;">
+                            <i class="fa-regular fa-calendar-days" style="font-size: 1.4rem;"></i>
+                        </div>
+                        <div>
+                            <span
+                                style="display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.15em; color: var(--accent-highlight); margin-bottom: 6px; text-transform: uppercase;">Período</span>
+                            <span
+                                style="display: block; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.25rem; color: #fff; margin-bottom: 4px;">I
+                                Ciclo 2026</span>
+                            <span
+                                style="display: block; font-family: 'Inter', sans-serif; font-weight: 400; font-size: 0.95rem; color: var(--text-muted); line-height: 1.4;">Martes</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 2: Tema 1 -->
+        <div class="slide" id="slide-2">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+
+                <!-- Encabezado de la diapositiva -->
+                <div style="margin-bottom: 40px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Tema
+                        1 &mdash; Fundamentos del Entorno</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: #fff; margin: 10px 0 0 0; line-height: 1.1;">
+                        ¿Qué es <span style="color: var(--accent-secondary);">R</span> y <span
+                            style="color: var(--accent-primary);">RStudio</span>?</h2>
+                </div>
+
+                <!-- Grid de Contenido -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; width: 100%;">
+
+                    <!-- Tarjeta R (El Motor) -->
+                    <div class="glass-box"
+                        style="position: relative; overflow: hidden; display: flex; flex-direction: column; padding: 40px; justify-content: center;">
+                        <!-- Decorador superior -->
+                        <div
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, var(--accent-secondary), transparent);">
+                        </div>
+
+                        <!-- Título Tarjeta -->
+                        <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 25px;">
+                            <div
+                                style="width: 60px; height: 60px; border-radius: 12px; background: rgba(167, 139, 250, 0.15); display: flex; justify-content: center; align-items: center; border: 1px solid rgba(167, 139, 250, 0.3);">
+                                <i class="fa-solid fa-gears"
+                                    style="font-size: 1.8rem; color: var(--accent-secondary);"></i>
+                            </div>
+                            <div>
+                                <h3
+                                    style="margin: 0; font-size: 2.2rem; font-weight: 800; color: #fff; letter-spacing: -0.02em;">
+                                    R</h3>
+                                <span
+                                    style="font-family: 'Playfair Display', serif; font-style: italic; color: #cbd5e1; font-size: 1.3rem;">(El
+                                    Motor Analítico)</span>
+                            </div>
+                        </div>
+
+                        <!-- Info Principal -->
+                        <p style="font-size: 1.15rem; line-height: 1.6; color: var(--text-main); margin-bottom: 20px;">
+                            Imagina a R como el motor de alto rendimiento de un vehículo. Es un <strong>lenguaje de
+                                programación interpretado</strong> (ejecuta instrucciones directamente línea por línea
+                            sin requerir compilación previa) diseñado específicamente por y para estadísticos. Su
+                            propósito central es la manipulación masiva de datos, el cálculo complejo y la generación de
+                            gráficos con calidad de publicación.
+                        </p>
+
+                        <!-- Detalle Técnico -->
+                        <div
+                            style="margin-top: 15px; padding: 20px 25px; background: rgba(0,0,0,0.25); border-radius: 12px; border-left: 3px solid var(--accent-secondary);">
+                            <span
+                                style="display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--accent-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.1em;">Arquitectura
+                                Base</span>
+                            <p style="margin: 0; font-size: 1.05rem; line-height: 1.5; color: #e2e8f0;">
+                                Basado en el antiguo lenguaje S, su filosofía es elegante: <strong>"Todo lo que existe
+                                    en R es un objeto"</strong> (datos, funciones, modelos) y <strong>"Todo lo que
+                                    ocurre es la llamada a una función"</strong>.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta RStudio (El Chasis) -->
+                    <div class="glass-box"
+                        style="position: relative; overflow: hidden; display: flex; flex-direction: column; padding: 40px; justify-content: center;">
+                        <!-- Decorador superior -->
+                        <div
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, var(--accent-primary), transparent);">
+                        </div>
+
+                        <!-- Título Tarjeta -->
+                        <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 25px;">
+                            <div
+                                style="width: 60px; height: 60px; border-radius: 12px; background: rgba(34, 211, 238, 0.15); display: flex; justify-content: center; align-items: center; border: 1px solid rgba(34, 211, 238, 0.3);">
+                                <i class="fa-solid fa-laptop-code"
+                                    style="font-size: 1.8rem; color: var(--accent-primary);"></i>
+                            </div>
+                            <div>
+                                <h3
+                                    style="margin: 0; font-size: 2.2rem; font-weight: 800; color: #fff; letter-spacing: -0.02em;">
+                                    RStudio</h3>
+                                <span
+                                    style="font-family: 'Playfair Display', serif; font-style: italic; color: #cbd5e1; font-size: 1.3rem;">(El
+                                    Panel de Control)</span>
+                            </div>
+                        </div>
+
+                        <!-- Info Principal -->
+                        <p style="font-size: 1.15rem; line-height: 1.6; color: var(--text-main); margin-bottom: 20px;">
+                            Si R es el motor, RStudio es el chasis y la cabina del piloto. Es un <strong>Entorno de
+                                Desarrollo Integrado (IDE)</strong>. Por sí solo <em>no realiza cálculos</em>; su
+                            función es enviar tus instrucciones al motor (R) de forma amigable, organizando tu código,
+                            gráficos y memoria en una interfaz visual.
+                        </p>
+
+                        <!-- Componentes -->
+                        <div
+                            style="margin-top: 15px; padding: 20px 25px; background: rgba(0,0,0,0.25); border-radius: 12px;">
+                            <span
+                                style="display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--accent-primary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.1em;">Los
+                                4 Paneles Principales</span>
+
+                            <ul
+                                style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
+                                <li
+                                    style="display: flex; align-items: flex-start; gap: 14px; font-size: 1.05rem; color: #e2e8f0; line-height: 1.4;">
+                                    <i class="fa-solid fa-file-code"
+                                        style="color: var(--accent-primary); margin-top: 4px; width: 18px;"></i>
+                                    <span><strong>Source/Script:</strong> Tu bloc de notas. Donde redactas y guardas tus
+                                        instrucciones.</span>
+                                </li>
+                                <li
+                                    style="display: flex; align-items: flex-start; gap: 14px; font-size: 1.05rem; color: #e2e8f0; line-height: 1.4;">
+                                    <i class="fa-solid fa-terminal"
+                                        style="color: var(--accent-primary); margin-top: 4px; width: 18px;"></i>
+                                    <span><strong>Consola:</strong> El intérprete. Ejecuta el código inmediatamente,
+                                        pero no lo guarda a largo plazo.</span>
+                                </li>
+                                <li
+                                    style="display: flex; align-items: flex-start; gap: 14px; font-size: 1.05rem; color: #e2e8f0; line-height: 1.4;">
+                                    <i class="fa-solid fa-memory"
+                                        style="color: var(--accent-primary); margin-top: 4px; width: 18px;"></i>
+                                    <span><strong>Environment:</strong> El inventario de la RAM. Muestra todas las
+                                        variables y tablas cargadas.</span>
+                                </li>
+                                <li
+                                    style="display: flex; align-items: flex-start; gap: 14px; font-size: 1.05rem; color: #e2e8f0; line-height: 1.4;">
+                                    <i class="fa-solid fa-chart-line"
+                                        style="color: var(--accent-primary); margin-top: 4px; width: 18px;"></i>
+                                    <span><strong>Files/Plots:</strong> Visor de tus carpetas locales y lienzo donde se
+                                        pintan los gráficos.</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 3: Entorno Scripts vs Markdown -->
+        <div class="slide" id="slide-3">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+
+                <!-- Encabezado de la diapositiva -->
+                <div style="margin-bottom: 30px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Tema
+                        1 &mdash; Formatos de Trabajo</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: #fff; margin: 10px 0 0 0; line-height: 1.1;">
+                        El Script Clásico <span
+                            style="font-size: 2.5rem; color: var(--text-muted); font-weight: 400; font-style: italic;">vs.</span>
+                        <span style="color: var(--accent-secondary);">R Markdown</span>
+                    </h2>
+                </div>
+
+                <div style="display: flex; gap: 40px; width: 100%; align-items: stretch;">
+
+                    <!-- Lado Izquierdo: Script Clásico -->
+                    <div style="flex: 0 0 35%; display: flex; flex-direction: column; gap: 20px;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-highlight); padding: 35px; display: flex; flex-direction: column;">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                                <i class="fa-solid fa-file-code"
+                                    style="font-size: 2rem; color: var(--accent-highlight);"></i>
+                                <h3 style="margin: 0; font-size: 1.8rem; font-weight: 700; color: #fff;">Scripts <span
+                                        style="font-family: 'JetBrains Mono'; color: var(--accent-highlight); font-weight: 400;">(.R)</span>
+                                </h3>
+                            </div>
+                            <p
+                                style="font-size: 1.1rem; line-height: 1.6; color: var(--text-main); margin-bottom: 20px;">
+                                Es el archivo tradicional de programación. Son meros archivos de texto plano diseñados
+                                para ser leídos por la máquina. <strong>Solo admiten código R</strong> puro y apuntes
+                                breves comentados tras un símbolo <code>#</code>. Su propósito es ejecutar secuencias de
+                                tareas automatizadas en silencio (ej. limpiar datos a medianoche).
+                            </p>
+
+                            <!-- Dummy Code Block representation -->
+                            <div
+                                style="margin-top: auto; background: #0f172a; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); padding: 15px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #94a3b8;">
+                                <span style="color: #64748b;"># Cálculo simple sin ninguna narrativa
+                                    explicativa</span><br>
+                                <span style="color: #64748b;"># Difícil de leer para un tomador de decisiones</span><br>
+                                ventas &lt;- c(150, 200, 310)<br>
+                                <span style="color: var(--accent-highlight);">mean</span>(ventas)
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lado Derecho: R Markdown -->
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 20px;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-secondary); padding: 35px; display: flex; flex-direction: column;">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                                <i class="fa-brands fa-markdown"
+                                    style="font-size: 2.2rem; color: var(--accent-secondary);"></i>
+                                <h3 style="margin: 0; font-size: 1.8rem; font-weight: 700; color: #fff;">R Markdown
+                                    <span
+                                        style="font-family: 'JetBrains Mono'; color: var(--accent-secondary); font-weight: 400;">(.Rmd)</span>
+                                </h3>
+                            </div>
+                            <p
+                                style="font-size: 1.1rem; line-height: 1.6; color: var(--text-main); margin-bottom: 25px;">
+                                El estándar de oro para reportes de Data Science. Utiliza el paradigma de
+                                <strong>"Programación Literaria"</strong>: no escribes código con comentarios, escribes
+                                un ensayo explicativo en lenguaje humano e incrustas "islas" de código vivo (Chunks). Al
+                                final, R "teje" un reporte unificado (HTML, PDF o Word) que mezcla texto pulido con
+                                resultados, tablas y gráficos.
+                            </p>
+
+                            <!-- Estructura Explícita Rmd -->
+                            <div
+                                style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 25px; border-left: 3px solid var(--accent-secondary); margin-top: auto;">
+                                <span
+                                    style="display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--accent-secondary); margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.1em;">Estructura
+                                    Tríptico de un .Rmd</span>
+
+                                <ol
+                                    style="margin: 0; padding-left: 20px; font-size: 1.05rem; color: #e2e8f0; line-height: 1.6;">
+                                    <li style="margin-bottom: 15px;">
+                                        <strong style="color: #fff;">YAML Header (El Pasaporte):</strong> Metadatos
+                                        encerrados entre
+                                        <code
+                                            style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono'; color: var(--accent-secondary);">---</code>.
+                                        Dicta las "reglas del juego": Título, Autor y el formato estético de salida.
+                                    </li>
+                                    <li style="margin-bottom: 15px;">
+                                        <strong style="color: #fff;">Markdown (La Narrativa):</strong> Todo el texto
+                                        argumentativo, formulado libremente asumiendo que el lector final no sabe
+                                        programación.
+                                    </li>
+                                    <li>
+                                        <strong style="color: #fff;">Chunks (Los Motores de Datos):</strong> Bloques de
+                                        código reales iniciados con
+                                        <code
+                                            style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono'; color: var(--accent-secondary);">```{r}</code>
+                                        y cerrados con <code
+                                            style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono'; color: var(--accent-secondary);">```</code>.
+                                        Proveen los números duros a la narrativa.
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 4: Operaciones Aritméticas y Lógicas -->
+        <div class="slide" id="slide-4">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+
+                <div style="margin-bottom: 40px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Tema
+                        1 &mdash; El Lenguaje de R</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: #fff; margin: 10px 0 0 0; line-height: 1.1;">
+                        Operaciones Matemáticas y <span style="color: var(--accent-secondary);">Lógicas</span></h2>
+                </div>
+
+                <p
+                    style="font-size: 1.15rem; line-height: 1.6; color: var(--text-main); margin-bottom: 30px; max-width: 90%;">
+                    Para manipular bases de datos, necesitas transformar columnas matemáticamente (ej. Ingresos -
+                    Gastos) o filtrarlas bajo condiciones específicas (ej. Mostrar solo "Ventas > 1000").
+                </p>
+
+                <!-- 3 Columns for Operators -->
+                <div style="display: flex; gap: 20px; width: 100%; flex: 1; margin-bottom: 20px;">
+
+                    <!-- Aritméticas -->
+                    <div class="glass-box" style="flex: 1; padding: 20px;">
+                        <h3
+                            style="font-size: 1.5rem; margin: 0 0 15px 0; color: #fff; display: flex; align-items: center; gap: 10px;">
+                            <i class="fa-solid fa-calculator" style="color: var(--accent-primary);"></i> Aritméticas
+                        </h3>
+                        <p style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 15px;">Para cálculos
+                            numéricos estándar.</p>
+                        <ul
+                            style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: #e2e8f0;">
+                            <li><span
+                                    style="color: var(--accent-primary); font-weight: bold; display: inline-block; width: 40px;">+
+                                    -</span> Suma y Resta</li>
+                            <li><span
+                                    style="color: var(--accent-primary); font-weight: bold; display: inline-block; width: 40px;">*
+                                    /</span> Mult. y División</li>
+                            <li><span
+                                    style="color: var(--accent-primary); font-weight: bold; display: inline-block; width: 40px;">^</span>
+                                Exponenciación (Potencia)</li>
+                            <li><span
+                                    style="color: var(--accent-primary); font-weight: bold; display: inline-block; width: 40px;">%%</span>
+                                Módulo (Resto de división)</li>
+                        </ul>
+                    </div>
+
+                    <!-- Lógicas (Relacionales) -->
+                    <div class="glass-box" style="flex: 1; padding: 20px;">
+                        <h3
+                            style="font-size: 1.5rem; margin: 0 0 15px 0; color: #fff; display: flex; align-items: center; gap: 10px;">
+                            <i class="fa-solid fa-code-compare" style="color: var(--accent-secondary);"></i>
+                            Relacionales
+                        </h3>
+                        <p style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 15px;">Comparan valores.
+                            Retornan TRUE o FALSE.</p>
+                        <ul
+                            style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: #e2e8f0;">
+                            <li><span
+                                    style="color: var(--accent-secondary); font-weight: bold; display: inline-block; width: 40px;">==</span>
+                                Igualdad <em>(Exactamente igual a)</em></li>
+                            <li><span
+                                    style="color: var(--accent-secondary); font-weight: bold; display: inline-block; width: 40px;">!=</span>
+                                Desigualdad <em>(Diferente de)</em></li>
+                            <li><span
+                                    style="color: var(--accent-secondary); font-weight: bold; display: inline-block; width: 40px;">&lt;
+                                    &gt;</span> Menor o Mayor estricto</li>
+                            <li><span
+                                    style="color: var(--accent-secondary); font-weight: bold; display: inline-block; width: 40px;">&lt;=</span>
+                                Menor o igual ( / Mayor o igual)</li>
+                        </ul>
+                    </div>
+
+                    <!-- Booleanos -->
+                    <div class="glass-box"
+                        style="flex: 1; padding: 20px; border-top: 4px solid var(--accent-highlight); display: flex; flex-direction: column;">
+                        <h3
+                            style="font-size: 1.5rem; margin: 0 0 15px 0; color: #fff; display: flex; align-items: center; gap: 10px;">
+                            <i class="fa-solid fa-toggle-on" style="color: var(--accent-highlight);"></i> Booleanos
+                        </h3>
+                        <p style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 15px;">Combinan múltiples
+                            condiciones para filtrar.</p>
+                        <ul
+                            style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: #e2e8f0;">
+                            <li><span
+                                    style="color: var(--accent-highlight); font-weight: bold; display: inline-block; width: 30px;">&amp;</span>
+                                AND (Ambas deben ser TRUE)</li>
+                            <li><span
+                                    style="color: var(--accent-highlight); font-weight: bold; display: inline-block; width: 30px;">|</span>
+                                OR (Al menos una debe ser TRUE)</li>
+                            <li><span
+                                    style="color: var(--accent-highlight); font-weight: bold; display: inline-block; width: 30px;">!</span>
+                                NOT (Invierte: TRUE pasa a FALSE)</li>
+                        </ul>
+                        <div
+                            style="margin-top: auto; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; font-family: 'Inter', sans-serif; line-height: 1.4; color: #fff; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                            <strong style="color: var(--accent-highlight);">El Cuidado del Doble Símbolo:</strong><br>
+                            Un solo <code>&amp;</code> filtra columnas enteras elemento por elemento. El doble
+                            <code>&amp;&amp;</code> solo evalúa el <em>primer registro</em> (usado en control de flujo
+                            `if`).
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Concepto Clave: Reciclaje -->
+                <div
+                    style="width: 100%; background: linear-gradient(90deg, rgba(34, 211, 238, 0.1), rgba(167, 139, 250, 0.1)); border: 1px solid rgba(255,255,255,0.1); border-left: 4px solid var(--accent-primary); border-radius: 12px; padding: 15px 25px; display: flex; align-items: flex-start; gap: 20px;">
+                    <i class="fa-solid fa-recycle"
+                        style="font-size: 2.5rem; color: var(--accent-primary); margin-top: 5px;"></i>
+                    <div>
+                        <h4
+                            style="margin: 0 0 8px 0; font-size: 1.2rem; color: #fff; text-transform: uppercase; letter-spacing: 0.1em; font-family: 'JetBrains Mono', monospace;">
+                            Comportamiento Nativo: La Regla de Reciclaje</h4>
+                        <p style="margin: 0; font-size: 1.1rem; line-height: 1.5; color: #e2e8f0;">
+                            A diferencia de Excel donde multiplicar columnas de diferente tamaño da error, <strong>R
+                                "recicla" invisiblemente los datos.</strong> Si sumas una columna de 10 datos con una de
+                            2, R repetirá los 2 datos del vector corto 5 veces consecutivas para obligar a que cuadren.
+                            ¡Cuidado con no notarlo!
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 5: Tipos de Datos -->
+        <div class="slide" id="slide-5">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+
+                <div style="margin-bottom: 40px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Tema
+                        1 &mdash; La Materia Prima</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: #fff; margin: 10px 0 0 0; line-height: 1.1;">
+                        Los 3 Tipos de Datos <span style="color: var(--accent-highlight);">Básicos</span></h2>
+                </div>
+
+                <p
+                    style="font-size: 1.15rem; line-height: 1.6; color: var(--text-main); margin-bottom: 30px; max-width: 90%;">
+                    Antes de construir estructuras complejas, necesitamos entender de qué están hechas. Todo en R se
+                    reduce a <strong style="color: #fff;">tres bloques atómicos</strong>.
+                </p>
+
+                <!-- 3 Columns for Data Types -->
+                <div style="display: flex; gap: 20px; width: 100%; flex: 1;">
+
+                    <!-- Numeric -->
+                    <div class="glass-box"
+                        style="flex: 1; padding: 25px; border-top: 4px solid var(--accent-primary); display: flex; flex-direction: column; justify-content: center;">
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                            <div
+                                style="background: rgba(34, 211, 238, 0.15); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fa-solid fa-hashtag"
+                                    style="font-size: 1.5rem; color: var(--accent-primary);"></i>
+                            </div>
+                            <h3 style="font-size: 1.5rem; margin: 0; color: #fff;">Numéricos</h3>
+                        </div>
+                        <p style="font-size: 1rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px;">
+                            Cualquier valor matemático. Por defecto en R, todos los números son tratados como continuos
+                            (con decimales), incluso si escribes un entero.
+                        </p>
+                        <div>
+                            <span
+                                style="display: block; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Ejemplos:</span>
+                            <div
+                                style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; color: #e2e8f0; font-size: 1.1rem;">
+                                <span style="color: #b5cea8;">15.5</span> <span
+                                    style="color: #6a9955; font-size: 0.85rem;"># Un salario o peso</span><br>
+                                <span style="color: #b5cea8;">42</span> <span
+                                    style="color: #6a9955; font-size: 0.85rem;"># Una edad</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Character (Text) -->
+                    <div class="glass-box"
+                        style="flex: 1; padding: 25px; border-top: 4px solid var(--accent-secondary); display: flex; flex-direction: column; justify-content: center;">
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                            <div
+                                style="background: rgba(167, 139, 250, 0.15); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fa-solid fa-font"
+                                    style="font-size: 1.5rem; color: var(--accent-secondary);"></i>
+                            </div>
+                            <h3 style="font-size: 1.5rem; margin: 0; color: #fff;">Textos <span
+                                    style="font-size: 1.1rem; font-weight: 400; color: var(--text-muted);">(Strings)</span>
+                            </h3>
+                        </div>
+                        <p style="font-size: 1rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px;">
+                            Letras, palabras o frases (Incluso números si no quieres operarlos matemáticamente, como un
+                            ID). <strong style="color: #fff;">Obligatoriamente</strong> deben ir encerrados entre
+                            comillas.
+                        </p>
+                        <div>
+                            <span
+                                style="display: block; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Ejemplos:</span>
+                            <div
+                                style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; color: #ce9178; font-size: 1.1rem;">
+                                "Costa Rica"<br>
+                                "Cliente_VIP_001"
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logical (Booleans) -->
+                    <div class="glass-box"
+                        style="flex: 1; padding: 25px; border-top: 4px solid var(--accent-highlight); display: flex; flex-direction: column; justify-content: center;">
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                            <div
+                                style="background: rgba(253, 224, 71, 0.15); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fa-solid fa-toggle-on"
+                                    style="font-size: 1.5rem; color: var(--accent-highlight);"></i>
+                            </div>
+                            <h3 style="font-size: 1.5rem; margin: 0; color: #fff;">Lógicos <span
+                                    style="font-size: 1.1rem; font-weight: 400; color: var(--text-muted);">(Booleans)</span>
+                            </h3>
+                        </div>
+                        <p style="font-size: 1rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px;">
+                            Interruptores binarios. Le indican a la computadora si una condición es cierta o falsa. Son
+                            el núcleo de la toma de decisiones algorítmicas (Filtros).
+                        </p>
+                        <div>
+                            <span
+                                style="display: block; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Ejemplos:</span>
+                            <div
+                                style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; color: #569cd6; font-size: 1.1rem;">
+                                TRUE <span style="color: #6a9955; font-size: 0.85rem;"># Encendido / Sí</span><br>
+                                FALSE <span style="color: #6a9955; font-size: 0.85rem;"># Apagado / No</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 6: Importación de Datos -->
+        <div class="slide" id="slide-6">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+
+                <div style="margin-bottom: 40px; width: 100%;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Tema
+                        1 &mdash; Ingesta de Información</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: #fff; margin: 5px 0 0 0; line-height: 1.1;">
+                        ¿Cómo meto mi <span style="color: #21a366;">Excel</span> a R?</h2>
+                    <p
+                        style="font-size: 1.1rem; line-height: 1.4; color: var(--text-main); margin-top: 15px; max-width: 90%;">
+                        R trabaja procesando datos en la <strong style="color: #fff;">Memoria RAM</strong>
+                        (Environment). Para analizar información del mundo real, primero debemos "leer" el archivo desde
+                        el disco duro y "asignarlo" (<code>&lt;-</code>) a una variable en la memoria.
+                    </p>
+                </div>
+
+                <div style="display: flex; gap: 30px; width: 100%; flex: 1; align-items: stretch;">
+
+                    <!-- CSV (FLIP CARD) -->
+                    <div class="flip-card" style="flex: 1;" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+
+                            <!-- CARA FRONTAL -->
+                            <div class="flip-card-front glass-box"
+                                style="padding: 30px; border-left: 4px solid var(--accent-secondary); display: flex; flex-direction: column; justify-content: center;">
+
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                                    <div style="display: flex; align-items: center; gap: 15px;">
+                                        <div
+                                            style="background: rgba(167, 139, 250, 0.15); padding: 15px; border-radius: 12px;">
+                                            <i class="fa-solid fa-file-csv"
+                                                style="font-size: 2rem; color: var(--accent-secondary);"></i>
+                                        </div>
+                                        <div>
+                                            <h3 style="margin: 0; font-size: 1.6rem; color: #fff; font-weight: 700;">
+                                                Archivos CSV</h3>
+                                            <span style="font-size: 0.95rem; color: var(--text-muted);">(Valores
+                                                Separados por Comas)</span>
+                                        </div>
+                                    </div>
+                                    <i class="fa-solid fa-arrow-pointer"
+                                        style="color: var(--accent-secondary); animation: pulse-icon 2s infinite;"></i>
+                                </div>
+
+                                <p
+                                    style="font-size: 1.05rem; line-height: 1.5; color: var(--text-main); margin-bottom: 20px;">
+                                    Piensa en ellos como un archivo de texto simple donde las columnas están separadas
+                                    por "comitas". Son universales, súper ligeros y a R le encantan.
+                                </p>
+
+                                <div
+                                    style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                                    <h4
+                                        style="margin: 0 0 10px 0; font-size: 0.95rem; color: var(--accent-secondary); text-transform: uppercase; letter-spacing: 0.05em;">
+                                        ¿Por qué usarlos?</h4>
+                                    <ul
+                                        style="margin: 0; padding-left: 20px; color: #cbd5e1; font-size: 0.95rem; line-height: 1.6;">
+                                        <li><strong>Máxima compatibilidad:</strong> Cualquier programa del mundo puede
+                                            abrirlos.</li>
+                                        <li><strong>Cero "basura":</strong> No guardan colores, ni negritas, ni
+                                            fórmulas. Solo datos puros.</li>
+                                        <li><strong>Velocidad:</strong> R los lee muchísimo más rápido que un Excel.
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div
+                                    style="margin-top: auto; text-align: center; background: rgba(167, 139, 250, 0.1); border-radius: 8px; padding: 10px;">
+                                    <span
+                                        style="font-size: 0.9rem; color: var(--accent-secondary); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;">
+                                        Haz clic para ver el código <i class="fa-solid fa-rotate"></i>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- CARA TRASERA -->
+                            <div class="flip-card-back glass-box"
+                                style="padding: 30px; border-left: 4px solid var(--accent-secondary); display: flex; flex-direction: column; justify-content: center; background: rgba(15, 23, 42, 0.98);">
+
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                                    <h3
+                                        style="margin: 0; font-size: 1.4rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 12px;">
+                                        <i class="fa-solid fa-code" style="color: var(--accent-secondary);"></i>
+                                        Archivos CSV
+                                    </h3>
+                                    <i class="fa-solid fa-rotate-left" style="color: var(--text-muted);"></i>
+                                </div>
+
+                                <p
+                                    style="font-size: 0.95rem; line-height: 1.4; color: var(--text-main); margin-bottom: 15px;">
+                                    ¡Vienen listos para usarse! R base los lee de forma <strong>nativa</strong> sin que
+                                    tengamos que instalar nada extra.
+                                </p>
+
+                                <div
+                                    style="background: #1e1e1e; padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; margin-bottom: 15px;">
+                                    <span style="color: #6a9955;"># Usamos la función nativa read.csv()</span><br>
+                                    <span style="color: #9cdcfe;">mis_datos</span> <span
+                                        style="color: #d4d4d4;">&lt;-</span> <span
+                                        style="color: #dcdcaa;">read.csv</span>(<span
+                                        style="color: #ce9178;">"reporte.csv"</span>)
+                                </div>
+
+                                <div
+                                    style="margin-top: auto; background: rgba(0,0,0,0.3); border-left: 2px solid var(--accent-secondary); border-radius: 8px; padding: 12px;">
+                                    <p style="font-size: 0.85rem; color: #cbd5e1; margin: 0;">Nota: El símbolo <code
+                                            style="color: var(--accent-secondary);">&lt;-</code> significa que estamos
+                                        guardando el archivo en la RAM con el nombre "mis_datos".</p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Excel (FLIP CARD) -->
+                    <div class="flip-card" style="flex: 1;" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+
+                            <!-- CARA FRONTAL -->
+                            <div class="flip-card-front glass-box"
+                                style="padding: 30px; border-left: 4px solid #21a366; display: flex; flex-direction: column; justify-content: center;">
+
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                                    <div style="display: flex; align-items: center; gap: 15px;">
+                                        <div
+                                            style="background: rgba(33, 163, 102, 0.15); padding: 15px; border-radius: 12px;">
+                                            <i class="fa-solid fa-file-excel"
+                                                style="font-size: 2rem; color: #21a366;"></i>
+                                        </div>
+                                        <div>
+                                            <h3 style="margin: 0; font-size: 1.6rem; color: #fff; font-weight: 700;">
+                                                Archivos Excel</h3>
+                                            <span style="font-size: 0.95rem; color: var(--text-muted);">(.xlsx o
+                                                .xls)</span>
+                                        </div>
+                                    </div>
+                                    <i class="fa-solid fa-arrow-pointer"
+                                        style="color: #21a366; animation: pulse-icon 2s infinite;"></i>
+                                </div>
+
+                                <p
+                                    style="font-size: 1.05rem; line-height: 1.5; color: var(--text-main); margin-bottom: 20px;">
+                                    El formato corporativo tradicional. A diferencia de los ligeros CSV, los Excel son
+                                    archivos pesados llenos de colores, fórmulas y múltiples pestañas.
+                                </p>
+
+                                <div
+                                    style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                                    <h4
+                                        style="margin: 0 0 10px 0; font-size: 0.95rem; color: #21a366; text-transform: uppercase; letter-spacing: 0.05em;">
+                                        Los Desafíos (Banderas Rojas)</h4>
+                                    <ul
+                                        style="margin: 0; padding-left: 20px; color: #cbd5e1; font-size: 0.95rem; line-height: 1.6;">
+                                        <li><strong>No son datos puros:</strong> Tienen celdas combinadas, gráficos
+                                            flotantes y macros que a R no le interesan.</li>
+                                        <li><strong>Múltiples "Hojas":</strong> R necesita saber exactamente de de qué
+                                            pestaña (Hoja) quieres extraer la tabla.</li>
+                                        <li>Solución: Hay que "limpiarlos" mentalmente antes de pasarlos a R.</li>
+                                    </ul>
+                                </div>
+
+                                <div
+                                    style="margin-top: auto; text-align: center; background: rgba(33, 163, 102, 0.1); border-radius: 8px; padding: 10px;">
+                                    <span
+                                        style="font-size: 0.9rem; color: #21a366; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;">
+                                        Haz clic para ver cómo leerlos <i class="fa-solid fa-rotate"></i>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- CARA TRASERA -->
+                            <div class="flip-card-back glass-box"
+                                style="padding: 30px; border-left: 4px solid #21a366; display: flex; flex-direction: column; justify-content: center; background: rgba(15, 23, 42, 0.98);">
+
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                                    <h3
+                                        style="margin: 0; font-size: 1.4rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 12px;">
+                                        <i class="fa-solid fa-code" style="color: #21a366;"></i> Archivos Excel
+                                    </h3>
+                                    <i class="fa-solid fa-rotate-left" style="color: var(--text-muted);"></i>
+                                </div>
+
+                                <p
+                                    style="font-size: 0.95rem; line-height: 1.4; color: var(--text-main); margin-bottom: 15px;">
+                                    R originalmente no entiende el "idioma Microsoft". Por eso, primero debemos
+                                    enseñarle instalando un "traductor" (un paquete oficial llamado
+                                    <code>readxl</code>).
+                                </p>
+
+                                <div
+                                    style="background: #1e1e1e; padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; margin-bottom: 15px;">
+                                    <span style="color: #6a9955;"># 1. Cargamos el traductor a la RAM</span><br>
+                                    <span style="color: #dcdcaa;">library</span>(<span
+                                        style="color: #ce9178;">readxl</span>)<br><br>
+                                    <span style="color: #6a9955;"># 2. Leemos el archivo usando el traductor</span><br>
+                                    <span style="color: #9cdcfe;">mis_datos</span> <span
+                                        style="color: #d4d4d4;">&lt;-</span> <span
+                                        style="color: #dcdcaa;">read_excel</span>(<span
+                                        style="color: #ce9178;">"reporte.xlsx"</span>)
+                                </div>
+
+                                <div
+                                    style="margin-top: auto; background: rgba(0,0,0,0.3); border-left: 2px solid #21a366; border-radius: 8px; padding: 12px;">
+                                    <p style="font-size: 0.85rem; color: #cbd5e1; margin: 0;">Nota: En R, descargar
+                                        paquetes creados por otras personas para resolver problemas específicos es lo
+                                        más natural del mundo.</p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 7: Paquetes y Estructuras -->
+        <div class="slide" id="slide-7">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+
+                <div style="margin-bottom: 40px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Tema
+                        1 &mdash; Ecosistema de R</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: #fff; margin: 10px 0 0 0; line-height: 1.1;">
+                        Paquetes y Estructuras de Datos</h2>
+                </div>
+                <div style="display: flex; gap: 40px; width: 100%; flex: 1;">
+
+                    <!-- Columna Izquierda: Paquetes -->
+                    <div style="flex: 0 0 35%; display: flex; flex-direction: column; gap: 20px;">
+                        <div class="glass-box"
+                            style="flex: 1; padding: 35px; border-top: 4px solid var(--accent-primary);">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                                <i class="fa-solid fa-box-open"
+                                    style="font-size: 2rem; color: var(--accent-primary);"></i>
+                                <h3 style="margin: 0; font-size: 1.8rem; font-weight: 700; color: #fff;">Paquetes <span
+                                        style="font-size: 1.2rem; color: var(--text-muted); font-weight: 400; font-family: 'Playfair Display', serif; font-style: italic;">(Librerías)</span>
+                                </h3>
+                            </div>
+                            <p
+                                style="font-size: 1.05rem; line-height: 1.6; color: var(--text-main); margin-bottom: 30px;">
+                                R Base viene con lo esencial. Los paquetes son como "Aplicaciones" (ej. WhatsApp, Excel)
+                                que desarrolladores externos crean para dar superpoderes a R (ej. Machine Learning,
+                                gráficos web).
+                            </p>
+
+                            <div style="display: flex; flex-direction: column; gap: 15px;">
+                                <div
+                                    style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border-left: 2px solid var(--text-muted);">
+                                    <span
+                                        style="display: block; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px;">Paso
+                                        1: Instalación (Una sola vez)</span>
+                                    <p style="font-size: 0.9rem; color: #e2e8f0; margin: 0 0 8px 0;">Descarga el código
+                                        de internet a tu disco duro.</p>
+                                    <code
+                                        style="font-family: 'JetBrains Mono'; color: var(--accent-highlight); font-size: 1rem;">install.packages("nombre_paquete")</code>
+                                </div>
+                                <div
+                                    style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border-left: 2px solid var(--accent-primary);">
+                                    <span
+                                        style="display: block; font-size: 0.85rem; color: var(--accent-primary); text-transform: uppercase; margin-bottom: 5px;">Paso
+                                        2: Carga (En cada sesión)</span>
+                                    <p style="font-size: 0.9rem; color: #e2e8f0; margin: 0 0 8px 0;">Abre la "App" en tu
+                                        memoria RAM para poder usarla hoy.</p>
+                                    <code
+                                        style="font-family: 'JetBrains Mono'; color: var(--accent-secondary); font-size: 1rem;">library(nombre_paquete)</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Columna Derecha: Estructuras (Grid 2x2) -->
+                    <div style="flex: 1; display: flex; flex-direction: column;">
+                        <span
+                            style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--accent-secondary); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 15px; display: block;">Las
+                            4 Piezas de Lego Fundamentales</span>
+
+                        <div
+                            style="display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 20px; flex: 1;">
+
+                            <!-- Vector -->
+                            <div class="glass-box"
+                                style="padding: 25px; display: flex; flex-direction: column; justify-content: center;">
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                                    <h4 style="margin: 0; font-size: 1.4rem; color: #fff;">1. Vectores</h4>
+                                    <span
+                                        style="background: rgba(167, 139, 250, 0.15); border: 1px solid rgba(167, 139, 250, 0.3); color: var(--accent-secondary); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-family: 'JetBrains Mono';">1D,
+                                        Homogéneos</span>
+                                </div>
+                                <p
+                                    style="font-size: 0.95rem; color: var(--text-muted); margin: 0 0 10px 0; line-height: 1.4;">
+                                    Una fila o columna simple. <strong>Sus elementos deben ser del mismo tipo</strong>
+                                    (todo texto o todo número).
+                                </p>
+                                <span
+                                    style="font-size: 0.8rem; color: #cbd5e1; background: rgba(0,0,0,0.5); padding: 6px; border-radius: 4px;"><strong>Jerarquía
+                                        de Coerción:</strong> Si mezclas textos y números, R convierte los números a
+                                    texto forzosamente para no fallar.</span>
+                            </div>
+
+                            <!-- Matriz -->
+                            <div class="glass-box"
+                                style="padding: 25px; display: flex; flex-direction: column; justify-content: center;">
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                                    <h4 style="margin: 0; font-size: 1.4rem; color: #fff;">2. Matrices</h4>
+                                    <span
+                                        style="background: rgba(167, 139, 250, 0.15); border: 1px solid rgba(167, 139, 250, 0.3); color: var(--accent-secondary); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-family: 'JetBrains Mono';">2D,
+                                        Homogéneas</span>
+                                </div>
+                                <p style="font-size: 0.95rem; color: var(--text-muted); margin: 0; line-height: 1.4;">
+                                    Una tabla matemática de 2 dimensiones construida con vectores ensamblados. Al ser
+                                    homogénea, <strong>solo sirve si toda la tabla es numérica</strong> o toda es texto.
+                                    Se usa en álgebra lineal.
+                                </p>
+                            </div>
+
+                            <!-- Lista -->
+                            <div class="glass-box"
+                                style="padding: 25px; display: flex; flex-direction: column; justify-content: center;">
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                                    <h4 style="margin: 0; font-size: 1.4rem; color: #fff;">3. Listas</h4>
+                                    <span
+                                        style="background: rgba(34, 211, 238, 0.15); border: 1px solid rgba(34, 211, 238, 0.3); color: var(--accent-primary); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-family: 'JetBrains Mono';">1D,
+                                        Heterogéneas</span>
+                                </div>
+                                <p style="font-size: 0.95rem; color: var(--text-muted); margin: 0; line-height: 1.4;">
+                                    El comodín de R. Es un contenedor universal donde cada "casilla" puede guardar un
+                                    objeto distinto: en la posición 1 un número, en la 2 un texto, en la 3 ¡un gráfico
+                                    entero!
+                                </p>
+                            </div>
+
+                            <!-- Data Frame -->
+                            <div class="glass-box"
+                                style="padding: 25px; display: flex; flex-direction: column; justify-content: center; position: relative; border: 1px solid var(--accent-primary); background: linear-gradient(135deg, rgba(34, 211, 238, 0.05), var(--glass-bg));">
+                                <i class="fa-solid fa-table"
+                                    style="position: absolute; right: -10px; bottom: -10px; font-size: 8rem; color: rgba(255,255,255,0.02); z-index: 0;"></i>
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; position: relative; z-index: 1;">
+                                    <h4 style="margin: 0; font-size: 1.4rem; color: #fff;">4. Data Frames</h4>
+                                    <span
+                                        style="background: rgba(34, 211, 238, 0.2); border: 1px solid var(--accent-primary); color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-family: 'JetBrains Mono'; font-weight: bold;">2D,
+                                        Heterogéneos</span>
+                                </div>
+                                <p
+                                    style="font-size: 0.95rem; color: #e2e8f0; margin: 0; line-height: 1.4; position: relative; z-index: 1;">
+                                    <strong>La equivalencia en código a una hoja de Excel.</strong> Son listas
+                                    especiales donde cada elemento (columna) es un vector, y todos los vectores miden lo
+                                    mismo (filas). Permiten mezclar columnas numéricas con columnas de texto.
+                                </p>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 8: Programación Funcional -->
+        <div class="slide" id="slide-8">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+
+                <div style="margin-bottom: 30px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Tema
+                        1 &mdash; Filosofía del Código</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: #fff; margin: 10px 0 0 0; line-height: 1.1;">
+                        Programación Funcional en R</h2>
+                </div>
+
+                <div
+                    style="background: rgba(34, 211, 238, 0.05); border-left: 4px solid var(--accent-primary); padding: 15px 30px; border-radius: 0 12px 12px 0; margin-bottom: 25px; width: 100%;">
+                    <p style="margin: 0; font-size: 1.15rem; line-height: 1.5; color: var(--text-main);">
+                        R no se centra en decirle a la máquina cómo hacer las cosas paso a paso, sino en <strong>qué
+                            evaluar</strong>. Las funciones son <strong>"ciudadanos de primera clase"</strong>.<br>
+                        <span style="font-size: 0.95rem; color: var(--text-muted);">(Significa que una función puede
+                            guardarse en un objeto, pasarse como ingrediente a otra función, ¡e incluso ser el resultado
+                            matemático de otra función!).</span>
+                    </p>
+                </div>
+                <div style="display: flex; gap: 40px; width: 100%; flex: 1;">
+
+                    <!-- Columna Izquierda: Estructura de una función -->
+                    <div class="glass-box"
+                        style="flex: 1; padding: 25px; border-top: 4px solid var(--accent-secondary); display: flex; flex-direction: column; justify-content: center;">
+                        <h3
+                            style="margin: 0 0 15px 0; font-size: 1.3rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 12px;">
+                            <i class="fa-solid fa-code" style="color: var(--accent-secondary);"></i> Anatomía de una
+                            Función
+                        </h3>
+                        <p style="font-size: 0.95rem; color: #cbd5e1; margin-bottom: 15px; line-height: 1.4;">Las
+                            funciones encapsulan tareas repetitivas. Tienen un nombre, reciben argumentos
+                            (ingredientes), procesan el código interno, y retornan el plato final.</p>
+
+                        <!-- Pseudo Code Editor -->
+                        <div
+                            style="background: #1e1e1e; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 20px rgba(0,0,0,0.3); margin-top: 15px;">
+                            <div
+                                style="background: #2d2d2d; padding: 8px 15px; display: flex; gap: 6px; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <div style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f56;"></div>
+                                <div style="width: 12px; height: 12px; border-radius: 50%; background: #ffbd2e;"></div>
+                                <div style="width: 12px; height: 12px; border-radius: 50%; background: #27c93f;"></div>
+                                <span
+                                    style="margin-left: 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #858585;">limpiar_datos.R</span>
+                            </div>
+                            <div
+                                style="padding: 15px; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; line-height: 1.5; overflow-x: auto;">
+                                <span style="color: #9cdcfe;">mi_funcion</span> <span
+                                    style="color: #d4d4d4;">&lt;-</span> <span
+                                    style="color: #c586c0;">function</span>(<span style="color: #9cdcfe;">arg1</span>,
+                                <span style="color: #9cdcfe;">arg2</span> = <span
+                                    style="color: #ce9178;">valor_por_defecto</span>) {<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #9cdcfe;">resultado</span> <span
+                                    style="color: #d4d4d4;">&lt;-</span> arg1 + arg2<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #c586c0;">return</span>(resultado) <span
+                                    style="color: #6a9955;"># Retorna última evaluación</span><br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Columna Derecha: Familia Apply (FLIP CARD) -->
+                    <div class="flip-card" style="flex: 1;" onclick="this.classList.toggle('flipped')">
+                        <div class="flip-card-inner">
+
+                            <!-- CARA FRONTAL -->
+                            <div class="flip-card-front glass-box"
+                                style="padding: 25px; border-top: 4px solid var(--accent-highlight); display: flex; flex-direction: column; justify-content: center;">
+
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                                    <h3
+                                        style="margin: 0; font-size: 1.3rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 12px;">
+                                        <i class="fa-solid fa-layer-group" style="color: var(--accent-highlight);"></i>
+                                        La familia
+                                        <code
+                                            style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 6px; font-family: 'JetBrains Mono'; font-size: 1.1rem; font-weight: normal; color: var(--accent-highlight);">apply</code>
+                                    </h3>
+                                    <i class="fa-solid fa-arrow-pointer"
+                                        style="color: var(--accent-highlight); animation: pulse-icon 2s infinite;"></i>
+                                </div>
+
+                                <p
+                                    style="font-size: 1.05rem; line-height: 1.5; color: var(--text-main); margin-bottom: 15px;">
+                                    <strong>El problema:</strong> Los bucles <code>for</code> clásicos son lentos,
+                                    verbosos y difíciles de leer cuando analizas millones de datos.
+                                </p>
+
+                                <p
+                                    style="font-size: 1.05rem; line-height: 1.5; color: var(--text-main); margin-bottom: 15px;">
+                                    <strong>La solución:</strong> Es como pasar de lavar platos a mano (uno por uno) a
+                                    usar un <strong>lavavajillas industrial</strong> (todos a la vez). Es la forma
+                                    nativa de R para ejecutar operaciones a gran escala.
+                                </p>
+
+                                <div
+                                    style="margin-top: auto; text-align: center; background: rgba(253, 224, 71, 0.1); border-radius: 8px; padding: 10px;">
+                                    <span
+                                        style="font-size: 0.9rem; color: var(--accent-highlight); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;">
+                                        Haz clic para ver cómo se usa <i class="fa-solid fa-rotate"></i>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- CARA TRASERA -->
+                            <div class="flip-card-back glass-box"
+                                style="padding: 25px; border-top: 4px solid var(--accent-highlight); display: flex; flex-direction: column; justify-content: center; background: rgba(15, 23, 42, 0.98);">
+
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                                    <h3
+                                        style="margin: 0; font-size: 1.3rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 12px;">
+                                        <i class="fa-solid fa-code" style="color: var(--accent-highlight);"></i> La
+                                        familia
+                                        <code
+                                            style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 6px; font-family: 'JetBrains Mono'; font-size: 1.1rem; font-weight: normal; color: var(--accent-highlight);">apply</code>
+                                    </h3>
+                                    <i class="fa-solid fa-rotate-left" style="color: var(--text-muted);"></i>
+                                </div>
+
+                                <p
+                                    style="font-size: 0.95rem; line-height: 1.4; color: var(--text-main); margin-bottom: 15px;">
+                                    Toma una <strong>función</strong> (un verbo) y se la aplica instantáneamente a una
+                                    <strong>lista de objetos</strong> (sujetos), sin bucles.
+                                </p>
+
+                                <div
+                                    style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; border-left: 2px solid var(--accent-highlight); margin-bottom: 15px;">
+                                    <code
+                                        style="font-family: 'JetBrains Mono'; color: var(--accent-highlight); font-size: 0.95rem;">lapply(lista_archivos, promedio)</code>
+                                    <p style="font-size: 0.8rem; color: #cbd5e1; margin: 5px 0 0 0;">(Lee: "Aplica la
+                                        función promedio a CADA archivo simultáneamente").</p>
+                                </div>
+
+                                <div
+                                    style="margin-top: auto; background: linear-gradient(135deg, rgba(253, 224, 71, 0.15), rgba(0,0,0,0)); border: 1px solid rgba(253, 224, 71, 0.3); border-radius: 12px; padding: 12px; display: flex; align-items: center; gap: 12px;">
+                                    <i class="fa-solid fa-list-check"
+                                        style="font-size: 1.5rem; color: var(--accent-highlight);"></i>
+                                    <div>
+                                        <span
+                                            style="display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--accent-highlight); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 3px;">Regla
+                                            de Oro de lapply</span>
+                                        <strong style="color: #fff; font-size: 0.9rem;">Devolverá siempre una
+                                            Lista.</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 9: Aterrizando Conceptos (Regresión Lineal) -->
+        <div class="slide" id="slide-9">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+
+                <div style="margin-bottom: 10px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Tema
+                        1 &mdash; Práctica Guiada</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 2.8rem; font-weight: 800; color: #fff; margin: 5px 0 0 0; line-height: 1.1;">
+                        Aterrizando Conceptos</h2>
+                </div>
+
+                <p
+                    style="font-size: 1rem; line-height: 1.4; color: var(--text-main); margin-bottom: 12px; max-width: 100%;">
+                    Veamos R en acción. Cargamos un dataset (<strong>mtcars</strong>) y creamos un modelo de IA (<strong
+                        style="color: var(--accent-highlight);">Regresión Lineal Simple</strong>) para predecir el
+                    consumo de gasolina según el peso.
+                </p>
+
+                <!-- Contenedor Principal Lado a Lado -->
+                <div style="display: flex; gap: 30px; width: 100%; flex: 1; align-items: stretch;">
+
+                    <!-- Columna Izquierda: Pseudo Code Editor -->
+                    <div class="glass-box"
+                        style="flex: 2; border-top: 4px solid var(--accent-secondary); padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+
+                        <div
+                            style="background: #2d2d2d; padding: 12px 15px; display: flex; gap: 8px; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <div style="width: 14px; height: 14px; border-radius: 50%; background: #ff5f56;"></div>
+                            <div style="width: 14px; height: 14px; border-radius: 50%; background: #ffbd2e;"></div>
+                            <div style="width: 14px; height: 14px; border-radius: 50%; background: #27c93f;"></div>
+                            <span
+                                style="margin-left: 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: #858585;">modelo_prediccion_autos.R</span>
+                        </div>
+
+                        <div
+                            style="background: #1e1e1e; padding: 20px 25px; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; line-height: 1.6; overflow: auto; flex: 1;">
+                            <span style="color: #6a9955;"># 1. Cargar paquete gráfico (Motor de
+                                visualización)</span><br>
+                            <span style="color: #dcdcaa;">library</span>(<span
+                                style="color: #ce9178;">ggplot2</span>)<br>
+                            <br>
+                            <span style="color: #6a9955;"># 2. Cargar datos (mtcars viene preinstalado)</span><br>
+                            <span style="color: #6a9955;"># ↓ ATENCIÓN: La flecha significa "ASIGNAR". Tomamos 'mtcars'
+                                y lo guardamos dentro de la variable 'autos_data'</span><br>
+                            <span style="color: #9cdcfe;">autos_data</span> <span style="color: #d4d4d4;">&lt;-</span>
+                            mtcars<br>
+                            <span style="color: #dcdcaa;">head</span>(autos_data, <span
+                                style="color: #b5cea8;">3</span>) <span style="color: #6a9955;"># Ver primeras 3 filas
+                                para explorar formato</span><br>
+                            <br>
+                            <span style="color: #6a9955;"># 3. Entrenar el Modelo Predictivo (Regresión Lineal
+                                Simple)</span><br>
+                            <span style="color: #6a9955;"># Fórmula (Y ~ X): Predecir 'mpg' (Millas/Galón) usando 'wt'
+                                (Peso)</span><br>
+                            <span style="color: #9cdcfe;">mi_modelo</span> <span style="color: #d4d4d4;">&lt;-</span>
+                            <span style="color: #dcdcaa;">lm</span>(<span style="color: #9cdcfe;">formula</span> = mpg ~
+                            wt, <span style="color: #9cdcfe;">data</span> = autos_data)<br>
+                            <br>
+                            <span style="color: #6a9955;"># 4. Interpretar la Inteligencia creada</span><br>
+                            <span style="color: #dcdcaa;">summary</span>(mi_modelo) <span style="color: #6a9955;">#
+                                Revela matemática pura si el Peso afecta el consumo</span><br>
+                        </div>
+                    </div>
+
+                    <!-- Columna Derecha: Explicaciones -->
+                    <div
+                        style="flex: 1; display: flex; flex-direction: column; gap: 15px; justify-content: space-between;">
+
+                        <!-- Caja 1 -->
+                        <div class="glass-box"
+                            style="flex: 1; padding: 20px; border-left: 4px solid #27c93f; display: flex; flex-direction: column; justify-content: center;">
+                            <h4
+                                style="margin: 0 0 8px 0; color: #fff; font-size: 1.1rem; display: flex; align-items: center;">
+                                <i class="fa-solid fa-arrow-right-to-bracket"
+                                    style="color: #27c93f; margin-right: 10px; font-size: 1.2rem;"></i> Asignación <code
+                                    style="margin-left:5px; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">&lt;-</code>
+                            </h4>
+                            <p style="margin: 0; font-size: 0.95rem; color: var(--text-muted); line-height: 1.5;">
+                                En R, la flecha <strong>significa "asignar a"</strong>. Es como meter datos del lado
+                                derecho en una caja con el nombre del lado izquierdo. Guarda el resultado devuelto en la
+                                memoria RAM del sistema.
+                            </p>
+                        </div>
+
+                        <!-- Caja 2 -->
+                        <div class="glass-box"
+                            style="flex: 1; padding: 20px; border-left: 4px solid #ffbd2e; display: flex; flex-direction: column; justify-content: center;">
+                            <h4
+                                style="margin: 0 0 8px 0; color: #fff; font-size: 1.1rem; display: flex; align-items: center;">
+                                <i class="fa-solid fa-microchip"
+                                    style="color: #ffbd2e; margin-right: 10px; font-size: 1.2rem;"></i> Función <code
+                                    style="margin-left:5px; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">lm()</code>
+                            </h4>
+                            <p style="margin: 0; font-size: 0.95rem; color: var(--text-muted); line-height: 1.5;">
+                                Acrónimo de <em>Linear Model</em>. Calcula la línea matemática de mejor ajuste a través
+                                de los datos.
+                            </p>
+                        </div>
+
+                        <!-- Caja 3 -->
+                        <div class="glass-box"
+                            style="flex: 1; padding: 20px; border-left: 4px solid #ff5f56; display: flex; flex-direction: column; justify-content: center;">
+                            <h4
+                                style="margin: 0 0 8px 0; color: #fff; font-size: 1.1rem; display: flex; align-items: center;">
+                                <i class="fa-solid fa-chart-line"
+                                    style="color: #ff5f56; margin-right: 10px; font-size: 1.2rem;"></i> Fórmula <code
+                                    style="margin-left:5px; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">~</code>
+                            </h4>
+                            <p style="margin: 0; font-size: 0.95rem; color: var(--text-muted); line-height: 1.5;">
+                                La tilde (virgulilla) separa la Variable Objetivo que quieres predecir (Y) de los
+                                parámetros Predictores (X).
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 10: Ecosistema de Paquetes (Bento Box) -->
+        <div class="slide" id="slide-10">
+            <div class="slide-content"
+                style="align-items: flex-start; justify-content: flex-start; padding: 40px 80px;">
+
+                <div style="margin-bottom: 25px; width: 100%;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Tema
+                        1 &mdash; Ecosistema R</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3rem; font-weight: 800; color: #fff; margin: 5px 0 0 0; line-height: 1.1;">
+                        Las "Apps" de la Analítica</h2>
+                    <p
+                        style="font-size: 1.1rem; line-height: 1.4; color: var(--text-main); margin-top: 10px; max-width: 90%;">
+                        En R, instalamos <strong>Paquetes (Libraries)</strong> para darle superpoderes a nuestro
+                        entorno. Esta es la <em>"Hoja de Trucos"</em> con el stack tecnológico más demandado en la
+                        industria actual de datos.
+                    </p>
+                </div>
+
+                <!-- Bento Box Grid -->
+                <div
+                    style="display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: auto auto; gap: 20px; width: 100%; flex: 1;">
+
+                    <!-- Manipulación de Datos (Principal) -->
+                    <div class="glass-box"
+                        style="grid-column: span 1; grid-row: span 2; padding: 25px; border-top: 4px solid #3b82f6; display: flex; flex-direction: column;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+                            <div style="background: rgba(59, 130, 246, 0.15); padding: 12px; border-radius: 12px;">
+                                <i class="fa-solid fa-filter" style="font-size: 1.5rem; color: #3b82f6;"></i>
+                            </div>
+                            <h3 style="margin: 0; font-size: 1.3rem; color: #fff; font-weight: 700;">Limpieza
+                                y<br>Manipulación</h3>
+                        </div>
+                        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.4;">
+                            El trabajo sucio del Científico de Datos. Fundamental para estructurar la info bruta.</p>
+
+                        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: auto;">
+                            <div
+                                style="background: rgba(0,0,0,0.2); padding: 12px 15px; border-radius: 8px; border-left: 2px solid #fff;">
+                                <strong
+                                    style="color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 1rem;">dplyr</strong>
+                                <div style="font-size: 0.8rem; color: #cbd5e1; margin-top: 4px;">El estándar dorado para
+                                    filtrar, agrupar y transformar tablas rápidamente.</div>
+                            </div>
+                            <div
+                                style="background: rgba(0,0,0,0.2); padding: 12px 15px; border-radius: 8px; border-left: 2px solid #fff;">
+                                <strong
+                                    style="color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 1rem;">tidyr</strong>
+                                <div style="font-size: 0.8rem; color: #cbd5e1; margin-top: 4px;">Organiza los datos para
+                                    que sean "Tidy" (cada variable una columna).</div>
+                            </div>
+                            <div
+                                style="background: rgba(0,0,0,0.2); padding: 12px 15px; border-radius: 8px; border-left: 2px solid #fff;">
+                                <strong
+                                    style="color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 1rem;">lubridate</strong>
+                                <div style="font-size: 0.8rem; color: #cbd5e1; margin-top: 4px;">Haces que trabajar con
+                                    Fechas y Horas deje de ser una pesadilla.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Visualización -->
+                    <div class="glass-box"
+                        style="padding: 20px; border-top: 4px solid var(--accent-highlight); display: flex; flex-direction: column;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                            <div style="background: rgba(253, 224, 71, 0.15); padding: 10px; border-radius: 10px;">
+                                <i class="fa-solid fa-chart-pie"
+                                    style="font-size: 1.2rem; color: var(--accent-highlight);"></i>
+                            </div>
+                            <h3 style="margin: 0; font-size: 1.1rem; color: #fff; font-weight: 700;">Visualización
+                                Estelar</h3>
+                        </div>
+                        <div
+                            style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+                            <strong style="color: #fff; font-family: 'JetBrains Mono', monospace;">ggplot2</strong>
+                            <div style="font-size: 0.8rem; color: #cbd5e1; margin-top: 4px;">Gráficos elegantes por
+                                capas. El mejor motor visual de cualquier lenguaje.</div>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
+                            <strong style="color: #fff; font-family: 'JetBrains Mono', monospace;">plotly</strong>
+                            <div style="font-size: 0.8rem; color: #cbd5e1; margin-top: 4px;">Convierte los gráficos
+                                fijos de ggplot en interactivos (Dashboard ready).</div>
+                        </div>
+                    </div>
+
+                    <!-- Reportes -->
+                    <div class="glass-box"
+                        style="padding: 20px; border-top: 4px solid #a855f7; display: flex; flex-direction: column;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                            <div style="background: rgba(168, 85, 247, 0.15); padding: 10px; border-radius: 10px;">
+                                <i class="fa-solid fa-file-invoice" style="font-size: 1.2rem; color: #a855f7;"></i>
+                            </div>
+                            <h3 style="margin: 0; font-size: 1.1rem; color: #fff; font-weight: 700;">Producción y
+                                Reportes</h3>
+                        </div>
+                        <div
+                            style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+                            <strong style="color: #fff; font-family: 'JetBrains Mono', monospace;">rmarkdown /
+                                Quarto</strong>
+                            <div style="font-size: 0.8rem; color: #cbd5e1; margin-top: 4px;">Mezcla Código + Texto
+                                explicativo para generar PDFs o HTMLs automáticos.</div>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
+                            <strong style="color: #fff; font-family: 'JetBrains Mono', monospace;">shiny</strong>
+                            <div style="font-size: 0.8rem; color: #cbd5e1; margin-top: 4px;">Crea aplicaciones web
+                                interactivas directamente desde R. Sin saber HTML.</div>
+                        </div>
+                    </div>
+
+                    <!-- Machine Learning & Colección -->
+                    <div class="glass-box"
+                        style="grid-column: span 2; padding: 20px; border-top: 4px solid var(--accent-secondary); display: flex; align-items: center; gap: 25px;">
+
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                <i class="fa-solid fa-brain"
+                                    style="font-size: 1.2rem; color: var(--accent-secondary);"></i>
+                                <h3 style="margin: 0; font-size: 1.1rem; color: #fff; font-weight: 700;">Machine
+                                    Learning</h3>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
+                                <strong
+                                    style="color: #fff; font-family: 'JetBrains Mono', monospace;">tidymodels</strong>
+                                <div style="font-size: 0.8rem; color: #cbd5e1; margin-top: 4px;">El framework moderno
+                                    unificado para entrenar cualquier modelo de Inteligencia Artificial de forma
+                                    ordenada.</div>
+                            </div>
+                        </div>
+
+                        <div style="width: 1px; height: 80%; background: rgba(255,255,255,0.1);"></div>
+
+                        <div
+                            style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+                            <img src="https://tidyverse.tidyverse.org/logo.png" alt="Tidyverse Logo"
+                                style="width: 60px; height: auto; margin-bottom: 10px; opacity: 0.9; filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));">
+                            <h4 style="margin: 0 0 5px 0; color: #fff; font-size: 1.2rem;">La Suite "Tidyverse"</h4>
+                            <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">Un
+                                megapack que instala <em>dplyr, tidyr, ggplot2</em> y más, compartiendo la misma
+                                filosofía unida de diseño.</p>
+                            <code
+                                style="margin-top: 10px; background: #1e1e1e; padding: 4px 10px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #6a9955;">install.packages("tidyverse")</code>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SCRIPTS LÓGICOS DE NAVEGACIÓN Y RENDER (Extraídos del diseño Maestro) -->
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Inicializar KaTeX para formulas, de ser necesario
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '$', right: '$', display: false }
+                ],
+                throwOnError: false
+            });
+
+            // LÓGICA DE NAVEGACIÓN
+            const slides = document.querySelectorAll('.slide');
+            const indicator = document.getElementById('slide-indicator');
+            let currentSlide = 0;
+
+            function updateSlides() {
+                if (slides.length === 0) return;
+                slides.forEach((slide, index) => {
+                    if (index === currentSlide) {
+                        slide.classList.add('active');
+                    } else {
+                        slide.classList.remove('active');
+                    }
+                });
+                indicator.textContent = `${currentSlide + 1} / ${slides.length}`;
+            }
+
+            function nextSlide() {
+                if (currentSlide < slides.length - 1) {
+                    currentSlide++;
+                    updateSlides();
+                }
+            }
+
+            function prevSlide() {
+                if (currentSlide > 0) {
+                    currentSlide--;
+                    updateSlides();
+                }
+            }
+
+            // Keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' || e.key === 'Space' || e.key === 'PageDown') {
+                    nextSlide();
+                } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                    prevSlide();
+                }
+            });
+
+            // Click navigation
+            document.addEventListener('click', (e) => {
+                // Ignore clicks on links or interactive elements
+                if (e.target.closest('a') || e.target.closest('button')) return;
+
+                const clickX = e.clientX;
+                const windowWidth = window.innerWidth;
+
+                if (clickX > windowWidth * 0.7) {
+                    nextSlide();
+                } else if (clickX < windowWidth * 0.3) {
+                    prevSlide();
+                }
+            });
+
+            // Mousewheel navigation with debounce
+            let wheelTimer;
+            document.addEventListener('wheel', (e) => {
+                if (wheelTimer) return;
+                wheelTimer = setTimeout(() => { wheelTimer = null }, 800);
+
+                if (e.deltaY > 50) nextSlide();
+                else if (e.deltaY < -50) prevSlide();
+            }, { passive: true });
+
+            updateSlides();
+        });
+    </script>
+</body>
+
+</html>
