@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prolog - Inteligencia Artificial Simbólica</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lato:wght@300;400;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-deep: #020617;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --c-cyan: #22d3ee;
+            --c-purple: #d8b4fe;
+            --c-pink: #f472b6;
+            --c-green: #4ade80;
+            --c-gold: #facc15;
+            --c-danger: #ef4444;
+            --glass-bg: rgba(15, 23, 42, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --radius-lg: 20px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif; background-color: var(--bg-deep);
+            color: var(--text-main); height: 100vh; overflow: hidden;
+            background-image: radial-gradient(circle at 50% 50%, #1e1b4b, #020617);
+        }
+
+        .progress-bar { position: fixed; top: 0; left: 0; height: 4px; background: linear-gradient(90deg, var(--c-cyan), var(--c-purple)); width: 0%; transition: width 0.3s; z-index: 200; box-shadow: 0 0 15px var(--c-cyan); }
+        .slide-counter { position: fixed; bottom: 20px; right: 30px; background: var(--glass-bg); padding: 6px 15px; border-radius: 99px; font-size: 0.8rem; color: var(--text-muted); font-family: 'JetBrains Mono'; border: 1px solid var(--glass-border); z-index: 1000; }
+
+        .slides-container { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .slide { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transform: scale(0.98); transition: all 0.5s ease; padding: 20px; }
+        .slide.active { opacity: 1; visibility: visible; transform: scale(1); }
+
+        /* Ajuste clave de alineación y scroll */
+        .card { background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: 2.5rem; width: 100%; max-width: 1150px; max-height: 90vh; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        
+        h1 { font-family: 'Lato'; font-weight: 900; font-size: 3.2rem; background: linear-gradient(135deg, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem; line-height: 1.1; }
+        h2 { font-family: 'Lato'; font-weight: 800; font-size: 2rem; color: var(--c-cyan); margin-bottom: 1.2rem; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px; }
+        h3 { font-size: 1.2rem; color: var(--c-purple); margin-bottom: 0.8rem; font-weight: 600; }
+        p, li { font-size: 1.05rem; line-height: 1.5; color: var(--text-muted); margin-bottom: 0.8rem; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        .concept-box { background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); }
+        .example-box { border-left: 4px solid var(--c-cyan); background: rgba(34, 211, 238, 0.05); padding: 1.2rem; border-radius: 0 16px 16px 0; margin: 1rem 0; }
+        
+        .pill { display: inline-block; padding: 5px 14px; border-radius: 30px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; border: 1px solid var(--c-cyan); color: var(--c-cyan); margin-bottom: 1rem; width: fit-content; align-self: flex-start; }
+        .step-tag { background: var(--c-cyan); color: #000; padding: 2px 10px; border-radius: 4px; font-weight: 900; margin-right: 8px; font-family: 'JetBrains Mono'; font-size: 0.9rem; }
+        code { font-family: 'JetBrains Mono', monospace; color: var(--c-gold); background: rgba(0,0,0,0.5); padding: 2px 8px; border-radius: 6px; font-size: 0.95em; }
+        
+        .code-block { font-family: 'JetBrains Mono'; background: #000; padding: 1.2rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 1rem; font-size: 1.15rem; }
+        .syntax-var { color: #fff; font-weight: bold; }
+        .syntax-op { color: var(--c-pink); font-weight: bold; }
+        .syntax-atom { color: var(--c-cyan); }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    <div class="slides-container">
+
+        <div class="slide active">
+            <div class="card" style="align-items: center; text-align: center;">
+                <span class="pill" style="border-color: var(--c-gold); color: var(--c-gold); align-self: center;">Laboratorio Práctico</span>
+                <h1 style="text-align: center;">Prolog: Inteligencia Simbólica</h1>
+                <p style="font-size: 1.4rem; color: var(--text-main); max-width: 800px; margin-top: 1rem; text-align: center;">Construyendo un motor de inferencia lógica paso a paso.</p>
+                
+                <div style="margin-top: 3rem; display: flex; justify-content: center; gap: 50px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem; width: 100%;">
+                    <div style="text-align: left;">
+                        <small style="display:block; color:var(--c-cyan);">DOCENTE</small>
+                        <strong>Dr. J. Ignacio Borge</strong>
+                    </div>
+                    <div style="text-align: left;">
+                        <small style="display:block; color:var(--c-pink);">CURSO</small>
+                        <strong>Aplicaciones de la I.A. (CENFOTEC)</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <h2><i class="fa-solid fa-code"></i> El Paradigma Declarativo</h2>
+                <div class="grid-2">
+                    <div class="concept-box">
+                        <h3>Diferencia con Python/Java</h3>
+                        <p>En programación tradicional imperativa, se define una receta paso a paso de <strong>CÓMO</strong> hacer las cosas.</p>
+                        <p>Prolog (<em>Programming in Logic</em>) opera bajo un paradigma declarativo: defines <strong>QUÉ</strong> es verdad. El motor interno utiliza lógica matemática para resolver el árbol de posibilidades por sí mismo.</p>
+                    </div>
+                    <div class="concept-box" style="border-top: 4px solid var(--c-green);">
+                        <h3>Los 3 Componentes del Sistema</h3>
+                        <p>1. <strong>Hechos:</strong> Verdades absolutas (La base de datos inmutable).</p>
+                        <p>2. <strong>Reglas:</strong> Leyes condicionales (La lógica deductiva del motor).</p>
+                        <p>3. <strong>Consultas:</strong> Interacciones y preguntas hacia la IA.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <h2><i class="fa-solid fa-pen-nib"></i> Reglas de Sintaxis Estricta</h2>
+                <p>Prolog exige una diferenciación tipográfica crítica. El compilador asigna roles matemáticos basados estrictamente en el uso de mayúsculas y minúsculas:</p>
+                <div class="grid-2">
+                    <div class="example-box">
+                        <h3 style="color: var(--c-cyan);">Átomos (Constantes)</h3>
+                        <p>Inician siempre con <strong>minúscula</strong>. Representan objetos o nombres fijos.</p>
+                        <p>✅ <code>juan</code>, <code>pedro</code>, <code>costa_rica</code></p>
+                        <p>❌ <code>Juan</code> (Crashea el modelo de datos)</p>
+                    </div>
+                    <div class="example-box" style="border-color: var(--c-pink);">
+                        <h3 style="color: var(--c-pink);">Variables (Comodines)</h3>
+                        <p>Inician siempre con <strong>Mayúscula</strong>. Son punteros vacíos que la IA debe instanciar.</p>
+                        <p>✅ <code>X</code>, <code>Padre</code>, <code>Hijo</code></p>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: center; margin-top: 1rem;">
+                    <span class="pill" style="border-color: var(--c-gold); color: var(--c-gold); margin-bottom: 0;">¡OJO! Toda instrucción lógica en Prolog DEBE finalizar con un punto (.)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <div style="display: flex; justify-content: center;">
+                    <span class="pill" style="color: var(--c-gold); border-color: var(--c-gold);">Teoría de Compiladores</span>
+                </div>
+                <h2 style="justify-content: center;">¿Por qué los llamamos "Átomos"?</h2>
+                <div class="grid-2">
+                    <div class="concept-box">
+                        <h3 style="color: var(--c-cyan);">Unidad Lógica Indivisible</h3>
+                        <p>En la lógica de predicados de primer orden, un átomo es la unidad estructural más básica. A diferencia de un <em>string</em>, un átomo <strong>no se puede iterar ni fragmentar</strong> en caracteres individuales.</p>
+                        <p>Representa una entidad estática inmutable en nuestro universo de conocimiento.</p>
+                    </div>
+                    <div class="concept-box" style="border-top: 4px solid var(--c-pink);">
+                        <h3 style="color: var(--c-pink);">Eficiencia de Memoria O(1)</h3>
+                        <p>A nivel de compilador, Prolog no lee el texto "juan". Lo registra en una <strong>tabla de símbolos centralizada</strong> y le asigna un ID numérico único en memoria.</p>
+                        <p>Al evaluar miles de reglas complejas, la IA no compara textos; compara enteros matemáticos. Esto garantiza inferencias extremadamente rápidas.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <h2>El Contraste Estructural</h2>
+                <p>La IA necesita saber de inmediato si está lidiando con un ancla fija de información (Átomo) o con un espacio de búsqueda abierto (Variable).</p>
+                <div class="grid-2">
+                    <div class="example-box" style="border-color: var(--c-cyan);">
+                        <h3 style="color: var(--c-cyan);">Comportamiento del Átomo</h3>
+                        <p>El motor lógico asume que <code>juan</code> siempre será estrictamente igual a <code>juan</code>. No requiere evaluación, solo constatación.</p>
+                    </div>
+                    <div class="example-box" style="border-color: var(--c-pink);">
+                        <h3 style="color: var(--c-pink);">Comportamiento de Variable</h3>
+                        <p>El algoritmo de <em>backtracking</em> tomará la variable <code>X</code> e iterará recursivamente la base de datos completa intentando encajar un átomo válido en ella.</p>
+                    </div>
+                </div>
+                <div class="concept-box" style="margin-top: 1rem; padding: 1.2rem; border-color: var(--c-gold);">
+                    <h3 style="color: var(--c-gold); margin-bottom: 0.5rem;"><i class="fa-solid fa-lightbulb"></i> Truco de Sintaxis</h3>
+                    <p style="margin: 0;">Si necesitas un dato estático que obligatoriamente empiece en mayúscula o tenga espacios, <strong>enciérralo en comillas simples</strong>. Ej: <code style="font-size: 1.1rem;">'Juan'</code> o <code style="font-size: 1.1rem;">'Costa Rica'</code>. Esto fuerza al compilador a tratarlo como un Átomo O(1) y no como Variable.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <div style="display: flex; justify-content: center;">
+                    <span class="pill" style="align-self: center;">Planteamiento del Reto</span>
+                </div>
+                <h2 style="justify-content: center;">El Oráculo Familiar</h2>
+                <div class="grid-2">
+                    <div style="display: flex; flex-direction: column; justify-content: center;">
+                        <p><strong>Nuestra Misión:</strong> Entregarle a la IA una lista básica de quién es padre/madre de quién, y definir el género de cada entidad.</p>
+                        <p>A partir de ahí, programaremos la "topología lógica" de un Hijo, un Hermano y un Abuelo.</p>
+                    </div>
+                    <div class="concept-box" style="text-align: center; border-style: dashed; display: flex; flex-direction: column; justify-content: center;">
+                        <i class="fa-solid fa-network-wired" style="font-size: 3rem; color: var(--c-cyan); margin-bottom: 1rem;"></i>
+                        <p>El objetivo es que la IA pueda <strong>deducir</strong> parentescos que nosotros nunca hayamos introducido explícitamente.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <div style="display: flex; justify-content: center;">
+                    <span class="pill" style="border-color: var(--c-purple); color: var(--c-purple);">El Entorno de Trabajo</span>
+                </div>
+                <h2 style="justify-content: center;">La Regla de las Dos Ventanas</h2>
+                <p style="text-align: center; max-width: 900px; margin: 0 auto 2rem auto;">El error #1 de los principiantes en Prolog es confundir dónde se escribe qué. <strong>Nunca escribas reglas donde van las preguntas.</strong> Existen dos espacios separados:</p>
+                <div class="grid-2">
+                    <div class="concept-box" style="border-top: 4px solid var(--c-cyan);">
+                        <h3 style="color: var(--c-cyan);"><i class="fa-solid fa-file-code"></i> 1. El Archivo (.pl)</h3>
+                        <p>Es tu editor de texto. <strong>Aquí SOLO escribes los Hechos y las Reglas.</strong></p>
+                        <p>Es el "cerebro" estático del programa. Todo lo que programemos a continuación irá guardado en este archivo.</p>
+                    </div>
+                    <div class="concept-box" style="border-top: 4px solid var(--c-pink);">
+                        <h3 style="color: var(--c-pink);"><i class="fa-solid fa-terminal"></i> 2. La Consola (Terminal)</h3>
+                        <p>Es el intérprete interactivo (empieza con <code>?-</code>). <strong>Aquí SOLO escribes las Consultas.</strong></p>
+                        <p>Es donde "conversas" con el programa una vez que has cargado el archivo. No se programa aquí, solo se pregunta.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <h2>Paso 1: Declarar los Hechos en el Archivo</h2>
+                <p>En nuestro editor de texto, establecemos la base del mundo. Usamos la estructura: <code>relacion(sujeto, objeto).</code></p>
+                <div class="code-block">
+                    <span style="color: var(--text-muted);">% Relaciones Lógicas (Átomos en minúscula)</span><br>
+                    <span class="syntax-atom">padre</span>(juan, pedro).<br>
+                    <span class="syntax-atom">padre</span>(juan, maria).<br>
+                    <span class="syntax-atom">madre</span>(ana, pedro).<br><br>
+                    <span style="color: var(--text-muted);">% Propiedades Unilaterales</span><br>
+                    <span class="syntax-atom">hombre</span>(juan). <span class="syntax-atom">hombre</span>(pedro).<br>
+                    <span class="syntax-atom">mujer</span>(ana). <span class="syntax-atom">mujer</span>(maria).
+                </div>
+                <p><small><i class="fa-solid fa-circle-info"></i> Todo lo que escribas después del símbolo de porcentaje <code>%</code> son comentarios que el compilador ignora.</small></p>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <h2>Paso 2: La Lógica del Hijo (Reglas)</h2>
+                <p>Debajo de los hechos, añadimos nuestra primera <strong>Regla Deductiva</strong>. Usamos Variables (X, Y) para generalizar.</p>
+                <div class="code-block" style="text-align: center;">
+                    <span class="syntax-atom">hijo</span>(<span class="syntax-var">X</span>, <span class="syntax-var">Y</span>) <span class="syntax-op">:-</span> <span class="syntax-atom">padre</span>(<span class="syntax-var">Y</span>, <span class="syntax-var">X</span>)<span class="syntax-op">,</span> <span class="syntax-atom">hombre</span>(<span class="syntax-var">X</span>)<span class="syntax-op">.</span>
+                </div>
+                <div class="grid-2">
+                    <div class="concept-box" style="padding: 1rem;">
+                        <p><strong><span class="syntax-op">:-</span> (Operador de Condición SI)</strong><br>La afirmación izquierda es válida, SI las premisas derechas se cumplen.</p>
+                    </div>
+                    <div class="concept-box" style="padding: 1rem;">
+                        <p><strong><span class="syntax-op">,</span> (Operador Lógico AND)</strong><br>Fuerza una evaluación conjunta; ambas partes deben arrojar "True".</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <h2>Traducción Formal del Compilador</h2>
+                <div class="example-box" style="font-size: 1.15rem; border-color: var(--c-green); line-height: 1.6;">
+                    "El sistema deducirá formalmente que <span style="color: #fff; font-weight: bold;">X</span> es hijo de <span style="color: #fff; font-weight: bold;">Y</span>,<br> 
+                    <strong>ESTRICTAMENTE SI</strong> ( <code>:-</code> )<br> 
+                    encuentra en la tabla de hechos que <span style="color: #fff; font-weight: bold;">Y</span> es padre de <span style="color: #fff; font-weight: bold;">X</span>,<br> 
+                    <strong>Y AL MISMO TIEMPO</strong> ( <code>,</code> )<br> 
+                    verifica que <span style="color: #fff; font-weight: bold;">X</span> pertenece a la propiedad hombre."
+                </div>
+                <p style="text-align: center; margin-top: 1rem; color: var(--c-gold);">Al ser variables (mayúsculas), la IA usará esta plantilla genérica para auditar cualquier átomo del sistema.</p>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <h2>Paso 3: Transitividad entre Hermanos</h2>
+                <p>Para establecer la hermandad, introducimos una tercera variable (Z) que actuará como nodo puente común.</p>
+                <div class="code-block" style="text-align: center;">
+                    <span class="syntax-atom">hermano</span>(<span class="syntax-var">X</span>, <span class="syntax-var">Y</span>) <span class="syntax-op">:-</span> <span class="syntax-atom">padre</span>(<span class="syntax-var">Z</span>, <span class="syntax-var">X</span>)<span class="syntax-op">,</span> <span class="syntax-atom">padre</span>(<span class="syntax-var">Z</span>, <span class="syntax-var">Y</span>)<span class="syntax-op">,</span> <span class="syntax-var">X</span> <span class="syntax-op">\=</span> <span class="syntax-var">Y</span><span class="syntax-op">.</span>
+                </div>
+                <div class="concept-box" style="margin-top: 1rem; padding: 1.2rem;">
+                    <h3 style="margin-bottom: 0.5rem; color: var(--text-main);">El Operador de Diferencia ( <code style="color: var(--c-pink);">\=</code> )</h3>
+                    <p style="margin: 0;">Es vital para la IA. Sin <code>X \= Y</code>, el motor evaluaría que Pedro es hermano de Pedro, ya que Pedro comparte el mismo padre (Z) consigo mismo. Bloqueamos los falsos positivos forzando a que las variables apunten a personas distintas.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <div style="display: flex; justify-content: center;">
+                    <span class="pill" style="color: var(--c-gold); border-color: var(--c-gold);">Inferencia de Segundo Nivel</span>
+                </div>
+                <h2 style="justify-content: center;">Paso 4: La Regla del Abuelo</h2>
+                <p style="text-align: center;">Agregamos un nuevo nodo a los hechos de nuestro archivo: <code>padre(luis, juan).</code></p>
+                <p style="text-align: center;"><strong>La lógica:</strong> X es abuelo de Y, si X es padre de un intermediario (Z), y ese intermediario (Z) es padre de Y.</p>
+                <div class="code-block" style="text-align: center; border-color: var(--c-gold); width: 80%; margin: 1rem auto;">
+                    <span class="syntax-atom">abuelo</span>(<span class="syntax-var">X</span>, <span class="syntax-var">Y</span>) <span class="syntax-op">:-</span> <span class="syntax-atom">padre</span>(<span class="syntax-var">X</span>, <span class="syntax-var">Z</span>)<span class="syntax-op">,</span> <span class="syntax-atom">padre</span>(<span class="syntax-var">Z</span>, <span class="syntax-var">Y</span>)<span class="syntax-op">.</span>
+                </div>
+                <p style="text-align: center;"><small>Aquí ocurre la deducción pura: la IA conecta dos hechos independientes a través de la variable Z para materializar una relación que no existe en el código fuente.</small></p>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card" style="align-items: center; padding: 1.5rem;">
+                <div style="display: flex; justify-content: center;">
+                    <span class="pill" style="border-color: var(--c-cyan); color: var(--c-cyan); margin-bottom: 0.5rem;">El Código Final</span>
+                </div>
+                <h2 style="justify-content: center; margin-bottom: 0.5rem;"><i class="fa-regular fa-file-code"></i> familia.pl</h2>
+                <p style="text-align: center; margin-bottom: 1rem; font-size: 0.9rem;">Así debe verse exactamente todo tu archivo de texto. Cópialo, guárdalo y compílalo.</p>
+                
+                <div class="code-block" style="width: 100%; max-width: 950px; font-size: 0.9rem; line-height: 1.4; border-left: 4px solid var(--c-green); margin-bottom: 0; padding: 1rem;">
+                    <span style="color: var(--text-muted);">% ==========================================</span><br>
+                    <span style="color: var(--text-muted);">% BASE DE CONOCIMIENTOS: EL ORÁCULO FAMILIAR</span><br>
+                    <span style="color: var(--text-muted);">% ==========================================</span><br><br>
+
+                    <span style="color: var(--text-muted);">% --- 1. HECHOS (Datos estáticos de la IA) ---</span><br>
+                    <span class="syntax-atom">padre</span>(juan, pedro).<br>
+                    <span class="syntax-atom">padre</span>(juan, maria).<br>
+                    <span class="syntax-atom">padre</span>(luis, juan).<br>
+                    <span class="syntax-atom">madre</span>(ana, pedro).<br>
+                    <span class="syntax-atom">madre</span>(ana, maria).<br><br>
+
+                    <span class="syntax-atom">hombre</span>(juan). <span class="syntax-atom">hombre</span>(pedro). <span class="syntax-atom">hombre</span>(luis).<br>
+                    <span class="syntax-atom">mujer</span>(ana). <span class="syntax-atom">mujer</span>(maria).<br><br>
+
+                    <span style="color: var(--text-muted);">% --- 2. REGLAS (Motor Deductivo) ---</span><br>
+                    <span style="color: var(--text-muted);">% Regla 1: X es hijo de Y si Y es su padre y X es varón.</span><br>
+                    <span class="syntax-atom">hijo</span>(<span class="syntax-var">X</span>, <span class="syntax-var">Y</span>) <span class="syntax-op">:-</span> <span class="syntax-atom">padre</span>(<span class="syntax-var">Y</span>, <span class="syntax-var">X</span>)<span class="syntax-op">,</span> <span class="syntax-atom">hombre</span>(<span class="syntax-var">X</span>)<span class="syntax-op">.</span><br><br>
+
+                    <span style="color: var(--text-muted);">% Regla 2: X y Y son hermanos si tienen el mismo padre (Z) y son distintos.</span><br>
+                    <span class="syntax-atom">hermano</span>(<span class="syntax-var">X</span>, <span class="syntax-var">Y</span>) <span class="syntax-op">:-</span> <span class="syntax-atom">padre</span>(<span class="syntax-var">Z</span>, <span class="syntax-var">X</span>)<span class="syntax-op">,</span> <span class="syntax-atom">padre</span>(<span class="syntax-var">Z</span>, <span class="syntax-var">Y</span>)<span class="syntax-op">,</span> <span class="syntax-var">X</span> <span class="syntax-op">\=</span> <span class="syntax-var">Y</span><span class="syntax-op">.</span><br><br>
+
+                    <span style="color: var(--text-muted);">% Regla 3: X es abuelo de Y mediante el intermediario Z.</span><br>
+                    <span class="syntax-atom">abuelo</span>(<span class="syntax-var">X</span>, <span class="syntax-var">Y</span>) <span class="syntax-op">:-</span> <span class="syntax-atom">padre</span>(<span class="syntax-var">X</span>, <span class="syntax-var">Z</span>)<span class="syntax-op">,</span> <span class="syntax-atom">padre</span>(<span class="syntax-var">Z</span>, <span class="syntax-var">Y</span>)<span class="syntax-op">.</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <h2>Paso 5: Consultas en la Consola (Queries)</h2>
+                <p>Dejamos el editor de texto. Pasamos a la consola (marcada por <code>?-</code>) e interactuamos con nuestro algoritmo compilado:</p>
+                <div class="grid-2">
+                    <div class="concept-box">
+                        <p style="font-family: 'JetBrains Mono'; margin-bottom: 5px;">?- <span class="syntax-atom">hijo</span>(X, juan).</p>
+                        <p style="color: var(--c-green); font-family: 'JetBrains Mono'; font-weight: bold;">X = pedro.</p>
+                        <p style="margin-top: 10px;"><small>El motor cruzó la regla de "hijo" con los hechos y devolvió el átomo correcto.</small></p>
+                    </div>
+                    <div class="concept-box">
+                        <p style="font-family: 'JetBrains Mono'; margin-bottom: 5px;">?- <span class="syntax-atom">abuelo</span>(luis, maria).</p>
+                        <p style="color: var(--c-green); font-family: 'JetBrains Mono'; font-weight: bold;">true.</p>
+                        <p style="margin-top: 10px;"><small>Encontró a 'juan' como puente (Z) y validó el estado booleano exitosamente.</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <div style="display: flex; justify-content: center;">
+                    <span class="pill" style="color: var(--c-purple); border-color: var(--c-purple);">Algoritmos de Búsqueda</span>
+                </div>
+                <h2 style="justify-content: center;">El Motor en Acción: Backtracking</h2>
+                <p style="text-align: center;">Si en la consola dejamos ambas variables abiertas preguntando <strong>"¿Quiénes son hermanos?"</strong>, Prolog evaluará todo el árbol lógico existente.</p>
+                <div class="code-block" style="padding: 1.5rem; width: 80%; margin: 1rem auto;">
+                    ?- <span class="syntax-atom">hermano</span>(X, Y).<br>
+                    <span style="color: var(--c-green);">X = pedro, Y = maria ;</span><br>
+                    <span style="color: var(--c-green);">X = maria, Y = pedro.</span>
+                </div>
+                <p style="text-align: center; max-width: 900px; margin: 0 auto;">Al presionar punto y coma (<code>;</code>), forzamos al motor a aplicar <em>backtracking</em>: retrocede un paso en su evaluación de memoria y busca la siguiente combinación matemáticamente válida.</p>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card" style="align-items: center; text-align: center;">
+                <i class="fa-solid fa-microchip" style="font-size: 3.5rem; color: var(--c-cyan); margin-bottom: 1rem;"></i>
+                <h2 style="justify-content: center;">El Poder de los Sistemas Simbólicos</h2>
+                <p style="max-width: 850px; margin: 0 auto 1.5rem auto; text-align: center;">Prolog nos demuestra cómo separar el conocimiento crudo (Hechos) del razonamiento (Reglas). Esta arquitectura permite construir Inteligencias Artificiales auditables que no solo arrojan respuestas probabilísticas, sino conclusiones demostrables.</p>
+                
+                <div style="margin-top: 1.5rem; background: rgba(239, 68, 68, 0.08); border: 1px solid var(--c-danger); padding: 15px 25px; border-radius: 12px; width: 100%; max-width: 900px;">
+                    <p style="color: #fff; margin: 0; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                        <i class="fa-solid fa-triangle-exclamation" style="color: var(--c-danger); font-size: 1.2rem;"></i> 
+                        <strong>Aviso Académico:</strong> Debido al retraso en el cronograma, es requisito fundamental haber completado la lectura del <strong>Capítulo I del textbook</strong> para la próxima sesión.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="slideCounter" class="slide-counter">1 / 16</div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const progressBar = document.getElementById('progressBar');
+        const slideCounter = document.getElementById('slideCounter');
+        let currentSlide = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle('active', index === currentSlide);
+            });
+            const progress = ((currentSlide + 1) / slides.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            slideCounter.textContent = `${currentSlide + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') { 
+                if (currentSlide < slides.length - 1) { currentSlide++; updateSlides(); } 
+            }
+            if (e.key === 'ArrowLeft') { 
+                if (currentSlide > 0) { currentSlide--; updateSlides(); } 
+            }
+        });
+
+        updateSlides();
+    </script>
+</body>
+</html>
+

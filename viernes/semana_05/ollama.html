@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ollama + Prolog - Inteligencia Artificial Local</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lato:wght@300;400;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-deep: #020617;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --c-cyan: #22d3ee;
+            --c-purple: #d8b4fe;
+            --c-pink: #f472b6;
+            --c-green: #4ade80;
+            --c-gold: #facc15;
+            --c-danger: #ef4444;
+            --glass-bg: rgba(15, 23, 42, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --radius-lg: 20px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif; background-color: var(--bg-deep);
+            color: var(--text-main); height: 100vh; overflow: hidden;
+            background-image: radial-gradient(circle at 50% 50%, #1e1b4b, #020617);
+        }
+
+        .progress-bar { position: fixed; top: 0; left: 0; height: 4px; background: linear-gradient(90deg, var(--c-cyan), var(--c-purple)); width: 0%; transition: width 0.3s; z-index: 200; box-shadow: 0 0 15px var(--c-cyan); }
+        .slide-counter { position: fixed; bottom: 20px; right: 30px; background: var(--glass-bg); padding: 6px 15px; border-radius: 99px; font-size: 0.8rem; color: var(--text-muted); font-family: 'JetBrains Mono'; border: 1px solid var(--glass-border); z-index: 1000; }
+
+        .slides-container { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .slide { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transform: scale(0.98); transition: all 0.5s ease; padding: 20px; }
+        .slide.active { opacity: 1; visibility: visible; transform: scale(1); }
+
+        .card { background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: 2.5rem; width: 100%; max-width: 1250px; max-height: 90vh; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        
+        h1 { font-family: 'Lato'; font-weight: 900; font-size: 3.2rem; background: linear-gradient(135deg, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem; line-height: 1.1; }
+        h2 { font-family: 'Lato'; font-weight: 800; font-size: 2rem; color: var(--c-cyan); margin-bottom: 1.2rem; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px; }
+        h3 { font-size: 1.2rem; color: var(--c-purple); margin-bottom: 0.8rem; font-weight: 600; }
+        p, li { font-size: 1.05rem; line-height: 1.5; color: var(--text-muted); margin-bottom: 0.8rem; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+        .split-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; align-items: center; }
+
+        .concept-box { background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); }
+        .example-box { border-left: 4px solid var(--c-cyan); background: rgba(34, 211, 238, 0.05); padding: 1.2rem; border-radius: 0 16px 16px 0; margin: 1rem 0; }
+        
+        .pill { display: inline-block; padding: 5px 14px; border-radius: 30px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; border: 1px solid var(--c-cyan); color: var(--c-cyan); margin-bottom: 1rem; width: fit-content; align-self: flex-start; }
+        code { font-family: 'JetBrains Mono', monospace; color: var(--c-gold); background: rgba(0,0,0,0.5); padding: 2px 8px; border-radius: 6px; font-size: 0.95em; }
+        
+        .code-block { font-family: 'JetBrains Mono'; background: #000; padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 1rem; font-size: 1.1rem; line-height: 1.5; }
+        
+        table { width: 100%; border-collapse: collapse; background: rgba(0,0,0,0.2); border-radius: 12px; overflow: hidden; margin-bottom: 1rem; }
+        th { background: rgba(255,255,255,0.05); color: var(--c-cyan); padding: 12px 15px; text-align: left; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+        td { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.95rem; }
+        
+        /* Flowchart styles */
+        .flow-node { background: rgba(255,255,255,0.05); border: 1px solid var(--c-purple); padding: 1rem; border-radius: 8px; text-align: center; font-weight: 500; }
+        .flow-arrow { text-align: center; color: var(--c-cyan); font-size: 1.5rem; margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    <div class="slides-container">
+
+        <div class="slide active">
+            <div class="card" style="align-items: center; text-align: center;">
+                <span class="pill" style="border-color: var(--c-gold); color: var(--c-gold); align-self: center;">🤖 Ollama + Prolog</span>
+                <h1 style="text-align: center;">IA Local y Gratuita</h1>
+                <h2 style="justify-content: center; border: none; font-size: 1.8rem; background: linear-gradient(90deg, var(--c-purple), var(--c-cyan)); -webkit-background-clip: text; color: transparent;">para Resolver Problemas Cotidianos</h2>
+                
+                <div style="margin-top: 3rem; display: flex; justify-content: center; gap: 50px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem; width: 100%;">
+                    <div style="text-align: left;">
+                        <small style="display:block; color:var(--c-cyan);">DOCENTE</small>
+                        <strong>Dr. J. Ignacio Borge</strong>
+                    </div>
+                    <div style="text-align: left;">
+                        <small style="display:block; color:var(--c-pink);">CURSO</small>
+                        <strong>PSWE-18 • Aplicaciones de la I.A.</strong>
+                    </div>
+                    <div style="text-align: left;">
+                        <small style="display:block; color:var(--c-green);">INSTITUCIÓN</small>
+                        <strong>Universidad CENFOTEC</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <h2>📌 ¿Qué es Ollama?</h2>
+                <div class="grid-2">
+                    <div style="display: flex; flex-direction: column; justify-content: center;">
+                        <p>Ollama es una herramienta gratuita y de código abierto que te permite descargar y correr modelos de inteligencia artificial (LLMs) directamente en tu computadora, sin internet, sin suscripciones y sin pagar nada.</p>
+                        <p style="margin-top: 1rem;">🔗 Sitio oficial: <a href="https://ollama.com" style="color: var(--c-cyan); text-decoration: none;">https://ollama.com</a></p>
+                        
+                        <div class="example-box">
+                            <h3 style="color: var(--c-cyan);">¿Cómo funciona?</h3>
+                            <p>Tú instalas Ollama → descargas un modelo una sola vez → lo usas para siempre offline</p>
+                        </div>
+                        
+                        <div class="concept-box" style="border-left: 4px solid var(--c-purple); background: rgba(216, 180, 254, 0.05); margin-top: 1rem;">
+                            <p style="font-style: italic; color: #fff; font-size: 1.1rem; text-align: center; margin: 0;">"Es como tener tu propio ChatGPT instalado en tu laptop, sin depender de nadie."</p>
+                        </div>
+                    </div>
+                    <div class="concept-box">
+                        <h3 style="color: var(--c-gold); margin-bottom: 1rem;">¿Por qué es importante?</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Característica</th>
+                                    <th>Ollama</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>💰 Costo</strong></td>
+                                    <td>Completamente gratis</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>🌐 Internet requerido</strong></td>
+                                    <td>Solo para la descarga inicial</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>🔒 Privacidad</strong></td>
+                                    <td>Total — todo corre en tu PC</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>⚙️ Dificultad</strong></td>
+                                    <td>Fácil de instalar</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card" style="padding: 2rem;">
+                <h2 style="font-size: 1.8rem; margin-bottom: 1rem;">🧠 Los LLMs disponibles en Ollama (todos gratuitos)</h2>
+                <p>Ollama te permite elegir entre varios modelos de IA, cada uno creado por empresas reconocidas. Todos son 100% gratuitos.</p>
+                <div class="split-layout">
+                    <div>
+                        <table style="margin-bottom: 0;">
+                            <thead>
+                                <tr>
+                                    <th>Modelo</th>
+                                    <th>Creado por</th>
+                                    <th>RAM requerida</th>
+                                    <th>Ideal para</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><strong>TinyLlama</strong></td><td>Comunidad</td><td>4 GB</td><td>PCs básicas, pruebas rápidas</td></tr>
+                                <tr><td><strong>Gemma 2B</strong></td><td>Google</td><td>4 GB</td><td>Uso general ligero</td></tr>
+                                <tr><td><strong>Phi-3 Mini</strong></td><td>Microsoft</td><td>4-8 GB</td><td>Eficiencia y velocidad</td></tr>
+                                <tr><td><strong>Mistral 7B</strong></td><td>Mistral AI</td><td>8 GB</td><td>Tareas concretas y precisas</td></tr>
+                                <tr><td style="color: var(--c-cyan);"><strong>Llama 3.2</strong></td><td>Meta</td><td>8 GB</td><td>Uso general, muy recomendado</td></tr>
+                                <tr><td style="color: var(--c-gold);"><strong>DeepSeek-R1</strong></td><td>DeepSeek</td><td>8 GB</td><td>Razonamiento lógico y matemático</td></tr>
+                                <tr><td><strong>Qwen 2.5</strong></td><td>Alibaba</td><td>16 GB</td><td>Multilingüe, excelente en español</td></tr>
+                                <tr><td><strong>Llama 3.3 70B</strong></td><td>Meta</td><td>32 GB+</td><td>El más potente para uso local</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="concept-box" style="border-top: 4px solid var(--c-green);">
+                        <h3 style="color: var(--c-green);">Para instalar y usar un modelo:</h3>
+                        <div class="code-block" style="font-size: 0.95rem;">
+                            <span style="color: #64748b;"># 1. Instalar Ollama (una sola vez)</span><br>
+                            <span style="color: #fff;">curl -fsSL https://ollama.com/install.sh | sh</span><br><br>
+                            
+                            <span style="color: #64748b;"># 2. Descargar un modelo</span><br>
+                            <span style="color: #fff;">ollama pull deepseek-r1</span><br><br>
+                            
+                            <span style="color: #64748b;"># 3. Usarlo</span><br>
+                            <span style="color: var(--c-gold);">ollama run deepseek-r1</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <h2>🔗 ¿Por qué unir Ollama con Prolog?</h2>
+                <p>Prolog y los LLMs de Ollama se complementan perfectamente porque cada uno resuelve lo que el otro no puede:</p>
+                <div class="grid-2">
+                    <div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th style="color: var(--c-gold);">Prolog</th>
+                                    <th style="color: var(--c-cyan);">Ollama (LLM)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="font-size: 1.2rem;">✅ <strong>Fuerte en</strong></td>
+                                    <td>Lógica, reglas, restricciones</td>
+                                    <td>Lenguaje natural, comprensión</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-size: 1.2rem;">❌ <strong>Débil en</strong></td>
+                                    <td>Entender lenguaje humano</td>
+                                    <td>Garantizar reglas estrictas</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <div class="concept-box" style="margin-top: 1.5rem; padding: 1.5rem;">
+                            <h3 style="color: var(--c-pink); margin-bottom: 10px;">¿Por qué es útil esta combinación?</h3>
+                            <ul style="margin: 0;">
+                                <li><strong>Confiabilidad:</strong> Prolog garantiza que las reglas nunca se violen</li>
+                                <li><strong>Facilidad de uso:</strong> el LLM permite hablarle al sistema en español normal</li>
+                                <li><strong>Transparencia:</strong> puedes saber exactamente por qué el sistema tomó una decisión</li>
+                                <li><strong>Gratuito y privado:</strong> todo corre en tu computadora con Ollama</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="concept-box" style="border-color: var(--c-purple);">
+                        <h3 style="text-align: center; color: var(--c-purple); margin-bottom: 1rem;">Cómo trabajan juntos:</h3>
+                        <div class="flow-node" style="border-color: #fff;">Usuario (lenguaje natural)</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-node" style="border-color: var(--c-cyan);"><strong>Ollama interpreta</strong><br><small>"No quiero clases antes de las 8am"</small></div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-node" style="border-color: var(--c-gold);"><strong>Prolog aplica la regla estrictamente</strong><br><small>y genera una solución válida</small></div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-node" style="border-color: var(--c-cyan);"><strong>Ollama explica el resultado</strong><br><small>en lenguaje natural</small></div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-node" style="border-color: var(--c-green); background: rgba(74, 222, 128, 0.1);">Usuario recibe una respuesta clara</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card" style="padding: 2rem;">
+                <h2 style="font-size: 1.8rem; margin-bottom: 1rem;">💡 Agentes que puedes crear</h2>
+                <p>Con Prolog + Ollama puedes construir agentes inteligentes para resolver problemas del día a día:</p>
+                <div class="grid-2" style="gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <div class="concept-box" style="padding: 1.2rem;">
+                        <h3 style="color: var(--c-cyan);">🏫 Educación y trabajo</h3>
+                        <ul style="list-style: none; padding: 0;">
+                            <li>📅 <strong>Organizador de horarios universitarios</strong> — asigna profesores, aulas y materias evitando conflictos</li>
+                            <li>📚 <strong>Planificador de estudio</strong> — crea un plan personalizado para tus exámenes</li>
+                            <li>🗓️ <strong>Coordinador de reuniones</strong> — encuentra el horario ideal sin conflictos de agenda</li>
+                        </ul>
+                    </div>
+                    <div class="concept-box" style="padding: 1.2rem;">
+                        <h3 style="color: var(--c-pink);">🏠 Hogar</h3>
+                        <ul style="list-style: none; padding: 0;">
+                            <li>🍽️ <strong>Planificador de comidas</strong> — sugiere recetas según lo que tienes en el refrigerador</li>
+                            <li>🧹 <strong>Organizador de tareas del hogar</strong> — distribuye tareas por tiempo y prioridad</li>
+                            <li>💰 <strong>Controlador de presupuesto</strong> — analiza tus gastos y sugiere dónde ahorrar</li>
+                        </ul>
+                    </div>
+                    <div class="concept-box" style="padding: 1.2rem;">
+                        <h3 style="color: var(--c-green);">🏥 Salud</h3>
+                        <ul style="list-style: none; padding: 0;">
+                            <li>💊 <strong>Gestor de medicamentos</strong> — recuerda dosis y detecta conflictos entre fármacos</li>
+                            <li>🏋️ <strong>Planificador de rutinas de ejercicio</strong> — adapta el plan según tus metas y tiempo</li>
+                        </ul>
+                    </div>
+                    <div class="concept-box" style="padding: 1.2rem;">
+                        <h3 style="color: var(--c-gold);">🚗 Logística</h3>
+                        <ul style="list-style: none; padding: 0;">
+                            <li>🗺️ <strong>Optimizador de rutas</strong> — calcula el mejor orden para hacer diligencias en un día</li>
+                            <li>📦 <strong>Gestor de inventario del hogar</strong> — lleva control de lo que tienes y lo que necesitas comprar</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="example-box" style="border-color: var(--c-purple); background: rgba(216, 180, 254, 0.05); text-align: center; margin: 0;">
+                    <p style="font-size: 1.15rem; color: #fff; margin-bottom: 0.5rem;"><strong>Conclusión:</strong> Ollama te da el poder del lenguaje natural, Prolog te da la precisión lógica.</p>
+                    <p style="color: var(--c-purple); font-weight: bold; margin: 0;">Juntos forman una base sólida para crear agentes inteligentes, gratuitos y privados.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="slideCounter" class="slide-counter">1 / 5</div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const progressBar = document.getElementById('progressBar');
+        const slideCounter = document.getElementById('slideCounter');
+        let currentSlide = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle('active', index === currentSlide);
+            });
+            const progress = ((currentSlide + 1) / slides.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            slideCounter.textContent = `${currentSlide + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { 
+                if (currentSlide < slides.length - 1) { currentSlide++; updateSlides(); } 
+            }
+            if (e.key === 'ArrowLeft') { 
+                if (currentSlide > 0) { currentSlide--; updateSlides(); } 
+            }
+        });
+
+        updateSlides();
+    </script>
+</body>
+</html>
+
+

@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Razonamiento Formal e Inteligencia Artificial</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lato:wght@300;400;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* =========================================
+           CORE VARIABLES & THEME
+           ========================================= */
+        :root {
+            --bg-deep: #020617;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --c-cyan: #22d3ee;
+            --c-purple: #d8b4fe;
+            --c-pink: #f472b6;
+            --c-green: #4ade80;
+            --c-gold: #facc15;
+            --glass-bg: rgba(15, 23, 42, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.03);
+            --glass-blur: blur(20px);
+            --radius-lg: 24px;
+            --radius-md: 16px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg-deep);
+            background-image: radial-gradient(circle at 50% 120%, #1e1b4b, #020617);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Ambient Background Orbs */
+        body::before {
+            content: ''; position: absolute; top: -20%; left: -10%; width: 50vw; height: 50vw;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.1), transparent 60%);
+            border-radius: 50%; pointer-events: none; z-index: -1; animation: float 20s ease-in-out infinite;
+        }
+        body::after {
+            content: ''; position: absolute; bottom: -20%; right: -10%; width: 50vw; height: 50vw;
+            background: radial-gradient(circle, rgba(192, 132, 252, 0.1), transparent 60%);
+            border-radius: 50%; pointer-events: none; z-index: -1; animation: float 25s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(20px, 40px); }
+        }
+
+        /* UI Elements */
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--c-cyan), var(--c-purple)); width: 0%; transition: width 0.3s; z-index: 200; box-shadow: 0 0 15px var(--c-cyan); }
+        .slide-counter { position: fixed; bottom: 25px; right: 35px; background: rgba(15, 23, 42, 0.8); padding: 8px 16px; border-radius: 99px; font-size: 0.85rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); z-index: 1000; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); }
+
+        /* Slides Architecture */
+        .slides-container { position: relative; width: 100%; height: 100%; overflow: hidden; }
+        .slide { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transform: scale(0.96) translateY(15px); transition: opacity 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); padding: 40px; pointer-events: none; }
+        .slide.active { opacity: 1; visibility: visible; transform: scale(1) translateY(0); pointer-events: all; z-index: 10; }
+
+        /* Cards */
+        .card { background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); border-top: 1px solid var(--glass-highlight); border-radius: var(--radius-lg); padding: 3rem; width: 100%; max-width: 1300px; max-height: 95vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); display: flex; flex-direction: column; justify-content: center; position: relative; }
+        
+        /* Typography */
+        h1 { font-family: 'Lato', sans-serif; font-weight: 900; font-size: clamp(2.5rem, 4.5vw, 4.5rem); line-height: 1.1; margin-bottom: 1rem; background: linear-gradient(135deg, #fff 20%, #94a3b8 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.03em; }
+        h2 { font-family: 'Lato', sans-serif; font-weight: 800; font-size: clamp(1.8rem, 3vw, 2.8rem); margin-bottom: 1.5rem; background: linear-gradient(90deg, #fff, var(--c-cyan)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.02em; display: flex; align-items: center; gap: 15px; }
+        h3 { font-size: 1.3rem; color: #fff; margin-bottom: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        p, li { font-size: 1.1rem; line-height: 1.6; color: var(--text-muted); margin-bottom: 0.8rem; }
+        strong { color: var(--text-main); font-weight: 600; }
+        
+        /* Grids & Boxes */
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 2rem; height: 100%; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; height: 100%; }
+        .concept-box { background: rgba(255, 255, 255, 0.02); padding: 2rem; border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.3s ease; height: 100%; }
+        .concept-box:hover { background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.1); transform: translateY(-2px); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3); }
+        .example-box { border-left: 4px solid var(--c-cyan); background: rgba(34, 211, 238, 0.05); padding: 1.8rem; border-radius: 0 20px 20px 0; margin: 1.5rem 0; }
+        
+        /* Pills & Tags */
+        .pill { display: inline-flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; padding: 6px 16px; border-radius: 30px; margin-bottom: 1.5rem; align-self: flex-start; border: 1px solid; }
+        .pill-gold { background: rgba(250, 204, 21, 0.1); border-color: var(--c-gold); color: var(--c-gold); }
+        .pill-cyan { background: rgba(34, 211, 238, 0.1); border-color: var(--c-cyan); color: var(--c-cyan); }
+        .pill-pink { background: rgba(244, 114, 182, 0.1); border-color: var(--c-pink); color: var(--c-pink); }
+        .pill-purple { background: rgba(216, 180, 254, 0.1); border-color: var(--c-purple); color: var(--c-purple); }
+        .pill-green { background: rgba(74, 222, 128, 0.1); border-color: var(--c-green); color: var(--c-green); }
+        .step-tag { background: var(--c-cyan); color: #000; padding: 4px 12px; border-radius: 6px; font-weight: 900; margin-right: 12px; font-family: 'JetBrains Mono', monospace; }
+        
+        /* Tables & Code */
+        code { font-family: 'JetBrains Mono', monospace; color: var(--c-gold); background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 8px; font-size: 0.95em; border: 1px solid rgba(250, 204, 21, 0.2); }
+        .logic-syntax { color: var(--c-pink); font-weight: bold; font-family: 'JetBrains Mono', monospace; }
+        table { width: 100%; border-collapse: collapse; background: rgba(0,0,0,0.2); border-radius: 16px; overflow: hidden; margin-top: 1rem; }
+        th { background: rgba(255,255,255,0.05); color: var(--c-cyan); padding: 20px; text-align: left; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+        td { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+        ::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+
+    <div class="slides-container">
+
+        <div class="slide active">
+            <div class="card" style="text-align: center; align-items: center; min-height: 65vh;">
+                <div class="pill pill-gold"><i class="fa-solid fa-gem"></i> Maestría Profesional</div>
+                <h1>Razonamiento Formal</h1>
+                <h2 style="justify-content: center; background: linear-gradient(90deg, var(--c-purple), var(--c-cyan)); -webkit-background-clip: text; margin-bottom: 2rem;">& Aplicaciones en Inteligencia Artificial</h2>
+                <p style="font-size: 1.2rem; max-width: 800px; font-style: italic;">"Comprendiendo las bases lógicas de la deducción, inducción y abducción para modelar el pensamiento en sistemas inteligentes."</p>
+                
+                <div style="margin-top: 2.5rem; padding: 8px 24px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; letter-spacing: 1px;">
+                    PSWE-18 • Aplicaciones de la I.A.
+                </div>
+
+                <div style="margin-top: 3rem; display: flex; gap: 60px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem; width: 100%; max-width: 800px; justify-content: center;">
+                    <div style="text-align: left;">
+                        <small style="display:block; color:var(--c-cyan); letter-spacing: 2px; font-weight: 700; margin-bottom: 5px;"><i class="fa-solid fa-chalkboard-user"></i> DOCENTE</small>
+                        <strong>Dr. J. Ignacio Borge</strong>
+                    </div>
+                    <div style="text-align: left;">
+                        <small style="display:block; color:var(--c-pink); letter-spacing: 2px; font-weight: 700; margin-bottom: 5px;"><i class="fa-solid fa-calendar-days"></i> FECHA</small>
+                        <strong>20 de Febrero, 2026</strong>
+                    </div>
+                    <div style="text-align: left;">
+                        <small style="display:block; color:var(--c-green); letter-spacing: 2px; font-weight: 700; margin-bottom: 5px;"><i class="fa-solid fa-building-columns"></i> INSTITUCIÓN</small>
+                        <strong>Universidad CENFOTEC</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <h2><i class="fa-solid fa-list-check"></i> Agenda de la Sesión</h2>
+                <div class="grid-2">
+                    <div class="concept-box">
+                        <h3 style="color: var(--c-gold); border-bottom: 1px solid rgba(250, 204, 21, 0.2); padding-bottom: 10px; margin-bottom: 20px;"><i class="fa-solid fa-hourglass-start"></i> Primera Parte: Fundamentos</h3>
+                        <p>Iniciaremos explorando la definición de razonamiento formal y cómo elimina la ambigüedad del lenguaje natural. Analizaremos profundamente la estructura de la Inferencia Deductiva y la Inferencia Inductiva, identificando cómo la IA las utiliza para Sistemas Expertos y Machine Learning.</p>
+                    </div>
+                    <div class="concept-box">
+                        <h3 style="color: var(--c-cyan); border-bottom: 1px solid rgba(34, 211, 238, 0.2); padding-bottom: 10px; margin-bottom: 20px;"><i class="fa-solid fa-laptop-code"></i> Segunda Parte: Laboratorio</h3>
+                        <p>Tras estudiar el razonamiento Abductivo y realizar talleres de clasificación, pasaremos a la fase de programación. Construiremos un motor lógico desde cero usando una sintaxis basada en Prolog para que la IA deduzca relaciones familiares complejas sin entrenamiento previo.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-pink">Warm-up (5 min)</div>
+                <h2>Activación de Conocimientos Previos</h2>
+                <div class="grid-2">
+                    <div>
+                        <p>Antes de definir los conceptos matemáticos y algorítmicos, evalúa tus propios procesos mentales. En una hoja, responde brevemente basándote en tu intuición:</p>
+                        <div class="example-box">
+                            <p><span class="step-tag">1</span> ¿Qué crees que significa "razonar" frente a simplemente "adivinar"?</p>
+                            <p><span class="step-tag">2</span> Si ves que el pasto está mojado al salir, ¿cuál es la primera causa que asume tu cerebro?</p>
+                            <p><span class="step-tag">3</span> Si todos los martes has tenido clase y hoy es martes, ¿qué nivel de certeza tienes de que habrá clase hoy?</p>
+                        </div>
+                    </div>
+                    <div style="text-align: center; align-self: center;">
+                        <i class="fa-solid fa-brain" style="font-size: 8rem; color: var(--c-pink); opacity: 0.4; filter: drop-shadow(0 0 20px var(--c-pink));"></i>
+                        <p style="margin-top: 2rem; font-style: italic; color: var(--text-dim);">No hay respuestas incorrectas. El objetivo es hacer explícito el hardware lógico que ya posees.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <h2>¿Qué es el Razonamiento Formal?</h2>
+                <div class="grid-2">
+                    <div class="concept-box">
+                        <h3>Definición Estructural</h3>
+                        <p>Razonar es procesar información para llegar a una conclusión. El <strong>razonamiento formal</strong> es aquel que sigue reglas sintácticas estrictas y universales (como el álgebra) donde la validez de la conclusión depende de la forma del argumento, no de su contenido semántico.</p>
+                    </div>
+                    <div class="concept-box">
+                        <h3>El puente hacia la IA</h3>
+                        <p>Para que una máquina pueda "pensar", necesita que el mundo se traduzca a reglas inquebrantables. El razonamiento formal permite crear IA <strong>determinística</strong> y <strong>explicable</strong>, separándose de los modelos de "caja negra" probabilísticos puros.</p>
+                    </div>
+                </div>
+                <div class="example-box">
+                    <p><strong>La lógica básica:</strong> Si "Todos los X son Y", y te confirmo que "A es X", la máquina no necesita entender qué es X o Y para asegurar matemáticamente que "A es Y".</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <h2>Los 3 Pilares de la Inferencia Lógica</h2>
+                <p>Para construir arquitecturas cognitivas completas, la Inteligencia Artificial simula tres direcciones del pensamiento humano:</p>
+                <div class="grid-3" style="margin-top: 2rem;">
+                    <div class="concept-box" style="border-top: 4px solid var(--c-green); text-align: center;">
+                        <i class="fa-solid fa-arrow-down-long" style="font-size: 2.5rem; color: var(--c-green); margin-bottom: 1rem;"></i>
+                        <h3 style="justify-content: center;">Deducción</h3>
+                        <p>De leyes universales a hechos particulares. Aporta <strong>certeza absoluta</strong> si las premisas son correctas.</p>
+                    </div>
+                    <div class="concept-box" style="border-top: 4px solid var(--c-pink); text-align: center;">
+                        <i class="fa-solid fa-arrow-up-long" style="font-size: 2.5rem; color: var(--c-pink); margin-bottom: 1rem;"></i>
+                        <h3 style="justify-content: center;">Inducción</h3>
+                        <p>De datos particulares a reglas universales. Aporta <strong>probabilidad estadística</strong> basada en patrones.</p>
+                    </div>
+                    <div class="concept-box" style="border-top: 4px solid var(--c-purple); text-align: center;">
+                        <i class="fa-solid fa-magnifying-glass" style="font-size: 2.5rem; color: var(--c-purple); margin-bottom: 1rem;"></i>
+                        <h3 style="justify-content: center;">Abducción</h3>
+                        <p>De efectos visibles a causas subyacentes. Aporta <strong>hipótesis plausibles</strong> para explicar el entorno.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-green">Tipo 1: Deducción</div>
+                <h2>Razonamiento Deductivo: El dominio de la Certeza</h2>
+                <div class="grid-2">
+                    <div>
+                        <p>La deducción no crea información "nueva" en el universo; simplemente extrae verdades que ya estaban implícitas dentro de las premisas dadas. Es un flujo <strong>Top-Down</strong>.</p>
+                        <p>Su característica fundamental es su infalibilidad: es lógicamente imposible que las premisas sean verdaderas y la conclusión sea falsa al mismo tiempo.</p>
+                    </div>
+                    <div class="example-box" style="border-color: var(--c-green);">
+                        <h3 style="color: var(--c-green);">El Silogismo Clásico</h3>
+                        <p>1. <strong>Premisa Mayor (General):</strong> Todos los seres humanos son mortales.</p>
+                        <p>2. <strong>Premisa Menor (Particular):</strong> Sócrates es un ser humano.</p>
+                        <p>3. <strong>Conclusión Garantizada:</strong> Sócrates es mortal.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <h2>Implementación de Deducción en IA</h2>
+                <div class="grid-2">
+                    <div class="concept-box">
+                        <h3 style="color: var(--c-cyan);"><i class="fa-solid fa-scale-balanced"></i> Sistemas Expertos Legales</h3>
+                        <p><strong>Regla:</strong> Si una persona tiene menos de 18 años, el contrato es nulo.</p>
+                        <p><strong>Hecho:</strong> El usuario ingresó fecha de nacimiento indicando 16 años.</p>
+                        <p><strong>Acción IA:</strong> El sistema bloquea automáticamente la firma. No hay margen probabilístico, es una ejecución determinística.</p>
+                    </div>
+                    <div class="concept-box">
+                        <h3 style="color: var(--c-cyan);"><i class="fa-solid fa-shield-halved"></i> Verificación de Software (Formal Methods)</h3>
+                        <p>La IA deductiva se utiliza para comprobar matemáticamente el código fuente de sistemas críticos (aviones, reactores). Deduce todos los estados posibles para asegurar que nunca se llegará a un error fatal (Zero Bugs Theorem).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-pink">Tipo 2: Inducción</div>
+                <h2>Razonamiento Inductivo: El dominio del Patrón</h2>
+                <div class="grid-2">
+                    <div>
+                        <p>La inducción es el razonamiento <strong>Bottom-Up</strong>. Analizamos múltiples instancias aisladas del pasado para atrevernos a generalizar una ley sobre el futuro.</p>
+                        <p>A diferencia de la deducción, aquí siempre existe el riesgo del "Cisne Negro": una sola observación contraria basta para destruir la regla universal generada.</p>
+                    </div>
+                    <div class="example-box" style="border-color: var(--c-pink);">
+                        <h3 style="color: var(--c-pink);">El Riesgo Estadístico</h3>
+                        <p><strong>Observación 1:</strong> El sol salió por el este el lunes.</p>
+                        <p><strong>Observación N:</strong> El sol ha salido por el este durante 4.500 millones de años.</p>
+                        <p><strong>Conclusión:</strong> El sol "siempre" saldrá por el este.</p>
+                        <p><small style="color: var(--text-muted);">Es extremadamente probable, pero no una certeza matemática absoluta en el futuro lejano.</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <h2>Inducción: El motor del Machine Learning</h2>
+                <div class="grid-2">
+                    <div class="concept-box">
+                        <p>Toda la revolución actual de la IA (Deep Learning, Redes Neuronales) se basa en la <strong>inducción pura</strong>.</p>
+                        <p>No le decimos a la máquina qué reglas definen un tumor en una radiografía. Le mostramos 100,000 ejemplos de tumores y el algoritmo <strong>induce</strong> la regla general, ajustando sus pesos matemáticos para encontrar el patrón.</p>
+                    </div>
+                    <div class="example-box">
+                        <h3>Inducción en la vida diaria (Sesgos)</h3>
+                        <p>Si pruebas pizza en 5 restaurantes y todas son excelentes, tu cerebro induce: "Toda la pizza es buena". Esta capacidad biológica de inducir reglas rápido es vital para la supervivencia, pero es el origen de los prejuicios si la muestra de datos es pobre.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card" style="text-align: center;">
+                <div class="pill pill-cyan">Dinámica Grupal (5 min)</div>
+                <h2>Construye tu propio sesgo inductivo</h2>
+                <p style="max-width: 800px; margin: 0 auto 2rem auto;">En parejas, analicen una situación de su vida personal o profesional donde hayan generado una regla fuerte basada en la repetición de eventos pasados.</p>
+                <div class="concept-box" style="max-width: 700px; margin: 0 auto 2rem auto;">
+                    <h3 style="color: var(--c-gold); justify-content: center;">Ejemplo de Laboratorio</h3>
+                    <p>"He compilado este código tres veces los viernes por la tarde y el servidor de producción siempre se cae. Conclusión inductiva: Desplegar los viernes rompe el servidor."</p>
+                </div>
+                <p>Compartan: ¿Cuál fue su inducción? ¿Qué pasaría si el próximo evento no cumple la regla?</p>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card" style="text-align: center; justify-content: center; background: radial-gradient(circle at 50% 50%, rgba(30, 27, 75, 0.8), rgba(2, 6, 23, 0.9));">
+                <i class="fa-solid fa-mug-hot" style="font-size: 6rem; color: var(--c-cyan); margin-bottom: 2rem; filter: drop-shadow(0 0 20px rgba(34, 211, 238, 0.5));"></i>
+                <h1 style="font-size: 5rem; letter-spacing: 5px;">PAUSA</h1>
+                <h2 style="justify-content: center; color: var(--text-main); border: none;">Cooldown de 10 Minutos</h2>
+                <p style="font-size: 1.2rem;">Liberen memoria RAM. Estírense, tomen agua y preparen el compilador mental para la fase de programación lógica.</p>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-purple">Tipo 3: Abducción</div>
+                <h2>Razonamiento Abductivo: La Hipótesis Causal</h2>
+                <div class="grid-2">
+                    <div>
+                        <p>Es el razonamiento inverso: observamos un resultado sorprendente e intentamos "adivinar" hacia atrás cuál fue la causa más probable que lo generó.</p>
+                        <p>El núcleo de la abducción es la <strong>Navaja de Ockham</strong> (principio de parsimonia): ante múltiples explicaciones posibles, la más simple suele ser la correcta.</p>
+                    </div>
+                    <div class="example-box" style="border-color: var(--c-purple);">
+                        <h3 style="color: var(--c-purple);">El Caso del Efecto</h3>
+                        <p><strong>Regla conocida:</strong> Si llueve, las calles se mojan.</p>
+                        <p><strong>Observación:</strong> Veo por la ventana que la calle está empapada.</p>
+                        <p><strong>Abducción:</strong> "Llovió durante la noche". (Pudo ser un camión de limpieza o una tubería rota, pero la lluvia es la hipótesis más económica).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <h2>Aplicaciones Diagnósticas en IA</h2>
+                <div class="grid-2">
+                    <div class="concept-box">
+                        <h3 style="color: var(--c-cyan);"><i class="fa-solid fa-stethoscope"></i> Medicina y Sistemas Expertos (MYCIN)</h3>
+                        <p>La IA abductiva se alimenta con un listado de síntomas actuales del paciente (fiebre alta, dolor muscular, tos). El motor busca en su base de datos médicas y abduce la enfermedad que cubre óptimamente esa matriz de síntomas (ej. Influenza A).</p>
+                    </div>
+                    <div class="concept-box">
+                        <h3 style="color: var(--c-cyan);"><i class="fa-solid fa-bug"></i> Análisis de Causa Raíz (Root Cause)</h3>
+                        <p>En operaciones de TI (AIOps), si miles de usuarios reportan error de login simultáneamente, la IA abduce que no son errores aislados de contraseña, sino que el servidor de autenticación de la base de datos central ha fallado.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <h2>Matriz Resumen de Inferencia Lógica</h2>
+                <p>Consolidemos cómo cada método procesa los mismos componentes (Regla, Caso y Resultado):</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Método de Razonamiento</th>
+                            <th>Premisa de Partida</th>
+                            <th>Conclusión Obtenida</th>
+                            <th>Nivel de Confianza</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="color:var(--c-green); font-weight: bold; font-size: 1.2rem;"><i class="fa-solid fa-arrow-down"></i> Deducción</td>
+                            <td>Tengo la Regla y el Caso.</td>
+                            <td>Calculo el Resultado.</td>
+                            <td><strong>100%</strong> (Matemático)</td>
+                        </tr>
+                        <tr>
+                            <td style="color:var(--c-pink); font-weight: bold; font-size: 1.2rem;"><i class="fa-solid fa-arrow-up"></i> Inducción</td>
+                            <td>Tengo el Caso y el Resultado.</td>
+                            <td>Infiero la Regla General.</td>
+                            <td><strong>Probable</strong> (Estadístico)</td>
+                        </tr>
+                        <tr>
+                            <td style="color:var(--c-purple); font-weight: bold; font-size: 1.2rem;"><i class="fa-solid fa-magnifying-glass"></i> Abducción</td>
+                            <td>Tengo la Regla y el Resultado.</td>
+                            <td>Deduzco el Caso (Causa).</td>
+                            <td><strong>Hipótesis</strong> (Plausible)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-gold">Workshop Grupal (15 min)</div>
+                <h2>Auditoría Lógica: ¿Qué tipo de razonamiento es?</h2>
+                <p>En grupos de tres, lean cuidadosamente las siguientes premisas y clasifiquen el proceso lógico que se está ejecutando (Deducción, Inducción o Abducción):</p>
+                <div class="grid-3">
+                    <div class="concept-box">
+                        <h3 style="color: var(--text-main);">Caso Clínico 1</h3>
+                        <p>Sabemos que todos los metales conocidos se dilatan al aplicarles calor extremo. El tungsteno es un tipo de metal. Concluimos firmemente que el tungsteno se dilatará con calor.</p>
+                    </div>
+                    <div class="concept-box">
+                        <h3 style="color: var(--text-main);">Caso Clínico 2</h3>
+                        <p>El biólogo ha analizado 5,000 cuervos en distintos continentes y todos tienen plumaje negro. Presenta una tesis afirmando que la genética de la especie dicta que todos los cuervos son negros.</p>
+                    </div>
+                    <div class="concept-box">
+                        <h3 style="color: var(--text-main);">Caso Clínico 3</h3>
+                        <p>Al encender tu auto en la mañana, el motor no hace ruido y las luces del tablero parpadean débilmente. Llamas al mecánico y le dices: "Creo que la batería murió en la noche".</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <h2>Auditoría Lógica (Continuación del Workshop)</h2>
+                <div class="grid-3">
+                    <div class="concept-box">
+                        <h3 style="color: var(--text-main);">Caso Clínico 4</h3>
+                        <p>Por axioma matemático, todo número terminado en cero es divisible entre dos. El número 1,040 termina en cero. Por lo tanto, afirmo que 1,040 es divisible entre dos sin residuo.</p>
+                    </div>
+                    <div class="concept-box">
+                        <h3 style="color: var(--text-main);">Caso Clínico 5</h3>
+                        <p>La universidad tiene un registro histórico indicando que el 92% de los graduados en IA consiguen empleo en 3 meses. Ana se acaba de graduar. Asumimos que Ana se empleará rápidamente.</p>
+                    </div>
+                    <div class="concept-box">
+                        <h3 style="color: var(--text-main);">Caso Clínico 6</h3>
+                        <p>El sistema de seguridad de la empresa envía una alerta de "Tasa de inicio de sesión fallida x1000 por segundo" desde IPs rusas. El ingeniero de seguridad reporta: "Estamos bajo un ataque de fuerza bruta".</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <h2>Resolución y Validación de Casos</h2>
+                <div class="grid-2">
+                    <div class="concept-box">
+                        <h3 style="color: var(--c-gold);">Primera Tanda</h3>
+                        <ul style="list-style: none;">
+                            <li style="margin-bottom: 15px;"><i class="fa-solid fa-circle-check" style="color:var(--c-green); margin-right: 10px;"></i><strong>Caso 1: Deducción.</strong> Aplica una ley física universal hacia un elemento específico.</li>
+                            <li style="margin-bottom: 15px;"><i class="fa-solid fa-circle-check" style="color:var(--c-pink); margin-right: 10px;"></i><strong>Caso 2: Inducción.</strong> Genera una regla absoluta ("todos") a partir de observaciones finitas ("5,000").</li>
+                            <li style="margin-bottom: 15px;"><i class="fa-solid fa-circle-check" style="color:var(--c-purple); margin-right: 10px;"></i><strong>Caso 3: Abducción.</strong> Selecciona la causa más plausible (batería) para un efecto visible (no arranca).</li>
+                        </ul>
+                    </div>
+                    <div class="concept-box">
+                        <h3 style="color: var(--c-gold);">Segunda Tanda</h3>
+                        <ul style="list-style: none;">
+                            <li style="margin-bottom: 15px;"><i class="fa-solid fa-circle-check" style="color:var(--c-green); margin-right: 10px;"></i><strong>Caso 4: Deducción.</strong> Una verdad axiomática aplicada a un valor cerrado.</li>
+                            <li style="margin-bottom: 15px;"><i class="fa-solid fa-circle-check" style="color:var(--c-pink); margin-right: 10px;"></i><strong>Caso 5: Inducción.</strong> Proyección probabilística basada en datos estadísticos del pasado.</li>
+                            <li style="margin-bottom: 15px;"><i class="fa-solid fa-circle-check" style="color:var(--c-purple); margin-right: 10px;"></i><strong>Caso 6: Abducción.</strong> Inferencia causal (ataque) para explicar el síntoma inusual (logs masivos).</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card" style="text-align: center;">
+                <i class="fa-solid fa-code-branch" style="font-size: 5rem; color: var(--c-purple); margin-bottom: 1rem;"></i>
+                <h1>Laboratorio: El Motor Lógico Familiar</h1>
+                <p style="font-size: 1.3rem; max-width: 900px; margin: 0 auto 2rem auto;">Dejaremos atrás la teoría para implementar nuestro propio agente de <strong>Inferencia Deductiva</strong> basado en la sintaxis de programación lógica Prolog.</p>
+                <div class="grid-2" style="text-align: left;">
+                    <div class="concept-box" style="border-top: 4px solid var(--c-cyan);">
+                        <h3 style="color: var(--c-cyan);">Objetivo del Laboratorio</h3>
+                        <p>En programación tradicional, le decimos al computador exactamente CÓMO hacer las cosas. En Programación Lógica, solo definimos "QUÉ es verdad". El objetivo es lograr que la IA <strong>descubra parentescos ocultos</strong> cruzando datos atómicos de forma deductiva.</p>
+                    </div>
+                    <div class="concept-box" style="border-top: 4px solid var(--c-cyan);">
+                        <h3 style="color: var(--c-cyan);">Arquitectura del Sistema</h3>
+                        <p>Construiremos dos módulos: <br>1. <strong>Base de Conocimientos (Hechos):</strong> La data estática del mundo.<br>2. <strong>Motor de Reglas (Rules):</strong> Las fórmulas matemáticas condicionales que evalúan la data.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <h2>Paso 1: Declaración de Verdades Atómicas (Facts)</h2>
+                <p>Un <strong>Hecho</strong> es una verdad incuestionable ingresada manualmente. En Prolog, la sintaxis exige declarar primero la relación y luego los argumentos entre paréntesis: <code>relacion(sujeto, objeto).</code></p>
+                <div class="grid-2">
+                    <div class="concept-box" style="font-family: 'JetBrains Mono'; background: rgba(0,0,0,0.5); border-left: 6px solid var(--c-gold);">
+                        <span style="color: var(--c-cyan);">padre</span>(juan, pedro). <br>
+                        <span style="color: var(--c-cyan);">padre</span>(juan, maria). <br>
+                        <span style="color: var(--c-cyan);">madre</span>(ana, pedro). <br>
+                        <span style="color: var(--c-cyan);">madre</span>(ana, maria). <br>
+                        <span style="color: var(--c-pink);">hombre</span>(juan). <span style="color: var(--c-pink);">hombre</span>(pedro). <br>
+                        <span style="color: var(--c-pink);">mujer</span>(ana). <span style="color: var(--c-pink);">mujer</span>(maria).
+                    </div>
+                    <div class="example-box">
+                        <h3>Manual de Sintaxis Estricta:</h3>
+                        <p><span class="step-tag">1</span> <code>padre(juan, pedro).</code> le indica al compilador lógico que Juan ejerce la relación "padre" sobre Pedro.</p>
+                        <p><span class="step-tag">2</span> <code>hombre(juan).</code> es una propiedad unitaria (Juan pertenece al conjunto hombre).</p>
+                        <p><i class="fa-solid fa-triangle-exclamation" style="color:var(--c-pink);"></i> <strong>REGLA DE ORO:</strong> Toda declaración debe cerrarse con un punto (.). Si omites el punto, el compilador crasheará esperando más datos.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <h2>Paso 2: Ingeniería del Motor de Inferencia (Rules)</h2>
+                <p>Las <strong>Reglas</strong> son las macros deductivas de nuestra IA. Su arquitectura fundamental es un bloque condicional: <strong>"Se cumplirá la afirmación A, estrictamente SI se cumplen las variables B y C"</strong>.</p>
+                <div class="concept-box" style="font-family: 'JetBrains Mono'; background: #000; padding: 2rem; margin-bottom: 2rem; border: 1px solid var(--c-purple);">
+                    <p style="font-size: 1.5rem;"><span class="logic-syntax" style="color: var(--c-green);">hijo(X, Y)</span> <span style="color: #fff;">:-</span> <span class="logic-syntax" style="color: var(--c-cyan);">padre(Y, X)</span><span style="color: #fff;">,</span> <span class="logic-syntax" style="color: var(--c-pink);">hombre(X)</span><span style="color: #fff;">.</span></p>
+                </div>
+                <div class="grid-2">
+                    <div class="example-box">
+                        <h3>Diccionario de Operadores</h3>
+                        <p><code>:-</code> Se traduce literalmente como el condicional lógico <strong>"SI"</strong>.</p>
+                        <p><code>,</code> Representa la conjunción lógica <strong>"AND / Y"</strong>. Obliga a que ambas partes sean verdaderas.</p>
+                        <p><code>X, Y</code> Son <strong>Variables Genéricas</strong> (Cualquier elemento en mayúscula es un comodín que la IA buscará rellenar).</p>
+                    </div>
+                    <div class="example-box" style="border-left-color: var(--c-purple);">
+                        <h3>Traducción al Lenguaje Natural</h3>
+                        <p>"El sistema declarará que un individuo <span class="logic-syntax">X</span> es hijo de una entidad <span class="logic-syntax">Y</span>, <strong>solamente SI</strong> el sistema corrobora en la base de datos que <span class="logic-syntax">Y</span> es el padre de <span class="logic-syntax">X</span> <strong>Y AL MISMO TIEMPO</strong> verifica que <span class="logic-syntax">X</span> está clasificado como hombre".</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-cyan">Ejecución del Algoritmo (25 min)</div>
+                <h2>Misiones: Compilando en Papel</h2>
+                <p>Equipos, actúen como la CPU. Usando la matriz de Hechos de la Slide 19 y la sintaxis de Reglas, procesen estas consultas simulando el motor de inferencia:</p>
+                <div class="grid-2">
+                    <div class="concept-box" style="border: 2px dashed var(--c-cyan);">
+                        <h3 style="color: var(--c-cyan);"><span class="step-tag">Misión 1</span> Resolver la Incógnita</h3>
+                        <p>Se lanza el query: <code>?- hijo(X, juan).</code></p>
+                        <p><strong>Instrucciones:</strong> Revisa línea por línea la matriz de hechos. ¿Qué entidad cumple ambas condiciones de la regla <code>hijo</code> respecto a 'juan'? Escriban el valor exacto de la variable X.</p>
+                    </div>
+                    <div class="concept-box" style="border: 2px dashed var(--c-pink);">
+                        <h3 style="color: var(--c-pink);"><span class="step-tag">Misión 2</span> Validar Estado Booleano</h3>
+                        <p>Se lanza el query de seguridad: <code>?- hermano(pedro, maria).</code></p>
+                        <p><strong>Instrucciones:</strong> Sabiendo que dos nodos son hermanos si comparten el mismo padre 'Z'. Revisen la base de datos: ¿Tienen el mismo padre? ¿Son entidades diferentes? Respondan True o False.</p>
+                    </div>
+                </div>
+                <div class="concept-box" style="margin-top: 2rem; background: rgba(250, 204, 21, 0.05); border-top: 5px solid var(--c-gold);">
+                    <h3 style="color: var(--c-gold);"><span class="step-tag" style="background: var(--c-gold);">Misión Maestra</span> Arquitectura de Reglas (Creación del Abuelo)</h3>
+                    <p>Hagamos un update a la base de datos introduciendo: <code>padre(luis, juan).</code></p>
+                    <p><strong>El Reto:</strong> Tienen que diseñar desde cero la regla matemática para <code>abuelo(X, Y)</code> utilizando la sintaxis Prolog (<code>:-</code> y <code>,</code>). <br> <em>Lógica Humana de ayuda: "X es el abuelo de Y, estrictamente SI se cumple que X es padre de un intermediario (Z), y ese intermediario (Z) es padre de Y".</em> ¡Escriban la regla!</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card">
+                <h2>Debugger: Output del Motor Lógico</h2>
+                <p>Verifiquemos si los cálculos de sus equipos coinciden con el compilador de inferencia:</p>
+                <div class="grid-2">
+                    <div class="example-box">
+                        <h3 style="color: var(--c-cyan);">Output Misión 1 (Hijo)</h3>
+                        <p>El query <code>?- hijo(X, juan).</code> devuelve:</p>
+                        <p style="font-size: 1.5rem; font-family: 'JetBrains Mono'; color: var(--c-green);">X = pedro.</p>
+                        <p><small>La IA rastreó <code>padre(juan, pedro)</code> y confirmó <code>hombre(pedro)</code>, satisfaciendo el AND (,).</small></p>
+                    </div>
+                    <div class="example-box" style="border-color: var(--c-pink);">
+                        <h3 style="color: var(--c-pink);">Output Misión 2 (Hermanos)</h3>
+                        <p>El query <code>?- hermano(pedro, maria).</code> devuelve:</p>
+                        <p style="font-size: 1.5rem; font-family: 'JetBrains Mono'; color: var(--c-green);">True.</p>
+                        <p><small>La IA asignó Z=juan y validó que padre(juan, pedro) y padre(juan, maria) coexisten.</small></p>
+                    </div>
+                </div>
+                <div class="concept-box" style="margin-top: 2rem; text-align: center; border-color: var(--c-gold);">
+                    <h3 style="color: var(--c-gold);">Solución Misión Maestra (Regla Abuelo)</h3>
+                    <div style="background: #000; padding: 1.5rem; border-radius: 12px; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.2);">
+                        <code style="font-size: 1.8rem; background: none; border: none;"><span class="logic-syntax" style="color: var(--c-green);">abuelo(X, Y)</span> <span style="color: #fff;">:-</span> <span class="logic-syntax" style="color: var(--c-cyan);">padre(X, Z)</span><span style="color: #fff;">,</span> <span class="logic-syntax" style="color: var(--c-cyan);">padre(Z, Y)</span><span style="color: #fff;">.</span></code>
+                    </div>
+                    <p style="margin-top: 1.5rem; font-size: 1.1rem;"><strong>Lección Principal:</strong> La inteligencia del sistema recae en poder conectar datos (X -> Z) y (Z -> Y) para descubrir una relación de segundo grado (X -> Y) <strong>completamente invisible</strong> en la lista original de hechos.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="card" style="text-align: center; justify-content: center;">
+                <h2>Compilación Final de Conceptos</h2>
+                <div class="grid-3">
+                    <div class="concept-box" style="border-top: 4px solid var(--c-green);">
+                        <h3 style="color: var(--c-green);"><i class="fa-solid fa-lock"></i> Deducción</h3>
+                        <p>Sistemas basados en reglas estrictas. Permite crear IA 100% auditable y determinística. No hay margen de error probabilístico.</p>
+                    </div>
+                    <div class="concept-box" style="border-top: 4px solid var(--c-pink);">
+                        <h3 style="color: var(--c-pink);"><i class="fa-solid fa-chart-line"></i> Inducción</h3>
+                        <p>El corazón de las Redes Neuronales. Extrae reglas estadísticas asumiendo el riesgo de equivocarse ante datos atípicos.</p>
+                    </div>
+                    <div class="concept-box" style="border-top: 4px solid var(--c-purple);">
+                        <h3 style="color: var(--c-purple);"><i class="fa-solid fa-stethoscope"></i> Abducción</h3>
+                        <p>El núcleo de la IA de diagnóstico. Navega hacia atrás desde el efecto hasta la hipótesis causal más económica.</p>
+                    </div>
+                </div>
+                <div style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <h3 style="font-family: 'Lato'; font-size: 2rem; font-style: italic; color: var(--text-main); font-weight: 300;">"Entender la lógica formal no es aprender a programar; es aprender a estructurar la esencia misma del pensamiento computacional."</h3>
+                    <p style="color: var(--c-gold); font-weight: bold; margin-top: 1rem; text-transform: uppercase; letter-spacing: 3px;">Fin de la Sesión</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="slideCounter" class="slide-counter">1 / 23</div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const progressBar = document.getElementById('progressBar');
+        const slideCounter = document.getElementById('slideCounter');
+        let currentSlide = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle('active', index === currentSlide);
+            });
+            const progress = ((currentSlide + 1) / slides.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            slideCounter.textContent = `${currentSlide + 1} / ${slides.length}`;
+        }
+
+        // Sistema experto de navegación de diapositivas
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { 
+                if (currentSlide < slides.length - 1) { currentSlide++; updateSlides(); } 
+            }
+            if (e.key === 'ArrowLeft') { 
+                if (currentSlide > 0) { currentSlide--; updateSlides(); } 
+            }
+        });
+
+        // Init
+        updateSlides();
+    </script>
+</body>
+</html>
+
