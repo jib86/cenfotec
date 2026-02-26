@@ -1,0 +1,2272 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Introducción a la Minería de Datos - Curso Completo</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Lato:wght@300;400;700;900&amp;family=Fira+Code:wght@400;500&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <!-- MathJax -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script async="" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <style>
+        :root {
+            --bg-gradient: radial-gradient(circle at 50% 120%, #1e293b, #0f172a);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-highlight: rgba(255, 255, 255, 0.05);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-primary: #38bdf8;
+            --accent-secondary: #c084fc;
+            --accent-glow: rgba(56, 189, 248, 0.5);
+            --code-bg: #1e1e2e;
+
+            /* Ported Colors */
+            --c-cyan: #22d3ee;
+            --c-pink: #f472b6;
+            --c-green: #4ade80;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: #0f172a;
+            background-image:
+                linear-gradient(to bottom, transparent, #0f172a),
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .slides-container {
+            height: 100%;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            background: radial-gradient(circle at 10% 10%, rgba(56, 189, 248, 0.15), transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(192, 132, 252, 0.15), transparent 40%);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            opacity: 0;
+            transform: scale(0.95) translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+            filter: blur(10px);
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            pointer-events: all;
+            z-index: 10;
+            filter: blur(0);
+        }
+
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 32px;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 1320px;
+            max-height: 95vh;
+            overflow-y: auto;
+            box-shadow:
+                0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                0 2px 4px -1px rgba(0, 0, 0, 0.06),
+                0 20px 25px -5px rgba(0, 0, 0, 0.2),
+                inset 0 0 0 1px var(--glass-highlight);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Scrollbar elegant */
+        .card::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .card::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .card::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .card::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            font-family: 'Lato', sans-serif;
+            font-weight: 900;
+            font-size: 5rem;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -2px;
+            text-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        h2 {
+            font-family: 'Lato', sans-serif;
+            font-weight: 800;
+            font-size: 2.4rem;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            display: inline-block;
+            background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h3 {
+            font-size: 1.6rem;
+            color: var(--text-main);
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        p,
+        li {
+            font-size: 1.0rem;
+            line-height: 1.5;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        strong {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        ul {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        li::marker {
+            color: var(--accent-primary);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .concept-box {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            transition: transform 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+        }
+
+        .concept-box:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--accent-primary);
+        }
+
+        /* Interactive Blocks */
+        .interactive-block {
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .interactive-block::after {
+            content: 'Espacio para expandir';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 8px;
+            background: var(--accent-primary);
+            color: #000;
+            font-size: 0.8rem;
+            text-align: center;
+            font-weight: 700;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .interactive-block:hover::after {
+            transform: translateY(0);
+        }
+
+        .interactive-block:hover {
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+            border-color: var(--accent-primary);
+            background: rgba(56, 189, 248, 0.1);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: #1e293b;
+            border: 1px solid var(--accent-primary);
+            border-radius: 24px;
+            padding: 1.8rem;
+            max-width: 770px;
+            width: 90%;
+            position: relative;
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            background-image: radial-gradient(circle at top right, rgba(56, 189, 248, 0.1), transparent);
+        }
+
+        .modal-overlay.open .modal-content {
+            transform: scale(1);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.0rem;
+            transition: background 0.2s;
+        }
+
+        .close-modal:hover {
+            background: #ef4444;
+        }
+
+        .modal-title {
+            font-family: 'Lato', sans-serif;
+            font-size: 2.0rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: var(--accent-primary);
+        }
+
+        .modal-body {
+            font-size: 1.0rem;
+            line-height: 1.7;
+            color: var(--text-main);
+        }
+
+        pre {
+            background: var(--code-bg);
+            padding: 1.5rem;
+            border-radius: 16px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            overflow-x: auto;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.3);
+            margin: 1.5rem 0;
+        }
+
+        .footer-nav {
+            position: fixed;
+            bottom: 25px;
+            right: 35px;
+            z-index: 100;
+        }
+
+        .slide-counter {
+            font-family: 'Fira Code', monospace;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 1.0rem;
+            letter-spacing: 2px;
+            font-weight: 300;
+        }
+
+        /* Bento Grid Styles */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            height: 100%;
+        }
+
+        .card-bento {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .card-bento:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--accent-primary);
+            transform: translateY(-3px);
+        }
+
+        .module-number {
+            font-size: 3rem;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.05);
+            position: absolute;
+            top: -5px;
+            right: 0px;
+            font-family: 'Lato', sans-serif;
+            line-height: 1;
+        }
+
+
+
+        /* DIKW Styles */
+        .dikw-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 15px 30px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            width: var(--w);
+            border-left: 4px solid var(--c);
+        }
+
+        .reveal-item {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .reveal-item.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #progressBar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            width: 0%;
+            transition: width 0.3s ease;
+            z-index: 200;
+            box-shadow: 0 0 10px var(--accent-primary);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 3rem;
+            }
+
+            h2 {
+                font-size: 2rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    <div class="slides-container">
+        <!-- SLIDE 1: Regresión Múltiple -->
+        <!-- SLIDE 2 (Originalmente la 3 en la foto): Regularización L1 y L2 -->
+        <!-- SLIDE 3 (Originalmente la 4 en la foto): Criterios y Métricas -->
+        <!-- SLIDE 5: Laboratorio Weka -->
+        <!-- SLIDE 4: Introducción a Weka -->
+        <div class="slide active">
+            <div class="card" style="text-align: center; justify-content: center; height: 60vh;">
+                <p
+                    style="color: var(--accent-primary); letter-spacing: 2px; text-transform: uppercase; font-size: 0.9rem; font-weight: 700;">
+                    Ciencia de Datos &amp; Analytics</p>
+                <h1>Introducción a la<br />Minería de Datos</h1>
+                <p style="font-size: 1.0rem; color: var(--text-muted);">Transformando datos crudos en decisiones
+                    estratégicas.</p>
+                <div
+                    style="margin-top: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; text-align: left; width: 100%; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px;">
+                    <!-- Col 1 -->
+                    <div style="display: flex; gap: 10px; align-items: flex-start;">
+                        <div
+                            style="background: rgba(6,182,212,0.1); padding: 12px; border-radius: 8px; color: var(--c-cyan);">
+                            <i class="fa-solid fa-user-tie"></i>
+                        </div>
+                        <div>
+                            <h4
+                                style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: #64748b; margin: 0 0 5px 0; font-weight: 600;">
+                                Profesor</h4>
+                            <p style="font-size: 1.0rem; color: #fff; margin: 0;">Dr. J. Ignacio Borge</p>
+                            <p style="font-size: 0.9rem; color: var(--c-cyan); margin: 2px 0 0 0; font-style: italic;">
+                                Científico computacional</p>
+                        </div>
+                    </div>
+                    <!-- Col 2 -->
+                    <div style="display: flex; gap: 10px; align-items: flex-start;">
+                        <div
+                            style="background: rgba(236,72,153,0.1); padding: 12px; border-radius: 8px; color: var(--c-pink);">
+                            <i class="fa-regular fa-calendar-check"></i>
+                        </div>
+                        <div>
+                            <h4
+                                style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: #64748b; margin: 0 0 5px 0; font-weight: 600;">
+                                Fecha</h4>
+                            <p style="font-size: 1.0rem; color: #fff; margin: 0;">Jueves 26 de Febrero</p>
+                            <p style="font-size: 0.9rem; color: var(--text-muted); margin: 2px 0 0 0;">2026</p>
+                        </div>
+                    </div>
+                    <!-- Col 3 -->
+                    <div style="display: flex; gap: 10px; align-items: flex-start;">
+                        <div
+                            style="background: rgba(74,222,128,0.1); padding: 12px; border-radius: 8px; color: var(--c-green);">
+                            <i class="fa-solid fa-building-columns"></i>
+                        </div>
+                        <div>
+                            <h4
+                                style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: #64748b; margin: 0 0 5px 0; font-weight: 600;">
+                                Institución</h4>
+                            <p style="font-size: 1.0rem; color: #fff; margin: 0;">Universidad CENFOTEC</p>
+                            <p style="font-size: 0.9rem; color: var(--text-muted); margin: 2px 0 0 0;">Escuela de
+                                Sistemas Inteligente</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="slide index-slide">
+            <div class="card" style="padding: 1.5rem; max-width: 1210px;">
+                <h2 style="font-size: 2.0rem; margin-bottom: 10px; text-align: center;">Hoja de Ruta de la Sesión</h2>
+                <div class="simple-terms-box"
+                    style="background: rgba(255, 255, 255, 0.05); border-left: 3px solid #fbbf24; padding: 1.2rem 1.5rem; border-radius: 0 8px 8px 0; margin-bottom: 8px; display: flex; align-items: flex-start; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 85%; margin-left: auto; margin-right: auto;">
+                    <i class="fa-regular fa-map" style="color: #fbbf24; font-size: 1.0rem; margin-top: 2px;"></i>
+                    <p style="margin: 0; font-size: 1.0rem; color: #e2e8f0; line-height: 1.4; font-style: italic;">
+                        <strong style="color: #fbbf24; font-style: normal; margin-right: 5px;">En palabras
+                            sencillas:</strong> El viaje analítico que haremos hoy engloba 5 paradas clave. Empezaremos
+                        construyendo bases con regresión, exploraremos agrupamientos y terminaremos asegurando que todos
+                        nuestros modelos funcionen correctamente.
+                    </p>
+                </div>
+                <div class="grid-2" style="gap: 12px;">
+                    <!-- Parada 1: Regresión -->
+                    <div class="concept-box" onmouseout="this.style.transform='translateY(0)'"
+                        onmouseover="this.style.transform='translateY(-5px)'"
+                        style="padding: 1.5rem; border-left: 4px solid #f87171; background: rgba(248, 113, 113, 0.05); transition: transform 0.3s ease; cursor: default;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                            <div
+                                style="background: #f87171; color: #0f172a; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                1</div>
+                            <h3 style="margin: 0; color: #f87171; font-size: 0.95rem;">Regresión</h3>
+                        </div>
+                        <p style="margin: 0; color: #cbd5e1; font-size: 0.95rem; line-height: 1.4;">Modelado predictivo
+                            continuo y regularización matemática (Ridge/Lasso).</p>
+                    </div>
+                    <!-- Parada 2: Clasificación -->
+                    <div class="concept-box" onmouseout="this.style.transform='translateY(0)'"
+                        onmouseover="this.style.transform='translateY(-5px)'"
+                        style="padding: 1.5rem; border-left: 4px solid #38bdf8; background: rgba(56, 189, 248, 0.05); transition: transform 0.3s ease; cursor: default;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                            <div
+                                style="background: #38bdf8; color: #0f172a; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                2</div>
+                            <h3 style="margin: 0; color: #38bdf8; font-size: 0.95rem;">Clasificación</h3>
+                        </div>
+                        <p style="margin: 0; color: #cbd5e1; font-size: 0.95rem; line-height: 1.4;">Predicción de
+                            categorías usando modelos lineales (Logística) y no lineales (Ensembles).</p>
+                    </div>
+                    <!-- Parada 3: Clustering -->
+                    <div class="concept-box" onmouseout="this.style.transform='translateY(0)'"
+                        onmouseover="this.style.transform='translateY(-5px)'"
+                        style="padding: 1.5rem; border-left: 4px solid #10b981; background: rgba(16, 185, 129, 0.05); transition: transform 0.3s ease; cursor: default;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                            <div
+                                style="background: #10b981; color: #0f172a; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                3</div>
+                            <h3 style="margin: 0; color: #10b981; font-size: 0.95rem;">Clustering</h3>
+                        </div>
+                        <p style="margin: 0; color: #cbd5e1; font-size: 0.95rem; line-height: 1.4;">Descubrimiento
+                            estructurado no supervisado (K-Means / DBSCAN).</p>
+                    </div>
+                    <!-- Parada 4: Reglas de Asociación -->
+                    <div class="concept-box" onmouseout="this.style.transform='translateY(0)'"
+                        onmouseover="this.style.transform='translateY(-5px)'"
+                        style="padding: 1.5rem; border-left: 4px solid #a78bfa; background: rgba(167, 139, 250, 0.05); transition: transform 0.3s ease; cursor: default;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                            <div
+                                style="background: #a78bfa; color: #0f172a; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                4</div>
+                            <h3 style="margin: 0; color: #a78bfa; font-size: 0.95rem;">Asociación</h3>
+                        </div>
+                        <p style="margin: 0; color: #cbd5e1; font-size: 0.95rem; line-height: 1.4;">Minería de
+                            transacciones frecuentes y búsqueda espacial de patrones.</p>
+                    </div>
+                </div>
+                <!-- Parada 5: Validación (Centro) -->
+                <div class="concept-box" onmouseout="this.style.transform='translateY(0)'"
+                    onmouseover="this.style.transform='translateY(-5px)'"
+                    style="padding: 1.5rem; border: 2px dashed #facc15; background: rgba(250, 204, 21, 0.05); max-width: 660px; margin: 20px auto 0 auto; text-align: center; transition: transform 0.3s ease; cursor: default;">
+                    <div
+                        style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 5px;">
+                        <i class="fa-solid fa-shield-halved" style="color: #facc15; font-size: 1.0rem;"></i>
+                        <h3 style="margin: 0; color: #facc15; font-size: 0.95rem;">+ Validación y Seguridad</h3>
+                    </div>
+                    <p style="margin: 0; color: #cbd5e1; font-size: 0.95rem; line-height: 1.5;">Estándares de
+                        Cross-Validation y prevención de Data Leakage (Fuga de Datos) transversal a todos los modelos.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="slide">
+            <div class="card">
+                <h2>Regresión Múltiple: Mínimos Cuadrados Ordinarios (OLS)</h2>
+                <div class="simple-terms-box"
+                    style="background: rgba(255, 255, 255, 0.05); border-left: 3px solid #fbbf24; padding: 1.2rem 1.5rem; border-radius: 0 8px 8px 0; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <i class="fa-regular fa-lightbulb" style="color: #fbbf24; font-size: 1.0rem; margin-top: 2px;"></i>
+                    <p style="margin: 0; font-size: 1.0rem; color: #e2e8f0; line-height: 1.4; font-style: italic;">
+                        <strong style="color: #fbbf24; font-style: normal; margin-right: 5px;">En palabras
+                            sencillas:</strong> Intentamos predecir un valor continuo (como el precio de una casa)
+                        sumando el efecto de varias características (como el tamaño, número de cuartos, etc.).
+                    </p>
+                </div>
+                <div class="grid-2">
+                    <!-- Columna Izquierda: Conceptos Clave -->
+                    <div>
+                        <div class="concept-box" style="margin-bottom: 10px;">
+                            <h3 style="margin-top: 0; color: var(--accent-primary);">Objetivo</h3>
+                            <p>Modelar la relación lineal entre un vector de características \(X\) y una variable
+                                continua objetivo \(Y\).</p>
+                        </div>
+                        <div class="concept-box" style="margin-bottom: 10px;">
+                            <h3 style="margin-top: 0; color: var(--accent-primary);">Formulación del Modelo</h3>
+                            <div style="font-size: 1.0rem; text-align: center; margin: 15px 0; color: #fff;">
+                                \(Y = X\beta + \epsilon\)
+                            </div>
+                            <p style="font-size: 1rem;">Donde \(\beta\) es el vector de coeficientes y \(\epsilon\) es
+                                el error irreducible asumiendo \(\epsilon \sim \mathcal{N}(0, \sigma^2)\).</p>
+                        </div>
+                    </div>
+                    <!-- Columna Derecha: Estimación y Solución -->
+                    <div>
+                        <div class="concept-box" style="margin-bottom: 10px; border-color: var(--accent-secondary);">
+                            <h3 style="margin-top: 0; color: var(--accent-secondary);">Estimador OLS</h3>
+                            <p>Minimiza la suma de los residuos al cuadrado:</p>
+                            <div style="font-size: 1.0rem; text-align: center; margin: 15px 0; color: #fff;">
+                                \(||Y - X\beta||^2\)
+                            </div>
+                        </div>
+                        <div class="concept-box" style="background: rgba(167, 139, 250, 0.05);">
+                            <h3 style="margin-top: 0; color: var(--accent-secondary);">Solución Analítica (Ecuación
+                                Normal)</h3>
+                            <div
+                                style="font-size: 1.0rem; text-align: center; margin: 15px 0; color: #fff; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                                \(\hat{\beta}_{OLS} = (X^T X)^{-1} X^T Y\)
+                            </div>
+                            <div
+                                style="background: rgba(244, 63, 94, 0.1); border-left: 3px solid #f43f5e; padding: 10px; margin-top: 8px; border-radius: 0 8px 8px 0;">
+                                <strong style="color: #f43f5e; font-size: 0.9rem;">Nota Computacional:</strong>
+                                <p style="margin: 5px 0 0 0; font-size: 0.95rem; color: #cbd5e1;">La inversión matricial
+                                    tiene complejidad \(O(p^3)\), limitando su uso en espacios de alta dimensionalidad.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="slide">
+            <div class="card" style="padding: 1.8rem;">
+                <h2 style="font-size: 2.0rem; margin-bottom: 10px;">1.1 Regularización L1 y L2 (Ridge y Lasso)</h2>
+                <div class="simple-terms-box"
+                    style="background: rgba(255, 255, 255, 0.05); border-left: 3px solid #fbbf24; padding: 1.2rem 1.5rem; border-radius: 0 8px 8px 0; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <i class="fa-regular fa-lightbulb" style="color: #fbbf24; font-size: 1.0rem; margin-top: 2px;"></i>
+                    <p style="margin: 0; font-size: 1.0rem; color: #e2e8f0; line-height: 1.4; font-style: italic;">
+                        <strong style="color: #fbbf24; font-style: normal; margin-right: 5px;">En palabras
+                            sencillas:</strong> Cuando nuestro modelo memoriza demasiado (sobreajuste), le aplicamos un
+                        'castigo' matemático para que simplifique sus cálculos y se enfoque solo en las variables
+                        realmente importantes.
+                    </p>
+                </div>
+                <div class="concept-box" style="margin-bottom: 10px; border-color: rgba(255,255,255,0.2);">
+                    <p style="margin: 0; font-size: 0.95rem;">
+                        <strong style="color: var(--accent-primary);">Problema de la colinealidad:</strong>
+                        Vuelve singular la matriz \(X^T X\), disparando la varianza de \(\hat{\beta}\).
+                    </p>
+                </div>
+                <div class="grid-2" style="gap: 10px;">
+                    <!-- Ridge -->
+                    <div class="concept-box"
+                        style="border-top: 3px solid var(--accent-secondary); display: flex; flex-direction: column;">
+                        <h3 style="margin-top: 0; color: var(--text-main);">Regresión Ridge (Penalización L2)</h3>
+                        <div style="font-size: 0.95rem; text-align: center; margin: 20px 0; color: #fff;">
+                            \(J(\beta) = ||Y - X\beta||^2 + \lambda||\beta||_2^2\)
+                        </div>
+                        <p style="font-size: 1rem; color: var(--text-muted); margin-top: auto;">
+                            Solución analítica ajustada:
+                            <span
+                                style="background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 4px; display: inline-block; margin: 5px 0;">
+                                \(\hat{\beta}_{Ridge} = (X^T X + \lambda I)^{-1} X^T Y\)
+                            </span>.
+                            <br /><br />
+                            Encoge coeficientes hacia cero asintóticamente.
+                        </p>
+                    </div>
+                    <!-- Lasso -->
+                    <div class="concept-box"
+                        style="border-top: 3px solid var(--accent-primary); display: flex; flex-direction: column;">
+                        <h3 style="margin-top: 0; color: var(--text-main);">Regresión Lasso (Penalización L1)</h3>
+                        <div style="font-size: 0.95rem; text-align: center; margin: 20px 0; color: #fff;">
+                            \(J(\beta) = ||Y - X\beta||^2 + \lambda \sum_{j=1}^{p} |\beta_j|\)
+                        </div>
+                        <p style="font-size: 1rem; color: var(--text-muted); margin-top: auto;">
+                            Fuerza a coeficientes a ser <strong>exactamente cero</strong>. <br /><br />Actúa como
+                            selector intrínseco de características.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="slide">
+            <div class="card" style="padding: 1.8rem;">
+                <h2 style="font-size: 2.0rem; margin-bottom: 10px;">1.2 Criterios de Selección y 1.3 Métricas de
+                    Regresión</h2>
+                <div class="simple-terms-box"
+                    style="background: rgba(255, 255, 255, 0.05); border-left: 3px solid #fbbf24; padding: 1.2rem 1.5rem; border-radius: 0 8px 8px 0; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <i class="fa-regular fa-lightbulb" style="color: #fbbf24; font-size: 1.0rem; margin-top: 2px;"></i>
+                    <p style="margin: 0; font-size: 1.0rem; color: #e2e8f0; line-height: 1.4; font-style: italic;">
+                        <strong style="color: #fbbf24; font-style: normal; margin-right: 5px;">En palabras
+                            sencillas:</strong> Fórmulas que nos dicen qué tan equivocadas están nuestras predicciones
+                        frente a la realidad y si las variables que metimos al modelo de verdad aportan algo útil.
+                    </p>
+                </div>
+                <div class="grid-2" style="gap: 10px; align-items: stretch;">
+                    <!-- Criterios de Selección -->
+                    <div class="concept-box"
+                        style="display: flex; flex-direction: column; background: rgba(56, 189, 248, 0.05); border-color: rgba(56, 189, 248, 0.3);">
+                        <h3
+                            style="margin-top: 0; color: var(--accent-primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                            <i class="fa-solid fa-list-check" style="margin-right: 10px;"></i>Criterios de Selección
+                        </h3>
+                        <ul
+                            style="list-style: none; padding: 0; margin-top: 8px; display: flex; flex-direction: column; gap: 10px;">
+                            <li
+                                style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border-left: 3px solid #cbd5e1;">
+                                <strong style="color: #fff;">OLS:</strong> \(n \gg p\), características linealmente
+                                independientes.
+                            </li>
+                            <li
+                                style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border-left: 3px solid var(--accent-secondary);">
+                                <strong style="color: #fff;">Ridge:</strong> Alta multicolinealidad. Retiene todos los
+                                predictores, reduce ruido.
+                            </li>
+                            <li
+                                style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border-left: 3px solid var(--accent-primary);">
+                                <strong style="color: #fff;">Lasso:</strong> Alta dimensionalidad. Ideal para modelos en
+                                producción que requieren eficiencia.
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- Métricas de Evaluación -->
+                    <div class="concept-box"
+                        style="display: flex; flex-direction: column; background: rgba(167, 139, 250, 0.05); border-color: rgba(167, 139, 250, 0.3);">
+                        <h3
+                            style="margin-top: 0; color: var(--accent-secondary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                            <i class="fa-solid fa-chart-line" style="margin-right: 10px;"></i>Métricas de Evaluación
+                        </h3>
+                        <ul
+                            style="list-style: none; padding: 0; margin-top: 8px; display: flex; flex-direction: column; gap: 10px;">
+                            <li style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px;">
+                                <strong style="color: #fff; display: block; margin-bottom: 5px;">MSE (Error Cuadrático
+                                    Medio):</strong>
+                                <span style="color: var(--text-muted); font-size: 0.95rem;">Penaliza fuertemente
+                                    outliers.</span>
+                                <div style="text-align: center; margin-top: 2px; color: #fff;">
+                                    \(\text{MSE} = \frac{1}{n} \sum_{i=1}^n (y_i - \hat{y}_i)^2\)
+                                </div>
+                            </li>
+                            <li style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px;">
+                                <strong style="color: #fff; display: block; margin-bottom: 5px;">RMSE (Raíz del Error
+                                    Cuadrático Medio):</strong>
+                                <span style="color: var(--text-muted); font-size: 0.95rem;">Mantiene las unidades de
+                                    \(Y\).</span>
+                                <div style="text-align: center; margin-top: 2px; color: #fff;">
+                                    \(\text{RMSE} = \sqrt{ \frac{1}{n} \sum_{i=1}^n (y_i - \hat{y}_i)^2 }\)
+                                </div>
+                            </li>
+                            <li style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px;">
+                                <strong style="color: #fff; display: block; margin-bottom: 5px;">\(R^2\)
+                                    Ajustado:</strong>
+                                <span style="color: var(--text-muted); font-size: 0.95rem;">Penaliza predictores
+                                    nulos.</span>
+                                <div style="text-align: center; margin-top: 2px; color: #fff;">
+                                    \(R^2_{adj} = 1 - \left[ \frac{(1 - R^2)(n - 1)}{n - p - 1} \right]\)
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="slide">
+            <div class="card" style="padding: 1.8rem;">
+                <h2 style="font-size: 2.0rem; margin-bottom: 10px;">Introducción a <span
+                        style="color: var(--accent-primary);">Weka</span></h2>
+                <div class="simple-terms-box"
+                    style="background: rgba(255, 255, 255, 0.05); border-left: 3px solid #fbbf24; padding: 1.2rem 1.5rem; border-radius: 0 8px 8px 0; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <i class="fa-regular fa-lightbulb" style="color: #fbbf24; font-size: 1.0rem; margin-top: 2px;"></i>
+                    <p style="margin: 0; font-size: 1.0rem; color: #e2e8f0; line-height: 1.4; font-style: italic;">
+                        <strong style="color: #fbbf24; font-style: normal; margin-right: 5px;">En palabras
+                            sencillas:</strong> Un programa amigable que nos permite cargar datos y aplicar algoritmos
+                        complejos de Machine Learning haciendo clics en botones, sin necesidad de saber programar.
+                    </p>
+                </div>
+                <div class="grid-2" style="gap: 10px; align-items: stretch;">
+                    <!-- Columna Izquierda: ¿Qué es? -->
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <div class="concept-box"
+                            style="border-left: 4px solid var(--accent-primary); background: rgba(56, 189, 248, 0.05);">
+                            <h3 style="margin-top: 0; color: #fff; font-size: 1.0rem;">¿Qué es Weka?</h3>
+                            <p style="margin-bottom: 10px;">
+                                Es el acrónimo de <strong>Waikato Environment for Knowledge Analysis</strong>. Es un
+                                software libre desarrollado por la Universidad de Waikato en Nueva Zelanda.
+                            </p>
+                            <span style="font-size: 0.85rem; color: var(--text-muted); font-style: italic;">
+                                Curiosidad: El nombre y el logo provienen de un ave no voladora endémica de Nueva
+                                Zelanda.
+                            </span>
+                        </div>
+                        <div class="concept-box"
+                            style="border-left: 4px solid var(--accent-secondary); background: rgba(167, 139, 250, 0.05);">
+                            <h3 style="margin-top: 0; color: #fff; font-size: 1.0rem;">¿Qué incluye?</h3>
+                            <p style="margin-bottom: 0;">
+                                Una potente colección de <strong>herramientas y algoritmos</strong> de Machine Learning
+                                listos para usar en:
+                            </p>
+                            <ul style="margin-top: 2px; margin-bottom: 0;">
+                                <li>Preparación de datos</li>
+                                <li>Clasificación y Regresión</li>
+                                <li>Clustering (Agrupamiento)</li>
+                                <li>Reglas de Asociación y Visualización</li>
+                            </ul>
+                        </div>
+                        <div class="concept-box interactive-block" onclick="openModal('weka_data')"
+                            style="border-left: 4px solid #10b981; background: rgba(16, 185, 129, 0.05); cursor: pointer; margin-top: 10px;">
+                            <h3 style="margin-top: 0; color: #10b981; font-size: 1.0rem;"><i
+                                    class="fa-solid fa-database" style="margin-right: 8px;"></i>¿De dónde obtengo los
+                                Datasets?</h3>
+                            <p style="margin-bottom: 0; font-size: 0.95rem;">
+                                Haz clic aquí para ver las fuentes gratuitas de datos (.arff) para practicar en Weka.
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Columna Derecha: ¿Por qué usarlo? -->
+                    <div class="concept-box"
+                        style="display: flex; flex-direction: column; justify-content: center; align-items: center; border-color: rgba(255,255,255,0.2); text-align: center; position: relative;">
+                        <!-- Logo Placeholder / Estilo abstracto -->
+                        <div
+                            style="width: 100px; height: 100px; background: radial-gradient(circle, var(--accent-primary), transparent 70%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                            <i class="fa-solid fa-laptop-code"
+                                style="font-size: 2.0rem; color: #fff; text-shadow: 0 0 10px var(--accent-primary);"></i>
+                        </div>
+                        <h3
+                            style="margin-top: 0; color: var(--text-main); font-size: 1.0rem; border-bottom: 2px solid var(--accent-primary); padding-bottom: 10px; display: inline-block;">
+                            La Ventaja Principal</h3>
+                        <p style="font-size: 1.0rem; color: #cbd5e1; margin-top: 8px;">
+                            ¡No necesitas programar!
+                        </p>
+                        <p style="font-size: 1rem; color: var(--text-muted); line-height: 1.4;">
+                            Weka ofrece una <strong>interfaz gráfica orientada a ventanas</strong> (GUI Explorer) que te
+                            permite cargar datos (archivos CSV/ARFF), aplicar filtros, entrenar modelos y evaluar
+                            resultados con solo hacer clics. Ideal para aprender los fundamentos de la minería de datos
+                            sin la barrera inicial del código.
+                        </p>
+                        <a href="https://ml.cms.waikato.ac.nz/weka/"
+                            style="margin-top: 2px; display: inline-block; padding: 10px 20px; background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); border-radius: 20px; color: #fff; text-decoration: none; transition: 0.3s; font-size: 0.9rem;"
+                            target="_blank">
+                            <i class="fa-solid fa-link" style="margin-right: 5px;"></i>Sitio Oficial
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="slide">
+            <div class="card" style="padding: 3rem;">
+                <h2 style="font-size: 2.0rem; margin-bottom: 10px;">1.4 Laboratorio: Regresión en Weka</h2>
+                <div class="simple-terms-box"
+                    style="background: rgba(255, 255, 255, 0.05); border-left: 3px solid #fbbf24; padding: 1.2rem 1.5rem; border-radius: 0 8px 8px 0; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <i class="fa-regular fa-lightbulb" style="color: #fbbf24; font-size: 1.0rem; margin-top: 2px;"></i>
+                    <p style="margin: 0; font-size: 1.0rem; color: #e2e8f0; line-height: 1.4; font-style: italic;">
+                        <strong style="color: #fbbf24; font-style: normal; margin-right: 5px;">En palabras
+                            sencillas:</strong> Los pasos exactos dentro de la herramienta gráfica para cargar nuestros
+                        datos, construir un modelo de regresión lineal y leer las métricas de error resultantes.
+                    </p>
+                </div>
+                <div class="concept-box"
+                    style="padding: 1.8rem; border-color: rgba(255,255,255,0.1); background: rgba(0,0,0,0.15);">
+                    <ul
+                        style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
+                        <!-- Item 1: Ruta Explorer -->
+                        <li style="display: flex; align-items: flex-start; gap: 10px;">
+                            <i class="fa-solid fa-folder-tree"
+                                style="color: var(--accent-primary); font-size: 1.5rem; margin-top: 2px;"></i>
+                            <div>
+                                <strong style="color: #fff; font-size: 1.0rem; display: block; margin-bottom: 5px;">Ruta
+                                    Explorer:</strong>
+                                <span style="color: var(--text-muted); font-size: 1.0rem;">
+                                    <span
+                                        style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">Classify
+                                        (Clasificar)</span>
+                                    &gt;
+                                    <span
+                                        style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">functions</span>
+                                    &gt;
+                                    <span
+                                        style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">LinearRegression</span>.
+                                </span>
+                            </div>
+                        </li>
+                        <!-- Item 2: Config Ridge -->
+                        <li
+                            style="display: flex; align-items: flex-start; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                            <i class="fa-solid fa-sliders"
+                                style="color: var(--accent-secondary); font-size: 1.5rem; margin-top: 2px;"></i>
+                            <div>
+                                <strong
+                                    style="color: #fff; font-size: 1.0rem; display: block; margin-bottom: 5px;">Configuración
+                                    Ridge:</strong>
+                                <span style="color: var(--text-muted); font-size: 1.0rem; line-height: 1.5;">
+                                    Ajustar el parámetro <span
+                                        style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">ridge</span>
+                                    (por defecto <span
+                                        style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">1.0E-8</span>).
+                                    Para L2 real, incrementar empíricamente (ej. <strong>0.1</strong> o
+                                    <strong>1.0</strong>).
+                                </span>
+                            </div>
+                        </li>
+                        <!-- Item 3: Control Colinealidad -->
+                        <li
+                            style="display: flex; align-items: flex-start; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                            <i class="fa-solid fa-link-slash"
+                                style="color: #4ade80; font-size: 1.5rem; margin-top: 2px;"></i>
+                            <div>
+                                <strong
+                                    style="color: #fff; font-size: 1.0rem; display: block; margin-bottom: 5px;">Control
+                                    de Colinealidad:</strong>
+                                <span style="color: var(--text-muted); font-size: 1.0rem; line-height: 1.5;">
+                                    Weka usa <span
+                                        style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">eliminateColinearAttributes
+                                        = True</span> por defecto. Cambiar a <span
+                                        style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem; color: #f87171;">False</span>
+                                    para observar el impacto real de Ridge.
+                                </span>
+                            </div>
+                        </li>
+                        <!-- Item 4: Modelos no lineales -->
+                        <li
+                            style="display: flex; align-items: flex-start; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                            <i class="fa-solid fa-chart-pie"
+                                style="color: #f472b6; font-size: 1.5rem; margin-top: 2px;"></i>
+                            <div>
+                                <strong
+                                    style="color: #fff; font-size: 1.0rem; display: block; margin-bottom: 5px;">Modelos
+                                    no lineales:</strong>
+                                <span style="color: var(--text-muted); font-size: 1.0rem; line-height: 1.5;">
+                                    Usar <span
+                                        style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">functions</span>
+                                    &gt; <span
+                                        style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">SMOreg</span>
+                                    para SVM polinómico o RBF ajustando \(C\).
+                                </span>
+                            </div>
+                        </li>
+                        <!-- Item 5: Interpretacion -->
+                        <li
+                            style="display: flex; align-items: flex-start; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                            <i class="fa-solid fa-magnifying-glass-chart"
+                                style="color: #eab308; font-size: 1.5rem; margin-top: 2px;"></i>
+                            <div>
+                                <strong
+                                    style="color: #fff; font-size: 1.0rem; display: block; margin-bottom: 5px;">Interpretación:</strong>
+                                <span style="color: var(--text-muted); font-size: 1.0rem; line-height: 1.5;">
+                                    Analizar la ecuación lineal generada contrastando el peso del atributo con el
+                                    coeficiente de correlación de Pearson y el RMSE (Raíz del Error Cuadrático Medio).
+                                </span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <!-- SLIDE 6: Regresión Logística -->
+        <div class="slide">
+            <div class="card" style="padding: 1.8rem; max-width: 1100px;">
+                <h2 style="font-size: 2.0rem; margin-bottom: 10px;">2.1 Clasificación Probabilística: Regresión
+                    Logística</h2>
+                <div class="simple-terms-box"
+                    style="background: rgba(255, 255, 255, 0.05); border-left: 3px solid #fbbf24; padding: 1.2rem 1.5rem; border-radius: 0 8px 8px 0; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <i class="fa-regular fa-lightbulb" style="color: #fbbf24; font-size: 1.0rem; margin-top: 2px;"></i>
+                    <p style="margin: 0; font-size: 1.0rem; color: #e2e8f0; line-height: 1.4; font-style: italic;">
+                        <strong style="color: #fbbf24; font-style: normal; margin-right: 5px;">En palabras
+                            sencillas:</strong> Una técnica que en lugar de predecir un número (como dinero o peso), nos
+                        arroja un porcentaje de probabilidad para tomar decisiones (ej. 90% de probabilidad de que el
+                        paciente esté sano).
+                    </p>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Objetivo -->
+                    <div class="concept-box"
+                        style="padding: 1.5rem; border-color: rgba(255,255,255,0.1); background: rgba(56, 189, 248, 0.05);">
+                        <p style="margin: 0; font-size: 0.95rem;">
+                            <strong style="color: var(--accent-primary);">Objetivo:</strong>
+                            Clasificación lineal basada en optimización log-odds.
+                        </p>
+                    </div>
+                    <!-- Formulación Log-odds -->
+                    <div class="concept-box"
+                        style="padding: 1.5rem; display: flex; flex-direction: column; align-items: center; background: rgba(0,0,0,0.2);">
+                        <h3
+                            style="margin-top: 0; margin-bottom: 10px; color: #fff; width: 100%; text-align: left; font-size: 1.0rem;">
+                            Formulación Log-odds:</h3>
+                        <div
+                            style="font-size: 1.0rem; color: #cbd5e1; margin-top: 2px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; width: 100%; text-align: center; border-left: 3px solid var(--accent-primary);">
+                            \(\ln\left(\frac{p}{1-p}\right) = \beta_0 + \beta_1 x_1 + \dots + \beta_p x_p\)
+                        </div>
+                    </div>
+                    <!-- Función Sigmoide -->
+                    <div class="concept-box"
+                        style="padding: 1.5rem; display: flex; flex-direction: column; align-items: center; background: rgba(167, 139, 250, 0.05); border-color: rgba(167, 139, 250, 0.2);">
+                        <h3
+                            style="margin-top: 0; margin-bottom: 10px; color: var(--accent-secondary); width: 100%; text-align: left; font-size: 1.0rem;">
+                            Función Sigmoide <span
+                                style="font-size: 1rem; color: var(--text-muted); font-weight: normal;">(Probabilidad de
+                                clase positiva):</span></h3>
+                        <div
+                            style="font-size: 1.0rem; color: #cbd5e1; margin-top: 2px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px; width: 100%; text-align: center; border-left: 3px solid var(--accent-secondary);">
+                            \(P(Y=1|X) = \frac{1}{1 + e^{-X\beta}}\)
+                        </div>
+                    </div>
+                    <!-- Optimización -->
+                    <div class="concept-box"
+                        style="padding: 1.5rem; display: flex; flex-direction: column; align-items: center; background: rgba(236, 72, 153, 0.05); border-color: rgba(236, 72, 153, 0.2);">
+                        <h3
+                            style="margin-top: 0; margin-bottom: 10px; color: var(--c-pink); width: 100%; text-align: left; font-size: 1.0rem;">
+                            Optimización <span
+                                style="font-size: 1rem; color: var(--text-muted); font-weight: normal;">(Entropía
+                                Cruzada Binaria / Log-Loss):</span></h3>
+                        <div
+                            style="font-size: 1.0rem; color: #fff; margin-top: 2px; padding: 10px; background: rgba(236, 72, 153, 0.1); border-radius: 8px; width: 100%; text-align: center; border-left: 3px solid var(--c-pink);">
+                            \(J(\beta) = - \frac{1}{n} \sum_{i=1}^{n} [y_i \log(\hat{y}_i) + (1 - y_i) \log(1 -
+                            \hat{y}_i)]\)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- SLIDE 7: Random Forest -->
+        <div class="slide">
+            <div class="card" style="padding: 1.5rem; max-width: 1155px;">
+                <h2 style="font-size: 2.0rem; margin-bottom: 10px;">2.1 Ensambles no lineales: Random Forest</h2>
+                <div class="simple-terms-box"
+                    style="background: rgba(255, 255, 255, 0.05); border-left: 3px solid #fbbf24; padding: 1.2rem 1.5rem; border-radius: 0 8px 8px 0; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <i class="fa-regular fa-lightbulb" style="color: #fbbf24; font-size: 1.0rem; margin-top: 2px;"></i>
+                    <p style="margin: 0; font-size: 1.0rem; color: #e2e8f0; line-height: 1.4; font-style: italic;">
+                        <strong style="color: #fbbf24; font-style: normal; margin-right: 5px;">En palabras
+                            sencillas:</strong> En lugar de confiar en un solo 'árbol de decisiones', creamos un
+                        'bosque' entero con muchos de ellos y dejamos que voten para obtener una clasificación final más
+                        precisa y robusta.
+                    </p>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Arquitectura -->
+                    <div class="concept-box"
+                        style="padding: 1.5rem; border-left: 4px solid #10b981; background: rgba(16, 185, 129, 0.05); display: flex; align-items: flex-start; gap: 10px;">
+                        <i class="fa-solid fa-network-wired"
+                            style="color: #10b981; font-size: 1.5rem; margin-top: 2px;"></i>
+                        <div>
+                            <p style="margin: 0; font-size: 0.95rem; color: #cbd5e1; line-height: 1.5;">
+                                <strong
+                                    style="color: #10b981; display: block; margin-bottom: 5px;">Arquitectura:</strong>
+                                Ensamble iterativo de árboles de decisión (CART) usando <span
+                                    style="font-style: italic; color: #fff;">Bagging</span> (Bootstrap Aggregating) y
+                                subespacios de características aleatorios.
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Criterios de Partición -->
+                    <div class="concept-box"
+                        style="padding: 1.5rem; border-color: rgba(255,255,255,0.1); display: flex; flex-direction: column;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                            <i class="fa-solid fa-code-branch"
+                                style="color: var(--accent-primary); font-size: 1.5rem;"></i>
+                            <h3 style="margin: 0; color: var(--accent-primary); font-size: 0.95rem;">Criterios de
+                                Partición de Nodos:</h3>
+                        </div>
+                        <div class="grid-2" style="gap: 10px;">
+                            <div
+                                style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; text-align: center;">
+                                <strong style="color: #e2e8f0; display: block; margin-bottom: 10px;">Impureza de
+                                    Gini:</strong>
+                                <div style="font-size: 1.35rem; color: #38bdf8;">
+                                    \(Gini = 1 - \sum_{i=1}^c (p_i)^2\)
+                                </div>
+                            </div>
+                            <div
+                                style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; text-align: center;">
+                                <strong style="color: #e2e8f0; display: block; margin-bottom: 10px;">Entropía de
+                                    Shannon:</strong>
+                                <div style="font-size: 1.35rem; color: #c084fc;">
+                                    \(H(S) = - \sum_{i=1}^c p_i \log_2(p_i)\)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Inferencia -->
+                    <div class="concept-box"
+                        style="padding: 1.5rem; border-left: 4px solid #f59e0b; background: rgba(245, 158, 11, 0.05); display: flex; align-items: flex-start; gap: 10px;">
+                        <i class="fa-solid fa-bullseye" style="color: #f59e0b; font-size: 1.5rem; margin-top: 2px;"></i>
+                        <div>
+                            <p style="margin: 0; font-size: 0.95rem; color: #cbd5e1;">
+                                <strong
+                                    style="color: #f59e0b; display: inline-block; margin-right: 10px;">Inferencia:</strong>
+                                La predicción es la moda del ensamble:
+                            </p>
+                            <div
+                                style="font-size: 1.0rem; color: #fff; margin-top: 8px; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; text-align: center;">
+                                \(\hat{f}_{rf}^B(x) = \text{mayoría} \{ \hat{f}_b(x) \}_1^B\)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- SLIDE 8: Criterios y Métricas de Clasificación -->
+        <div class="slide">
+            <div class="card" style="padding: 1.5rem; max-width: 1210px;">
+                <h2 style="font-size: 2.0rem; margin-bottom: 10px;">2.2 Criterios y 2.3 Métricas de Clasificación</h2>
+                <div class="simple-terms-box"
+                    style="background: rgba(255, 255, 255, 0.05); border-left: 3px solid #fbbf24; padding: 1.2rem 1.5rem; border-radius: 0 8px 8px 0; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <i class="fa-regular fa-lightbulb" style="color: #fbbf24; font-size: 1.0rem; margin-top: 2px;"></i>
+                    <p style="margin: 0; font-size: 1.0rem; color: #e2e8f0; line-height: 1.4; font-style: italic;">
+                        <strong style="color: #fbbf24; font-style: normal; margin-right: 5px;">En palabras
+                            sencillas:</strong> Medidas para evaluar qué tanto se equivoca nuestro clasificador según lo
+                        que nos cueste más: ¿es peor clasificar a un sano como enfermo, o declarar a un enfermo como
+                        sano?
+                    </p>
+                </div>
+                <div class="grid-2" style="gap: 12px; align-items: start;">
+                    <!-- Columna Izquierda: Criterios -->
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <h3
+                            style="margin-top: 0; color: var(--accent-primary); font-size: 1.0rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                            <i class="fa-solid fa-code-compare" style="margin-right: 10px;"></i>Criterios de Selección
+                        </h3>
+                        <div class="concept-box"
+                            style="padding: 1.5rem; border-left: 4px solid var(--accent-primary); background: rgba(56, 189, 248, 0.05);">
+                            <strong
+                                style="color: #cbd5e1; font-size: 1.0rem; display: block; margin-bottom: 5px;">Regresión
+                                Logística:</strong>
+                            <p style="margin: 0; font-size: 0.95rem;">
+                                Alta interpretabilidad marginal. Susceptible a outliers y multicolinealidad.
+                            </p>
+                        </div>
+                        <div class="concept-box"
+                            style="padding: 1.5rem; border-left: 4px solid #10b981; background: rgba(16, 185, 129, 0.05);">
+                            <strong
+                                style="color: #cbd5e1; font-size: 1.0rem; display: block; margin-bottom: 5px;">Random
+                                Forest:</strong>
+                            <p style="margin: 0; font-size: 0.95rem;">
+                                Datos tabulares no lineales. Inmune a la multicolinealidad. Menor explicabilidad
+                                analítica.
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Columna Derecha: Métricas -->
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <h3
+                            style="margin-top: 0; color: var(--accent-secondary); font-size: 1.0rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                            <i class="fa-solid fa-chart-line" style="margin-right: 10px;"></i>Métricas de Evaluación
+                        </h3>
+                        <div class="concept-box"
+                            style="padding: 1.8rem; background: rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.05);">
+                            <ul
+                                style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
+                                <li style="display: flex; flex-direction: column;">
+                                    <div>
+                                        <strong style="color: #60a5fa; font-size: 1.0rem;">Precision
+                                            (Precisión):</strong>
+                                        <span style="font-size: 0.95rem; color: var(--text-muted);">(Costo alto de
+                                            falsos positivos).</span>
+                                    </div>
+                                    <div
+                                        style="font-size: 0.95rem; color: #fff; margin-top: 2px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 4px; text-align: center;">
+                                        \(Precision = \frac{TP}{TP + FP}\)
+                                    </div>
+                                </li>
+                                <li
+                                    style="display: flex; flex-direction: column; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
+                                    <div>
+                                        <strong style="color: #f472b6; font-size: 1.0rem;">Recall (Sensibilidad /
+                                            Exhaustividad):</strong>
+                                        <span style="font-size: 0.95rem; color: var(--text-muted);">(Costo alto de
+                                            falsos negativos).</span>
+                                    </div>
+                                    <div
+                                        style="font-size: 0.95rem; color: #fff; margin-top: 2px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 4px; text-align: center;">
+                                        \(Recall = \frac{TP}{TP + FN}\)
+                                    </div>
+                                </li>
+                                <li
+                                    style="display: flex; flex-direction: column; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
+                                    <strong style="color: #fcd34d; font-size: 1.0rem;">F1-Score (Puntaje F1):</strong>
+                                    <div
+                                        style="font-size: 0.95rem; color: #fff; margin-top: 2px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 4px; text-align: center;">
+                                        \(F_1 = 2 \times \frac{Precision \times Recall}{Precision + Recall}\)
+                                    </div>
+                                </li>
+                                <li
+                                    style="display: flex; align-items: center; gap: 12px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
+                                    <strong style="color: #a78bfa; font-size: 1.0rem;">Curva ROC (Características
+                                        Operativas del Receptor) / AUC (Área Bajo la Curva):</strong>
+                                    <span style="font-size: 0.95rem; color: #cbd5e1;">TPR (Tasa de Verdaderos Positivos)
+                                        vs. FPR (Tasa de Falsos Positivos). AUC de
+                                        <strong>1.0</strong> indica separación perfecta.</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- SLIDE 9: Laboratorio Clasificación Weka -->
+        <div class="slide">
+            <div class="card" style="padding: 1.5rem; max-width: 1155px;">
+                <h2 style="font-size: 2.0rem; margin-bottom: 10px;">2.4 Laboratorio: Clasificación en Weka</h2>
+                <div class="simple-terms-box"
+                    style="background: rgba(255, 255, 255, 0.05); border-left: 3px solid #fbbf24; padding: 1.2rem 1.5rem; border-radius: 0 8px 8px 0; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <i class="fa-regular fa-lightbulb" style="color: #fbbf24; font-size: 1.0rem; margin-top: 2px;"></i>
+                    <p style="margin: 0; font-size: 1.0rem; color: #e2e8f0; line-height: 1.4; font-style: italic;">
+                        <strong style="color: #fbbf24; font-style: normal; margin-right: 5px;">En palabras
+                            sencillas:</strong> Cómo configurar correctamente el 'bosque aleatorio' en la interfaz de
+                        Weka para clasificar nuestros datos y cómo leer los resultados (como la Curva ROC).
+                    </p>
+                </div>
+                <div class="concept-box"
+                    style="padding: 1.8rem; border-color: rgba(255,255,255,0.1); background: rgba(0,0,0,0.15);">
+                    <ul
+                        style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
+                        <!-- Item 1: Ruta Explorer -->
+                        <li style="display: flex; align-items: flex-start; gap: 10px;">
+                            <i class="fa-solid fa-folder-tree"
+                                style="color: var(--accent-primary); font-size: 1.5rem; margin-top: 2px;"></i>
+                            <div>
+                                <strong style="color: #fff; font-size: 1.0rem; display: block; margin-bottom: 5px;">Ruta
+                                    Explorer:</strong>
+                                <span style="color: var(--text-muted); font-size: 1.0rem;">
+                                    <span
+                                        style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">Classify
+                                        (Clasificar)</span>
+                                    &gt;
+                                    <span
+                                        style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">trees</span>
+                                    &gt;
+                                    <span
+                                        style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">RandomForest
+                                        (Bosque Aleatorio)</span>
+                                    y
+                                    <span
+                                        style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">functions</span>
+                                    &gt;
+                                    <span
+                                        style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">Logistic</span>.
+                                </span>
+                            </div>
+                        </li>
+                        <!-- Item 2: Ajuste Random Forest -->
+                        <li
+                            style="display: flex; align-items: flex-start; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                            <i class="fa-solid fa-sliders"
+                                style="color: var(--accent-secondary); font-size: 1.5rem; margin-top: 2px;"></i>
+                            <div>
+                                <strong
+                                    style="color: #fff; font-size: 1.0rem; display: block; margin-bottom: 5px;">Ajuste
+                                    Random Forest (Bosque Aleatorio):</strong>
+                                <span style="color: var(--text-muted); font-size: 1.0rem; line-height: 1.5;">
+                                    Controlar <span
+                                        style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">numIterations</span>
+                                    (árboles base) y <span
+                                        style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">maxDepth</span>
+                                    (control estricto de sobreajuste).
+                                </span>
+                            </div>
+                        </li>
+                        <!-- Item 3: Interpretacion de Log -->
+                        <li
+                            style="display: flex; align-items: flex-start; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                            <i class="fa-solid fa-file-invoice"
+                                style="color: #4ade80; font-size: 1.5rem; margin-top: 2px;"></i>
+                            <div>
+                                <strong
+                                    style="color: #fff; font-size: 1.0rem; display: block; margin-bottom: 5px;">Interpretación
+                                    de Log:</strong>
+                                <span style="color: var(--text-muted); font-size: 1.0rem; line-height: 1.5;">
+                                    Revisar el bloque <span style="font-style: italic; color: #cbd5e1;">Detailed
+                                        Accuracy By Class</span> para aislar métricas multiclasificatorias.
+                                </span>
+                            </div>
+                        </li>
+                        <!-- Item 4: Visualización ROC -->
+                        <li
+                            style="display: flex; align-items: flex-start; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                            <i class="fa-solid fa-chart-area"
+                                style="color: #f472b6; font-size: 1.5rem; margin-top: 2px;"></i>
+                            <div>
+                                <strong
+                                    style="color: #fff; font-size: 1.0rem; display: block; margin-bottom: 5px;">Visualización
+                                    ROC:</strong>
+                                <span style="color: var(--text-muted); font-size: 1.0rem; line-height: 1.5;">
+                                    Clic derecho sobre el modelo en <span
+                                        style="font-style: italic; color: #cbd5e1;">Result list</span> &gt;
+                                    <strong style="color: #fff;">ThresholdCurve</strong> &gt;
+                                    seleccionar la clase objetivo.
+                                </span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <!-- SLIDE 10: Clustering K-Means -->
+        <div class="slide">
+            <div class="card" style="padding: 1.5rem; max-width: 1155px;">
+                <h2 style="font-size: 2.0rem; margin-bottom: 10px;">3.1 Clustering Geométrico: K-Means</h2>
+                <div class="simple-terms-box"
+                    style="background: rgba(255, 255, 255, 0.05); border-left: 3px solid #fbbf24; padding: 1.2rem 1.5rem; border-radius: 0 8px 8px 0; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <i class="fa-regular fa-lightbulb" style="color: #fbbf24; font-size: 1.0rem; margin-top: 2px;"></i>
+                    <p style="margin: 0; font-size: 1.0rem; color: #e2e8f0; line-height: 1.4; font-style: italic;">
+                        <strong style="color: #fbbf24; font-style: normal; margin-right: 5px;">En palabras
+                            sencillas:</strong> Agrupar automáticamente los datos que no tienen etiqueta según qué tan
+                        parecidos (o cercanos matemáticamente) son entre sí, formando 'círculos' o centros de
+                        información.
+                    </p>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Objetivo -->
+                    <div class="concept-box"
+                        style="padding: 1.5rem; border-left: 4px solid #38bdf8; background: rgba(56, 189, 248, 0.05); display: flex; align-items: flex-start; gap: 10px;">
+                        <i class="fa-solid fa-layer-group"
+                            style="color: #38bdf8; font-size: 1.5rem; margin-top: 2px;"></i>
+                        <div>
+                            <p style="margin: 0; font-size: 0.95rem; color: #cbd5e1; line-height: 1.5;">
+                                <strong
+                                    style="color: #38bdf8; display: inline-block; margin-right: 5px;">Objetivo:</strong>
+                                Partición no supervisada en \(k\) subconjuntos minimizando la varianza intra-cluster
+                                (Inercia o WCSS).
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Formulación WCSS -->
+                    <div class="concept-box"
+                        style="padding: 1.5rem; display: flex; flex-direction: column; align-items: center; background: rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.1);">
+                        <h3
+                            style="margin-top: 0; margin-bottom: 10px; color: #fff; width: 100%; text-align: left; font-size: 0.95rem;">
+                            <i class="fa-solid fa-calculator"
+                                style="margin-right: 10px; color: var(--text-muted);"></i>Formulación WCSS:
+                        </h3>
+                        <div
+                            style="font-size: 1.5rem; color: #facc15; margin-top: 2px; padding: 15px; background: rgba(250, 204, 21, 0.05); border-radius: 8px; width: 100%; text-align: center; border-left: 3px solid #facc15;">
+                            \(WCSS = \sum_{j=1}^k \sum_{x_i \in C_j} ||x_i - \mu_j||^2\)
+                        </div>
+                    </div>
+                    <!-- Convergencia -->
+                    <div class="concept-box"
+                        style="padding: 1.5rem; border-left: 4px solid #a78bfa; background: rgba(167, 139, 250, 0.05); display: flex; align-items: flex-start; gap: 10px;">
+                        <i class="fa-solid fa-rotate" style="color: #a78bfa; font-size: 1.5rem; margin-top: 2px;"></i>
+                        <div>
+                            <p style="margin: 0; font-size: 0.95rem; color: #cbd5e1; line-height: 1.5;">
+                                <strong
+                                    style="color: #a78bfa; display: inline-block; margin-right: 5px;">Convergencia:</strong>
+                                Algoritmo iterativo de Lloyd. Alterna asignación por distancia Euclidiana/Manhattan y
+                                actualización recalculando el centroide \(\mu_j\) como la media del clúster.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- SLIDE 11: Clustering Topológico: DBSCAN -->
+        <div class="slide">
+            <div class="card" style="padding: 1.5rem; max-width: 1155px;">
+                <h2 style="font-size: 2.0rem; margin-bottom: 10px;">3.1 Clustering Topológico: DBSCAN</h2>
+                <div class="simple-terms-box"
+                    style="background: rgba(255, 255, 255, 0.05); border-left: 3px solid #fbbf24; padding: 1.2rem 1.5rem; border-radius: 0 8px 8px 0; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <i class="fa-regular fa-lightbulb" style="color: #fbbf24; font-size: 1.0rem; margin-top: 2px;"></i>
+                    <p style="margin: 0; font-size: 1.0rem; color: #e2e8f0; line-height: 1.4; font-style: italic;">
+                        <strong style="color: #fbbf24; font-style: normal; margin-right: 5px;">En palabras
+                            sencillas:</strong> Un algoritmo para agrupar que en lugar de usar círculos, busca zonas
+                        'densamente pobladas'. Esto le permite encontrar formas raras o arbitrarias y descartar puntos
+                        aislados como ruido.
+                    </p>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Objetivo -->
+                    <div class="concept-box"
+                        style="padding: 1.5rem; border-left: 4px solid #10b981; background: rgba(16, 185, 129, 0.05); display: flex; align-items: flex-start; gap: 10px;">
+                        <i class="fa-solid fa-shapes" style="color: #10b981; font-size: 1.5rem; margin-top: 2px;"></i>
+                        <div>
+                            <p style="margin: 0; font-size: 0.95rem; color: #cbd5e1; line-height: 1.5;">
+                                <strong
+                                    style="color: #10b981; display: inline-block; margin-right: 5px;">Objetivo:</strong>
+                                Algoritmo no paramétrico basado en densidad. Identifica contigüidad separando zonas por
+                                ruido.
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Hiperparametros -->
+                    <div class="concept-box"
+                        style="padding: 1.5rem; border-color: rgba(255,255,255,0.1); background: rgba(0,0,0,0.15);">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                            <i class="fa-solid fa-sliders" style="color: var(--accent-primary); font-size: 1.0rem;"></i>
+                            <h3 style="margin: 0; color: var(--accent-primary); font-size: 0.95rem;">Hiperparámetros
+                                base:</h3>
+                        </div>
+                        <ul
+                            style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px;">
+                            <li
+                                style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                                <div
+                                    style="font-size: 0.95rem; color: #f472b6; font-weight: bold; width: 120px; text-align: right;">
+                                    \(\epsilon\) (Eps)
+                                </div>
+                                <div style="width: 2px; height: 30px; background: rgba(255,255,255,0.1);"></div>
+                                <div style="font-size: 1.0rem; color: #e2e8f0;">
+                                    Radio de la vecindad euclidiana.
+                                </div>
+                            </li>
+                            <li
+                                style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                                <div
+                                    style="font-size: 0.95rem; color: #facc15; font-weight: bold; width: 120px; text-align: right;">
+                                    \(MinPts\)
+                                </div>
+                                <div style="width: 2px; height: 30px; background: rgba(255,255,255,0.1);"></div>
+                                <div style="font-size: 1.0rem; color: #e2e8f0;">
+                                    Umbral de puntos requeridos en el radio \(\epsilon\) para clasificar un punto como
+                                    núcleo (<em>core</em>).
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- Ventaja matemática -->
+                    <div class="concept-box"
+                        style="padding: 1.5rem; border-left: 4px solid #a78bfa; background: rgba(167, 139, 250, 0.05); display: flex; align-items: flex-start; gap: 10px;">
+                        <i class="fa-solid fa-award" style="color: #a78bfa; font-size: 1.5rem; margin-top: 2px;"></i>
+                        <div>
+                            <p style="margin: 0; font-size: 0.95rem; color: #cbd5e1; line-height: 1.5;">
+                                <strong style="color: #a78bfa; display: inline-block; margin-right: 5px;">Ventaja
+                                    matemática:</strong>
+                                No requiere especificar \(k\) previamente. Modela formas geométricas arbitrarias
+                                evadiendo el supuesto isotrópico de K-Means.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- SLIDE 12: Criterios y Métricas de Clustering -->
+        <div class="slide">
+            <div class="card" style="padding: 1.5rem; max-width: 1210px;">
+                <h2 style="font-size: 2.0rem; margin-bottom: 10px;">3.2 Criterios y 3.3 Métricas de Clustering</h2>
+                <div class="simple-terms-box"
+                    style="background: rgba(255, 255, 255, 0.05); border-left: 3px solid #fbbf24; padding: 1.2rem 1.5rem; border-radius: 0 8px 8px 0; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <i class="fa-regular fa-lightbulb" style="color: #fbbf24; font-size: 1.0rem; margin-top: 2px;"></i>
+                    <p style="margin: 0; font-size: 1.0rem; color: #e2e8f0; line-height: 1.4; font-style: italic;">
+                        <strong style="color: #fbbf24; font-style: normal; margin-right: 5px;">En palabras
+                            sencillas:</strong> Maneras de ponerle un puntaje al trabajo del agrupador: evaluando
+                        numéricamente si los grupos quedaron muy compactos por dentro y bien separados entre sí por
+                        fuera.
+                    </p>
+                </div>
+                <div class="grid-2" style="gap: 12px; align-items: stretch;">
+                    <!-- Columna Izquierda: Criterios -->
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <h3
+                            style="margin-top: 0; color: var(--accent-primary); font-size: 1.0rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                            <i class="fa-solid fa-code-compare" style="margin-right: 10px;"></i>Criterios de Selección
+                        </h3>
+                        <div class="concept-box"
+                            style="padding: 1.5rem; border-left: 4px solid #38bdf8; background: rgba(56, 189, 248, 0.05);">
+                            <strong
+                                style="color: #cbd5e1; font-size: 1.0rem; display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                                <i class="fa-solid fa-circle-nodes" style="color: #38bdf8; font-size: 1.0rem;"></i>
+                                K-Means:
+                            </strong>
+                            <p style="margin: 0; font-size: 0.95rem;">
+                                Clústeres isotrópicos (esféricos), varianza similar, escalabilidad en \(\mathcal{O}(n
+                                \cdot k \cdot d \cdot i)\).
+                            </p>
+                        </div>
+                        <div class="concept-box"
+                            style="padding: 1.5rem; border-left: 4px solid #10b981; background: rgba(16, 185, 129, 0.05); height: 100%;">
+                            <strong
+                                style="color: #cbd5e1; font-size: 1.0rem; display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                                <i class="fa-solid fa-shapes" style="color: #10b981; font-size: 1.0rem;"></i> DBSCAN:
+                            </strong>
+                            <p style="margin: 0; font-size: 0.95rem;">
+                                Formas arbitrarias, densidades dispares, alta tolerancia geométrica al ruido espacial.
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Columna Derecha: Métricas (Silhouette) -->
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <h3
+                            style="margin-top: 0; color: var(--accent-secondary); font-size: 1.0rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                            <i class="fa-solid fa-chart-line" style="margin-right: 10px;"></i>Métricas de Evaluación
+                            <span
+                                style="font-size: 1.0rem; color: var(--text-muted); font-weight: normal;">(Silhouette)</span>
+                        </h3>
+                        <div class="concept-box"
+                            style="padding: 1.5rem; background: rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.05); height: 100%;">
+                            <ul
+                                style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px;">
+                                <li style="display: flex; align-items: flex-start; gap: 12px;">
+                                    <i class="fa-solid fa-magnifying-glass-chart"
+                                        style="color: #a78bfa; margin-top: 2px;"></i>
+                                    <span style="font-size: 1.0rem; color: #e2e8f0; line-height: 1.4;">
+                                        Evalúa cohesión intra-cluster (\(a\)) vs. separación inter-cluster (\(b\)).
+                                    </span>
+                                </li>
+                                <li
+                                    style="display: flex; flex-direction: column; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+                                    <strong
+                                        style="color: #cbd5e1; font-size: 1.0rem; display: flex; align-items: center; gap: 10px;">
+                                        <i class="fa-solid fa-calculator" style="color: #eab308;"></i>Fórmula:
+                                    </strong>
+                                    <div
+                                        style="font-size: 1.0rem; color: #fff; margin-top: 2px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; text-align: center; border-left: 3px solid #eab308;">
+                                        \(s(i) = \frac{b(i) - a(i)}{\max\{a(i), b(i)\}}\)
+                                    </div>
+                                </li>
+                                <li
+                                    style="display: flex; align-items: flex-start; gap: 12px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+                                    <i class="fa-solid fa-circle-info" style="color: #38bdf8; margin-top: 2px;"></i>
+                                    <span style="font-size: 1.0rem; color: #e2e8f0; line-height: 1.4;">
+                                        Valores cercanos a <strong style="color: #4ade80;">1</strong> indican clústeres
+                                        óptimos; cercanos a <strong style="color: #f87171;">-1</strong> solapamiento
+                                        severo.
+                                    </span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- SLIDE 13: Laboratorio Clustering Weka -->
+        <div class="slide">
+            <div class="card" style="padding: 1.5rem; max-width: 1155px;">
+                <h2 style="font-size: 2.0rem; margin-bottom: 10px;">3.4 Laboratorio: Clustering en Weka</h2>
+                <div class="simple-terms-box"
+                    style="background: rgba(255, 255, 255, 0.05); border-left: 3px solid #fbbf24; padding: 1.2rem 1.5rem; border-radius: 0 8px 8px 0; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <i class="fa-regular fa-lightbulb" style="color: #fbbf24; font-size: 1.0rem; margin-top: 2px;"></i>
+                    <p style="margin: 0; font-size: 1.0rem; color: #e2e8f0; line-height: 1.4; font-style: italic;">
+                        <strong style="color: #fbbf24; font-style: normal; margin-right: 5px;">En palabras
+                            sencillas:</strong> La ruta de botones en Weka para lanzar los diferentes algoritmos de
+                        agrupación y visualizar gráficamente qué puntos encajaron en qué clúster.
+                    </p>
+                </div>
+                <div class="concept-box"
+                    style="padding: 1.8rem; border-color: rgba(255,255,255,0.1); background: rgba(0,0,0,0.15);">
+                    <ul
+                        style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
+                        <!-- Item 1: Ruta Explorer -->
+                        <li style="display: flex; align-items: flex-start; gap: 10px;">
+                            <i class="fa-solid fa-folder-tree"
+                                style="color: var(--accent-primary); font-size: 1.5rem; margin-top: 2px;"></i>
+                            <div>
+                                <strong style="color: #fff; font-size: 1.0rem; display: block; margin-bottom: 5px;">Ruta
+                                    Explorer:</strong>
+                                <span style="color: var(--text-muted); font-size: 1.0rem;">
+                                    Pestaña <span
+                                        style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">Cluster
+                                        (Agrupar)</span>.
+                                </span>
+                            </div>
+                        </li>
+                        <!-- Item 2: Implementación K-Means -->
+                        <li
+                            style="display: flex; align-items: flex-start; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                            <i class="fa-solid fa-circle-nodes"
+                                style="color: #38bdf8; font-size: 1.5rem; margin-top: 2px;"></i>
+                            <div>
+                                <strong
+                                    style="color: #fff; font-size: 1.0rem; display: block; margin-bottom: 5px;">Implementación
+                                    K-Means:</strong>
+                                <span style="color: var(--text-muted); font-size: 1.0rem; line-height: 1.5;">
+                                    Seleccionar <span
+                                        style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">SimpleKMeans
+                                        (K-Medias Simple)</span>.
+                                    Modificar <span
+                                        style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">numClusters
+                                        (Número de Clústeres)</span>.<br />
+                                    Demostrar el impacto de la semilla aleatoria (<span
+                                        style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">seed
+                                        (Semilla)</span>)
+                                    en la caída hacia óptimos locales.
+                                </span>
+                            </div>
+                        </li>
+                        <!-- Item 3: Implementación Densidad -->
+                        <li
+                            style="display: flex; align-items: flex-start; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                            <i class="fa-solid fa-shapes"
+                                style="color: #10b981; font-size: 1.5rem; margin-top: 2px;"></i>
+                            <div>
+                                <strong
+                                    style="color: #fff; font-size: 1.0rem; display: block; margin-bottom: 5px;">Implementación
+                                    Densidad:</strong>
+                                <span style="color: var(--text-muted); font-size: 1.0rem; line-height: 1.5;">
+                                    Seleccionar <span
+                                        style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">MakeDensityBasedClusterer
+                                        (Agrupador Basado en Densidad)</span>
+                                    (o paquete <span
+                                        style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">optics_dbScan</span>).
+                                </span>
+                            </div>
+                        </li>
+                        <!-- Item 4: Evaluación Visual -->
+                        <li
+                            style="display: flex; align-items: flex-start; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                            <i class="fa-solid fa-chart-pie"
+                                style="color: #eab308; font-size: 1.5rem; margin-top: 2px;"></i>
+                            <div>
+                                <strong
+                                    style="color: #fff; font-size: 1.0rem; display: block; margin-bottom: 5px;">Evaluación
+                                    Visual:</strong>
+                                <span style="color: var(--text-muted); font-size: 1.0rem; line-height: 1.5;">
+                                    Usar <span style="font-style: italic; color: #cbd5e1;">Classes to clusters
+                                        evaluation</span> si existe etiqueta <span
+                                        style="font-style: italic; color: #cbd5e1;">ground-truth</span>.<br />
+                                    Clic derecho en el log &gt; <strong style="color: #fff;">Visualize cluster
+                                        assignments</strong>.
+                                </span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <!-- SLIDE 14: Minería de Reglas de Asociación -->
+        <div class="slide">
+            <div class="card" style="padding: 1.5rem; max-width: 1155px;">
+                <h2 style="font-size: 2.0rem; margin-bottom: 10px;">4.1 Minería de Reglas de Asociación</h2>
+                <div class="simple-terms-box"
+                    style="background: rgba(255, 255, 255, 0.05); border-left: 3px solid #fbbf24; padding: 1.2rem 1.5rem; border-radius: 0 8px 8px 0; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <i class="fa-regular fa-lightbulb" style="color: #fbbf24; font-size: 1.0rem; margin-top: 2px;"></i>
+                    <p style="margin: 0; font-size: 1.0rem; color: #e2e8f0; line-height: 1.4; font-style: italic;">
+                        <strong style="color: #fbbf24; font-style: normal; margin-right: 5px;">En palabras
+                            sencillas:</strong> Descubrir patrones sobre qué cosas suelen ocurrir juntas (ej. 'quien
+                        compra pañales suele comprar cerveza'). Apriori prueba despacio repitiendo pasos, FP-Growth
+                        construye un mapa inverso para ser ultra rápido.
+                    </p>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Algoritmo Apriori -->
+                    <div class="concept-box"
+                        style="padding: 1.5rem; border-left: 4px solid #38bdf8; background: rgba(56, 189, 248, 0.05); display: flex; align-items: flex-start; gap: 10px;">
+                        <i class="fa-solid fa-code-compare"
+                            style="color: #38bdf8; font-size: 1.5rem; margin-top: 2px;"></i>
+                        <div>
+                            <p style="margin: 0; font-size: 0.95rem; color: #cbd5e1; line-height: 1.5;">
+                                <strong style="color: #38bdf8; display: inline-block; margin-right: 5px;">Algoritmo
+                                    Apriori:</strong>
+                                Basado en el principio anti-monótono (si un <em>itemset</em> es frecuente, sus
+                                subconjuntos también). Genera candidatos iterativamente con alto costo de I/O
+                                (\(\mathcal{O}(2^d)\) en densidad máxima).
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Algoritmo FP-Growth -->
+                    <div class="concept-box"
+                        style="padding: 1.5rem; border-left: 4px solid #10b981; background: rgba(16, 185, 129, 0.05); display: flex; align-items: flex-start; gap: 10px;">
+                        <i class="fa-solid fa-tree" style="color: #10b981; font-size: 1.5rem; margin-top: 2px;"></i>
+                        <div>
+                            <p style="margin: 0; font-size: 0.95rem; color: #cbd5e1; line-height: 1.5;">
+                                <strong style="color: #10b981; display: inline-block; margin-right: 5px;">Algoritmo
+                                    FP-Growth:</strong>
+                                Evade la explosión combinatoria. Usa un FP-Tree en memoria. Requiere solo dos escaneos
+                                de la base de datos (frecuencias y construcción del <em>trie</em>), eliminando el cuello
+                                de botella de I/O.
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Criterios de Seleccion -->
+                    <div class="concept-box"
+                        style="padding: 1.5rem; border-color: rgba(255,255,255,0.1); background: rgba(0,0,0,0.15); display: flex; align-items: flex-start; gap: 10px;">
+                        <i class="fa-solid fa-scale-balanced"
+                            style="color: var(--accent-primary); font-size: 1.5rem; margin-top: 2px;"></i>
+                        <div>
+                            <p style="margin: 0; font-size: 0.95rem; color: #cbd5e1; line-height: 1.5;">
+                                <strong style="color: #fff; display: inline-block; margin-right: 5px;">Criterios de
+                                    Selección:</strong>
+                                <strong>FP-Growth</strong> es el estándar de producción (Big Data, e-commerce masivo).
+                                <strong>Apriori</strong> se reserva para entornos de memoria ultra restringida o fines
+                                pedagógicos simples.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- SLIDE 15: Métricas de Asociación -->
+        <div class="slide">
+            <div class="card" style="padding: 1.5rem; max-width: 1155px;">
+                <h2 style="font-size: 2.0rem; margin-bottom: 10px;">4.3 Métricas de Asociación</h2>
+                <div class="simple-terms-box"
+                    style="background: rgba(255, 255, 255, 0.05); border-left: 3px solid #fbbf24; padding: 1.2rem 1.5rem; border-radius: 0 8px 8px 0; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <i class="fa-regular fa-lightbulb" style="color: #fbbf24; font-size: 1.0rem; margin-top: 2px;"></i>
+                    <p style="margin: 0; font-size: 1.0rem; color: #e2e8f0; line-height: 1.4; font-style: italic;">
+                        <strong style="color: #fbbf24; font-style: normal; margin-right: 5px;">En palabras
+                            sencillas:</strong> Fórmulas para medir si esa combinación que descubrimos ocurre
+                        frecuentemente (Soporte), si se cumple casi siempre (Confianza) y si de verdad hay una relación
+                        importante y no es pura coincidencia (Lift).
+                    </p>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Soporte -->
+                    <div class="concept-box"
+                        style="padding: 1.5rem; border-left: 4px solid #38bdf8; background: rgba(56, 189, 248, 0.05);">
+                        <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 8px;">
+                            <i class="fa-solid fa-layer-group"
+                                style="color: #38bdf8; font-size: 0.95rem; margin-top: 2px;"></i>
+                            <p style="margin: 0; font-size: 0.95rem; color: #cbd5e1; line-height: 1.5;">
+                                <strong style="color: #38bdf8; display: inline-block; margin-right: 5px;">Soporte
+                                    (Support):</strong>
+                                Significancia empírica de la regla en el dataset.
+                            </p>
+                        </div>
+                        <div
+                            style="font-size: 1.0rem; color: #facc15; margin-top: 2px; padding: 10px; background: rgba(250, 204, 21, 0.05); border-radius: 8px; text-align: center; border-left: 3px solid #facc15;">
+                            \(\text{Support}(X \Rightarrow Y) = P(X \cup Y)\)
+                        </div>
+                    </div>
+                    <!-- Confianza -->
+                    <div class="concept-box"
+                        style="padding: 1.5rem; border-left: 4px solid #10b981; background: rgba(16, 185, 129, 0.05);">
+                        <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 8px;">
+                            <i class="fa-solid fa-bullseye"
+                                style="color: #10b981; font-size: 0.95rem; margin-top: 2px;"></i>
+                            <p style="margin: 0; font-size: 0.95rem; color: #cbd5e1; line-height: 1.5;">
+                                <strong style="color: #10b981; display: inline-block; margin-right: 5px;">Confianza
+                                    (Confidence):</strong>
+                                Fiabilidad condicional de la inferencia matemática.
+                            </p>
+                        </div>
+                        <div
+                            style="font-size: 1.0rem; color: #facc15; margin-top: 2px; padding: 10px; background: rgba(250, 204, 21, 0.05); border-radius: 8px; text-align: center; border-left: 3px solid #facc15;">
+                            \(\text{Confidence}(X \Rightarrow Y) = P(Y|X) = \frac{\text{Support}(X \cup
+                            Y)}{\text{Support}(X)}\)
+                        </div>
+                    </div>
+                    <!-- Lift -->
+                    <div class="concept-box"
+                        style="padding: 1.5rem; border-left: 4px solid #a78bfa; background: rgba(167, 139, 250, 0.05);">
+                        <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 8px;">
+                            <i class="fa-solid fa-chart-line"
+                                style="color: #a78bfa; font-size: 0.95rem; margin-top: 2px;"></i>
+                            <p style="margin: 0; font-size: 0.95rem; color: #cbd5e1; line-height: 1.5;">
+                                <strong style="color: #a78bfa; display: inline-block; margin-right: 5px;">Lift:</strong>
+                                Correlación estadística (dependencia vs. independencia).
+                            </p>
+                        </div>
+                        <div
+                            style="font-size: 1.0rem; color: #facc15; margin-top: 2px; padding: 10px; background: rgba(250, 204, 21, 0.05); border-radius: 8px; text-align: center; border-left: 3px solid #facc15; overflow-x: auto;">
+                            \(\text{Lift}(X \Rightarrow Y) = \frac{P(X \cap Y)}{P(X)P(Y)} = \frac{\text{Confidence}(X
+                            \Rightarrow Y)}{P(Y)}\)
+                        </div>
+                        <p
+                            style="margin: 15px 0 0 0; font-size: 0.95rem; color: #cbd5e1; text-align: right; font-style: italic;">
+                            \(\text{Lift} &gt; 1\) indica utilidad analítica.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- SLIDE 16: Laboratorio Asociación Weka -->
+        <div class="slide">
+            <div class="card" style="padding: 1.5rem; max-width: 1155px;">
+                <h2 style="font-size: 2.0rem; margin-bottom: 10px;">4.4 Laboratorio: Asociación en Weka</h2>
+                <div class="simple-terms-box"
+                    style="background: rgba(255, 255, 255, 0.05); border-left: 3px solid #fbbf24; padding: 1.2rem 1.5rem; border-radius: 0 8px 8px 0; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <i class="fa-regular fa-lightbulb" style="color: #fbbf24; font-size: 1.0rem; margin-top: 2px;"></i>
+                    <p style="margin: 0; font-size: 1.0rem; color: #e2e8f0; line-height: 1.4; font-style: italic;">
+                        <strong style="color: #fbbf24; font-style: normal; margin-right: 5px;">En palabras
+                            sencillas:</strong> Cómo pedirle a Weka que encuentre estas 'reglas de negocio' y cómo notar
+                        que, al forzar al algoritmo a buscar relaciones muy extrañas, el tiempo de cálculo se dispara
+                        drásticamente.
+                    </p>
+                </div>
+                <div class="concept-box"
+                    style="padding: 1.8rem; border-color: rgba(255,255,255,0.1); background: rgba(0,0,0,0.15);">
+                    <ul
+                        style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
+                        <!-- Item 1: Ruta Explorer -->
+                        <li style="display: flex; align-items: flex-start; gap: 10px;">
+                            <i class="fa-solid fa-link"
+                                style="color: var(--accent-primary); font-size: 1.5rem; margin-top: 2px;"></i>
+                            <div>
+                                <strong style="color: #fff; font-size: 1.0rem; display: block; margin-bottom: 5px;">Ruta
+                                    Explorer:</strong>
+                                <span style="color: var(--text-muted); font-size: 1.0rem;">
+                                    Pestaña <span
+                                        style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">Associate
+                                        (Asociar)</span>
+                                    (Asegurar discretización previa obligatoria).
+                                </span>
+                            </div>
+                        </li>
+                        <!-- Item 2: Apriori -->
+                        <li
+                            style="display: flex; align-items: flex-start; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                            <i class="fa-solid fa-code-compare"
+                                style="color: #38bdf8; font-size: 1.5rem; margin-top: 2px;"></i>
+                            <div>
+                                <strong
+                                    style="color: #fff; font-size: 1.0rem; display: block; margin-bottom: 5px;">Apriori:</strong>
+                                <span style="color: var(--text-muted); font-size: 1.0rem; line-height: 1.5;">
+                                    Manipular <span
+                                        style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">lowerBoundMinSupport
+                                        (Límite Inferior de Soporte Mínimo)</span>.<br />
+                                    Demostrar el impacto exponencial en tiempo de cómputo al reducir este umbral.
+                                </span>
+                            </div>
+                        </li>
+                        <!-- Item 3: FP-Growth -->
+                        <li
+                            style="display: flex; align-items: flex-start; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                            <i class="fa-solid fa-tree" style="color: #10b981; font-size: 1.5rem; margin-top: 2px;"></i>
+                            <div>
+                                <strong
+                                    style="color: #fff; font-size: 1.0rem; display: block; margin-bottom: 5px;">FP-Growth:</strong>
+                                <span style="color: var(--text-muted); font-size: 1.0rem; line-height: 1.5;">
+                                    Modificar <span
+                                        style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">minMetric</span>.
+                                    Cambiar <span
+                                        style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">metricType</span>
+                                    de Confianza a Lift para forzar la búsqueda de reglas estadísticamente
+                                    correlacionadas.<br />
+                                    Contrastar tiempos de ejecución contra Apriori.
+                                </span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <!-- SLIDE 17: Validación de Modelos -->
+        <div class="slide">
+            <div class="card" style="padding: 1.5rem; max-width: 1155px;">
+                <h2 style="font-size: 2.0rem; margin-bottom: 10px;">5.1 y 5.2 Validación de Modelos</h2>
+                <div class="simple-terms-box"
+                    style="background: rgba(255, 255, 255, 0.05); border-left: 3px solid #fbbf24; padding: 1.2rem 1.5rem; border-radius: 0 8px 8px 0; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <i class="fa-regular fa-lightbulb" style="color: #fbbf24; font-size: 1.0rem; margin-top: 2px;"></i>
+                    <p style="margin: 0; font-size: 1.0rem; color: #e2e8f0; line-height: 1.4; font-style: italic;">
+                        <strong style="color: #fbbf24; font-style: normal; margin-right: 5px;">En palabras
+                            sencillas:</strong> Técnicas para poner a prueba nuestro modelo haciéndole diferentes
+                        variaciones de 'exámenes sorpresa' con datos ocultos, asegurándonos de que de verdad aprendió
+                        patrones y no solo memorizó respuestas.
+                    </p>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- K-Fold Cross-Validation -->
+                    <div class="concept-box"
+                        style="padding: 1.5rem; border-left: 4px solid #38bdf8; background: rgba(56, 189, 248, 0.05);">
+                        <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 8px;">
+                            <i class="fa-solid fa-layer-group"
+                                style="color: #38bdf8; font-size: 0.95rem; margin-top: 2px;"></i>
+                            <p style="margin: 0; font-size: 0.95rem; color: #cbd5e1; line-height: 1.5;">
+                                <strong style="color: #38bdf8; display: inline-block; margin-right: 5px;">K-Fold
+                                    Cross-Validation:</strong>
+                                Partición en \(K\) subconjuntos. Entrenamiento iterativo sobre \(D \setminus D_i\) y
+                                evaluación sobre \(D_i\).
+                            </p>
+                        </div>
+                        <div
+                            style="font-size: 1.0rem; color: #facc15; margin-top: 2px; padding: 10px; background: rgba(250, 204, 21, 0.05); border-radius: 8px; text-align: center; border-left: 3px solid #facc15;">
+                            \(E_{CV} = \frac{1}{K} \sum_{i=1}^K Error_i\)
+                        </div>
+                    </div>
+                    <div class="grid-2" style="gap: 10px; margin-top: 2px;">
+                        <!-- Validación Estratificada -->
+                        <div class="concept-box"
+                            style="padding: 1.5rem; border-left: 4px solid #10b981; background: rgba(16, 185, 129, 0.05); display: flex; align-items: flex-start; gap: 12px; height: 100%;">
+                            <i class="fa-solid fa-chart-pie"
+                                style="color: #10b981; font-size: 0.95rem; margin-top: 2px;"></i>
+                            <p style="margin: 0; font-size: 1.0rem; color: #cbd5e1; line-height: 1.5;">
+                                <strong style="color: #10b981; display: inline-block; margin-right: 5px;">Validación
+                                    Estratificada:</strong>
+                                Garantiza la conservación de la probabilidad marginal prior de las clases por partición.
+                            </p>
+                        </div>
+                        <!-- Bootstrap -->
+                        <div class="concept-box"
+                            style="padding: 1.5rem; border-left: 4px solid #a78bfa; background: rgba(167, 139, 250, 0.05); display: flex; align-items: flex-start; gap: 12px; height: 100%;">
+                            <i class="fa-solid fa-shuffle"
+                                style="color: #a78bfa; font-size: 0.95rem; margin-top: 2px;"></i>
+                            <p style="margin: 0; font-size: 1.0rem; color: #cbd5e1; line-height: 1.5;">
+                                <strong style="color: #a78bfa; display: inline-block; margin-right: 5px;">Bootstrap
+                                    (.632):</strong>
+                                Muestreo con reemplazo cubriendo el \(\approx 63.2\%\) de las observaciones originales.
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Limitación Matemática Crítica -->
+                    <div class="concept-box"
+                        style="padding: 1.5rem; border-left: 4px solid #f87171; background: rgba(248, 113, 113, 0.05); display: flex; align-items: flex-start; gap: 12px; margin-top: 2px;">
+                        <i class="fa-solid fa-triangle-exclamation"
+                            style="color: #f87171; font-size: 0.95rem; margin-top: 2px;"></i>
+                        <p style="margin: 0; font-size: 0.95rem; color: #cbd5e1; line-height: 1.5;">
+                            <strong style="color: #f87171; display: inline-block; margin-right: 5px;">Limitación
+                                Matemática Crítica:</strong>
+                            CV tradicional causa fuga de datos en Series de Tiempo al violar independencia. Reemplazar
+                            por <em>Walk-Forward</em>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- SLIDE 18: Laboratorio Validación y Filtros Weka -->
+        <div class="slide">
+            <div class="card" style="padding: 1.5rem; max-width: 1155px;">
+                <h2 style="font-size: 2.0rem; margin-bottom: 10px;">5.4 Laboratorio: Validación y Filtros en Weka</h2>
+                <div class="simple-terms-box"
+                    style="background: rgba(255, 255, 255, 0.05); border-left: 3px solid #fbbf24; padding: 1.2rem 1.5rem; border-radius: 0 8px 8px 0; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <i class="fa-regular fa-lightbulb" style="color: #fbbf24; font-size: 1.0rem; margin-top: 2px;"></i>
+                    <p style="margin: 0; font-size: 1.0rem; color: #e2e8f0; line-height: 1.4; font-style: italic;">
+                        <strong style="color: #fbbf24; font-style: normal; margin-right: 5px;">En palabras
+                            sencillas:</strong> La configuración avanzada estricta en Weka para hacer las pruebas
+                        sorpresa sin trampa, asegurándonos de que no le estemos mostrando información 'futura' al modelo
+                        durante su entrenamiento.
+                    </p>
+                </div>
+                <div class="concept-box"
+                    style="padding: 1.8rem; border-color: rgba(255,255,255,0.1); background: rgba(0,0,0,0.15);">
+                    <ul
+                        style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
+                        <!-- Item 1: Ruta Explorer -->
+                        <li style="display: flex; align-items: flex-start; gap: 10px;">
+                            <i class="fa-solid fa-code-merge"
+                                style="color: var(--accent-primary); font-size: 1.5rem; margin-top: 2px;"></i>
+                            <div>
+                                <strong style="color: #fff; font-size: 1.0rem; display: block; margin-bottom: 5px;">Ruta
+                                    Explorer:</strong>
+                                <span style="color: var(--text-muted); font-size: 1.0rem; line-height: 1.5;">
+                                    <span
+                                        style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">Classify
+                                        (Clasificar)</span>
+                                    &gt;
+                                    Panel <span
+                                        style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">Test
+                                        options</span> &gt;
+                                    <span
+                                        style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">Cross-validation
+                                        (Validación Cruzada)</span>
+                                    (Weka estratifica por defecto).
+                                </span>
+                            </div>
+                        </li>
+                        <!-- Item 2: Análisis de Varianza -->
+                        <li
+                            style="display: flex; align-items: flex-start; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                            <i class="fa-solid fa-chart-area"
+                                style="color: #38bdf8; font-size: 1.5rem; margin-top: 2px;"></i>
+                            <div>
+                                <strong
+                                    style="color: #fff; font-size: 1.0rem; display: block; margin-bottom: 5px;">Análisis
+                                    de Varianza:</strong>
+                                <span style="color: var(--text-muted); font-size: 1.0rem; line-height: 1.5;">
+                                    Usar <span
+                                        style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">More
+                                        options...</span> para alterar
+                                    <span
+                                        style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">Random
+                                        seed</span>
+                                    y demostrar la variabilidad del modelo según los cortes del Folds.
+                                </span>
+                            </div>
+                        </li>
+                        <!-- Item 3: Arquitectura Avanzada -->
+                        <li
+                            style="display: flex; align-items: flex-start; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                            <i class="fa-solid fa-triangle-exclamation"
+                                style="color: #f87171; font-size: 1.5rem; margin-top: 2px;"></i>
+                            <div style="width: 100%;">
+                                <strong
+                                    style="color: #f87171; font-size: 1.0rem; display: block; margin-bottom: 10px;">Arquitectura
+                                    Avanzada (Crucial):</strong>
+                                <span
+                                    style="color: var(--text-muted); font-size: 1.0rem; line-height: 1.5; display: block; margin-bottom: 8px;">
+                                    Evitar contaminar el test set al usar
+                                    <span
+                                        style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem; color: #fff;">SMOTE
+                                        (Sobremuestreo de Minorías Sintéticas)</span>
+                                    o re-balanceos.
+                                </span>
+                                <ul
+                                    style="list-style-type: disc; margin: 0 0 0 20px; padding: 0; color: #cbd5e1; font-size: 0.95rem; line-height: 1.7;">
+                                    <li>
+                                        No aplicar el filtro en la pestaña <span
+                                            style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">Preprocess
+                                            (Preprocesar)</span>.
+                                    </li>
+                                    <li>
+                                        Usar meta-clasificador <span
+                                            style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">FilteredClassifier
+                                            (Clasificador Filtrado)</span>.
+                                    </li>
+                                    <li>
+                                        Asignar <span
+                                            style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">SMOTE
+                                            (Sobremuestreo de Minorías Sintéticas)</span>
+                                        al filtro y
+                                        <span
+                                            style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9rem;">RandomForest
+                                            (Bosque Aleatorio)</span>
+                                        al base.
+                                        Esto garantiza que el sobremuestreo ocurra matemáticamente solo dentro de cada
+                                        loop de entrenamiento.
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide closing-slide">
+            <div class="card"
+                style="padding: 2rem 1.5rem; max-width: 1100px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 60vh;">
+                <i class="fa-solid fa-graduation-cap"
+                    style="font-size: 5rem; color: var(--accent-primary); margin-bottom: 12px; filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.4));"></i>
+                <h1
+                    style="font-size: 2.8rem; margin: 0 0 15px 0; background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    ¡Excelente trabajo hoy!</h1>
+                <p
+                    style="font-size: 0.95rem; color: #cbd5e1; max-width: 770px; margin: 0 auto 40px auto; line-height: 1.5;">
+                    Hemos transitado con éxito desde la formulación matemática abstracta (Regresión y Regularización)
+                    hasta la validación empírica y el despliegue práctico en Weka de múltiples ecosistemas analíticos.
+                </p>
+                <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 8px;">
+                    <div
+                        style="background: rgba(255,255,255,0.05); padding: 1.5rem 2.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                        <i class="fa-solid fa-comments"
+                            style="font-size: 2rem; color: #10b981; margin-bottom: 10px;"></i>
+                        <h3 style="margin: 0; color: #fff; font-size: 1.0rem;">Preguntas y Respuestas</h3>
+                    </div>
+                    <div
+                        style="background: rgba(255,255,255,0.05); padding: 1.5rem 2.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                        <i class="fa-solid fa-code" style="font-size: 2rem; color: #a78bfa; margin-bottom: 10px;"></i>
+                        <h3 style="margin: 0; color: #fff; font-size: 1.0rem;">Espacio de Laboratorio</h3>
+                    </div>
+                </div>
+                <p
+                    style="color: var(--text-muted); font-size: 1.0rem; font-style: italic; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 25px; width: 60%;">
+                    Fin de la Presentación
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="footer-nav">
+        <div class="slide-counter" id="slideCounter">01 / 12</div>
+    </div>
+    <!-- Modal Container -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal(event, true)">×</button>
+            <h2 class="modal-title" id="modalTitle">Título</h2>
+            <div class="modal-body" id="modalBody">
+                Descripción
+            </div>
+            <p
+                style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
+                Presiona ESC para cerrar
+            </p>
+        </div>
+    </div>
+    <script>
+        let currentSlide = 0;
+        let dikwStep = 0; // DIKW Stepper
+        const slides = document.querySelectorAll('.slide');
+        const progressBar = document.getElementById('progressBar');
+        const slideCounter = document.getElementById('slideCounter');
+
+        // Touch handling variables
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        function updateSlide() {
+            slides.forEach((slide, index) => {
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                } else {
+                    slide.classList.remove('active');
+                }
+            });
+
+            // Update UI
+            const progress = ((currentSlide + 1) / slides.length) * 100;
+            progressBar.style.width = progress + '%';
+            slideCounter.innerText = String(currentSlide + 1).padStart(2, '0') + " / " + String(slides.length).padStart(2, '0');
+
+            // Handle DIKW State
+            if (currentSlide === 3) { // DIKW is Slide index 3
+                updateDikw();
+            }
+        }
+
+        function updateDikw() {
+            const order = ['dikw-1', 'dikw-2', 'dikw-arrow', 'dikw-3', 'dikw-4'];
+            order.forEach((id, i) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (i < dikwStep) el.classList.add('visible');
+                    else el.classList.remove('visible');
+                }
+            });
+        }
+
+        function nextSlide() {
+            // DIKW Logic
+            if (currentSlide === 3 && dikwStep < 5) {
+                dikwStep++;
+                updateDikw();
+                return;
+            }
+
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+
+        function prevSlide() {
+            // DIKW Logic
+            if (currentSlide === 3 && dikwStep > 0) {
+                dikwStep--;
+                updateDikw();
+                return;
+            }
+
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+
+        // Keyboard Navigation
+
+        // CRISP-DM Content Data
+        const crispData = {
+            1: {
+                title: "1. Entendimiento del Negocio",
+                body: `<p>Antes de tocar un solo dato, debemos entender <strong>¿Qué problema queremos resolver?</strong></p>
+                       <ul>
+                           <li><strong>Objetivos:</strong> Aumentar ventas, reducir fraude, fidelizar clientes.</li>
+                           <li><strong>Criterios de Éxito:</strong> ¿Cómo mediremos si funcionó? (Ej: Reducir churn en un 5%).</li>
+                           <li><strong>Planificación:</strong> Definir recursos, costos y tiempos.</li>
+                       </ul>
+                       <p><em>"Si no sabes a dónde vas, cualquier camino te servirá... para perderte."</em></p>`
+            },
+            2: {
+                title: "2. Entendimiento de Datos",
+                body: `<p>Adquirir los datos y echar un primer vistazo.</p>
+                       <ul>
+                           <li><strong>Recolección:</strong> ¿De dónde sacamos los datos? (SQL, APIs, Excel).</li>
+                           <li><strong>Exploración Inicial:</strong> ¿Qué columnas hay? ¿Qué significan?</li>
+                           <li><strong>Calidad:</strong> ¿Hay valores nulos? ¿Errores evidentes? ¿Duplicados?</li>
+                       </ul>`
+            },
+            3: {
+                title: "3. Preparación de Datos",
+                body: `<p style="color: #f59e0b; font-weight: bold;">⚠️ La fase más larga: consume el 80% del tiempo.</p>
+                       <p>Los algoritmos necesitan datos limpios y ordenados.</p>
+                       <ul>
+                           <li><strong>Limpieza:</strong> Imputar nulos, corregir erratas.</li>
+                           <li><strong>Transformación:</strong> Normalizar rangos (0-1), convertir texto a números (One-Hot Encoding / Codificación Binaria).</li>
+                           <li><strong>Feature Engineering (Ingeniería de Características) (Ingeniería de Características):</strong> Crear nuevas variables que aporten valor (Ej: De "Fecha Nacimiento" extraer "Edad").</li>
+                       </ul>`
+            },
+            4: {
+                title: "4. Modelado",
+                body: `<p>La parte "divertida" donde aplicamos algoritmos.</p>
+                       <ul>
+                           <li><strong>Selección:</strong> ¿Árboles de decisión? ¿Redes neuronales? ¿Regresión lineal?</li>
+                           <li><strong>Entrenamiento:</strong> Alimentar el modelo con los datos preparados.</li>
+                           <li><strong>Ajuste (Tuning/Afinamiento):</strong> Modificar hiperparámetros para mejorar la precisión.</li>
+                       </ul>`
+            },
+            5: {
+                title: "5. Evaluación",
+                body: `<p>Ya tenemos un modelo, pero... ¿Sirve para el negocio?</p>
+                       <ul>
+                           <li><strong>Métricas Técnicas:</strong> Accuracy (Exactitud), Precision (Precisión), Recall (Sensibilidad), F1-Score.</li>
+                           <li><strong>Validación de Negocio:</strong> ¿El modelo cumple el criterio de éxito definido en la fase 1?</li>
+                           <li><strong>Seguridad:</strong> Verificar que no haya sesgos éticos graves.</li>
+                       </ul>`
+            },
+            6: {
+                title: "6. Despliegue",
+                body: `<p>El modelo sale del laboratorio al mundo real.</p>
+                       <ul>
+                           <li><strong>Integración:</strong> Conectar el modelo a la App o Web de la empresa.</li>
+                           <li><strong>Monitoreo:</strong> Vigilar que siga funcionando bien con el tiempo (Data Drift (Desviación de Datos) / Desviación de datos).</li>
+                           <li><strong>Reporting (Reportes):</strong> Generar informes automáticos para la gerencia.</li>
+                       </ul>`
+            },
+            'weka_data': {
+                title: "Fuentes de Datos (Datasets) para Weka",
+                body: `<p>Para utilizar Weka en los laboratorios, tienes excelentes fuentes gratuitas:</p>
+                       <h3 style="color: var(--accent-primary); margin-top: 15px; font-size: 1.2rem;">1. Datos Nativos de Weka (La mejor opción para empezar)</h3>
+                       <p>Al instalar Weka, se incluye una carpeta <strong>data</strong> con archivos <code>.arff</code> (el formato nativo de Weka).</p>
+                       <ul style="margin-bottom: 15px;">
+                           <li><strong>Ubuntu/Mac/Linux:</strong> Dentro de la carpeta de instalación.</li>
+                           <li><strong>Ruta Windows:</strong> <code>C:\\Program Files\\Weka-3-8\\data</code></li>
+                       </ul>
+                       <p><strong>Ejemplos Clásicos Incluidos:</strong></p>
+                       <ul>
+                           <li><code>iris.arff</code>: Clasificación botánica de tipos de flores.</li>
+                           <li><code>weather.numeric.arff</code> / <code>weather.nominal.arff</code>: Decidir si se juega golf (ideal para principiantes).</li>
+                           <li><code>supermarket.arff</code>: Excelente para reglas de asociación.</li>
+                           <li><code>soybean.arff</code> y <code>glass.arff</code>.</li>
+                       </ul>
+                       <div style="background: rgba(255,193,7,0.1); border-left: 3px solid #ffc107; padding: 10px; margin-top: 15px; border-radius: 4px;">
+                           <p style="margin: 0; font-size: 0.95rem;"><strong>💡 Tip:</strong> Otras excelentes fuentes externas son <a href="https://www.kaggle.com/datasets" target="_blank" style="color: #ffc107;">Kaggle</a> (Weka permite importar .csv), <a href="https://archive.ics.uci.edu/" target="_blank" style="color: #ffc107;">UCI Machine Learning Repository</a>, y <a href="https://datasetsearch.research.google.com/" target="_blank" style="color: #ffc107;">Google Dataset Search</a>.</p>
+                       </div>`
+            }
+        };
+
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+
+        function openModal(id) {
+            const data = crispData[id];
+            if (!data) return;
+
+            modalTitle.innerText = data.title;
+            modalBody.innerHTML = data.body;
+            modalOverlay.classList.add('open');
+            // Prevent scrolling background
+            // document.body.style.overflow = 'hidden'; // Optional: might conflict with slide structure
+        }
+
+        function closeModal(e, force = false) {
+            if (force || e.target === modalOverlay) {
+                modalOverlay.classList.remove('open');
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (['ArrowRight', 'Space', 'PageDown'].includes(e.code)) {
+                if (!modalOverlay.classList.contains('open')) nextSlide();
+            }
+            if (['ArrowLeft', 'PageUp'].includes(e.code)) {
+                if (!modalOverlay.classList.contains('open')) prevSlide();
+            }
+            if (e.code === 'Escape' && modalOverlay.classList.contains('open')) {
+                closeModal(null, true);
+            }
+        });
+
+        // Touch Navigation
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            const threshold = 50;
+            if (touchEndX < touchStartX - threshold) nextSlide();
+            if (touchEndX > touchStartX + threshold) prevSlide();
+        }
+
+        updateSlide();
+    </script>
+</body>
+
+</html>
