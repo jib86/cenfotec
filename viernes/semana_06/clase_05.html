@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentes Inteligentes</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lato:wght@300;400;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* =========================================
+           CORE VARIABLES & THEME
+           ========================================= */
+        :root {
+            --bg-deep: #020617;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --c-cyan: #22d3ee;
+            --c-purple: #d8b4fe;
+            --c-pink: #f472b6;
+            --c-green: #4ade80;
+            --c-gold: #facc15;
+            --glass-bg: rgba(15, 23, 42, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.03);
+            --glass-blur: blur(20px);
+            --radius-lg: 24px;
+            --radius-md: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg-deep);
+            background-image: radial-gradient(circle at 50% 120%, #1e1b4b, #020617);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Ambient Background Orbs */
+        body::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.1), transparent 60%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            bottom: -20%;
+            right: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(192, 132, 252, 0.1), transparent 60%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+            animation: float 25s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(20px, 40px);
+            }
+        }
+
+        /* UI Elements */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--c-cyan), var(--c-purple));
+            width: 0%;
+            transition: width 0.3s;
+            z-index: 200;
+            box-shadow: 0 0 15px var(--c-cyan);
+        }
+
+        .slide-counter {
+            position: fixed;
+            bottom: 25px;
+            right: 35px;
+            background: rgba(15, 23, 42, 0.8);
+            padding: 8px 16px;
+            border-radius: 99px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Slides Architecture */
+        .slides-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.96) translateY(15px);
+            transition: opacity 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            padding: 40px;
+            pointer-events: none;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateY(0);
+            pointer-events: all;
+            z-index: 10;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-top: 1px solid var(--glass-highlight);
+            border-radius: var(--radius-lg);
+            padding: 2.2rem 2.8rem;
+            width: 100%;
+            max-width: 1300px;
+            max-height: 93vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            position: relative;
+        }
+
+        /* Typography */
+        h1 {
+            font-family: 'Lato', sans-serif;
+            font-weight: 900;
+            font-size: clamp(2.5rem, 4.5vw, 4.5rem);
+            line-height: 1.1;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #fff 20%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.03em;
+        }
+
+        h2 {
+            font-family: 'Lato', sans-serif;
+            font-weight: 800;
+            font-size: clamp(1.8rem, 3vw, 2.8rem);
+            margin-bottom: 1.5rem;
+            background: linear-gradient(90deg, #fff, var(--c-cyan));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            color: #fff;
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        p,
+        li {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: var(--text-muted);
+            margin-bottom: 0.8rem;
+        }
+
+        strong {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        /* Grids & Boxes */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .concept-box {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .concept-box:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+        }
+
+        .example-box {
+            border-left: 4px solid var(--c-cyan);
+            background: rgba(34, 211, 238, 0.05);
+            padding: 1.2rem 1.5rem;
+            border-radius: 0 16px 16px 0;
+            margin: 1rem 0;
+        }
+
+        /* Pills & Tags */
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding: 6px 16px;
+            border-radius: 30px;
+            margin-bottom: 1.5rem;
+            align-self: flex-start;
+            border: 1px solid;
+        }
+
+        .pill-gold {
+            background: rgba(250, 204, 21, 0.1);
+            border-color: var(--c-gold);
+            color: var(--c-gold);
+        }
+
+        .pill-cyan {
+            background: rgba(34, 211, 238, 0.1);
+            border-color: var(--c-cyan);
+            color: var(--c-cyan);
+        }
+
+        .pill-pink {
+            background: rgba(244, 114, 182, 0.1);
+            border-color: var(--c-pink);
+            color: var(--c-pink);
+        }
+
+        .pill-purple {
+            background: rgba(216, 180, 254, 0.1);
+            border-color: var(--c-purple);
+            color: var(--c-purple);
+        }
+
+        .pill-green {
+            background: rgba(74, 222, 128, 0.1);
+            border-color: var(--c-green);
+            color: var(--c-green);
+        }
+
+        .step-tag {
+            background: var(--c-cyan);
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-weight: 900;
+            margin-right: 12px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Tables & Code */
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--c-gold);
+            background: rgba(0, 0, 0, 0.4);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            border: 1px solid rgba(250, 204, 21, 0.2);
+        }
+
+        .logic-syntax {
+            color: var(--c-pink);
+            font-weight: bold;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--c-cyan);
+            padding: 20px;
+            text-align: left;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        td {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+
+    <div class="slides-container">
+
+        <!-- PORTADA -->
+        <div class="slide active">
+            <div class="card"
+                style="align-items: center; justify-content: center; text-align: center; overflow: hidden; padding: 2rem 3rem; position: relative;">
+
+                <!-- Red de nodos decorativa (SVG) -->
+                <svg style="position:absolute; inset:0; width:100%; height:100%; opacity:0.06; pointer-events:none;"
+                    viewBox="0 0 1200 700" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Nodos -->
+                    <circle cx="100" cy="120" r="6" fill="#22d3ee" />
+                    <circle cx="350" cy="80" r="5" fill="#a855f7" />
+                    <circle cx="600" cy="180" r="7" fill="#22d3ee" />
+                    <circle cx="850" cy="60" r="5" fill="#f472b6" />
+                    <circle cx="1100" cy="140" r="6" fill="#a855f7" />
+                    <circle cx="200" cy="320" r="5" fill="#f472b6" />
+                    <circle cx="480" cy="350" r="8" fill="#22d3ee" />
+                    <circle cx="720" cy="300" r="5" fill="#a855f7" />
+                    <circle cx="950" cy="280" r="6" fill="#22d3ee" />
+                    <circle cx="150" cy="540" r="5" fill="#22d3ee" />
+                    <circle cx="400" cy="560" r="6" fill="#a855f7" />
+                    <circle cx="670" cy="500" r="5" fill="#f472b6" />
+                    <circle cx="900" cy="580" r="7" fill="#22d3ee" />
+                    <circle cx="1080" cy="480" r="5" fill="#a855f7" />
+                    <!-- Conexiones -->
+                    <line x1="100" y1="120" x2="350" y2="80" stroke="#22d3ee" stroke-width="1" />
+                    <line x1="350" y1="80" x2="600" y2="180" stroke="#a855f7" stroke-width="1" />
+                    <line x1="600" y1="180" x2="850" y2="60" stroke="#22d3ee" stroke-width="1" />
+                    <line x1="850" y1="60" x2="1100" y2="140" stroke="#f472b6" stroke-width="1" />
+                    <line x1="100" y1="120" x2="200" y2="320" stroke="#a855f7" stroke-width="1" />
+                    <line x1="350" y1="80" x2="480" y2="350" stroke="#22d3ee" stroke-width="1" />
+                    <line x1="600" y1="180" x2="480" y2="350" stroke="#f472b6" stroke-width="1" />
+                    <line x1="600" y1="180" x2="720" y2="300" stroke="#a855f7" stroke-width="1" />
+                    <line x1="850" y1="60" x2="950" y2="280" stroke="#22d3ee" stroke-width="1" />
+                    <line x1="1100" y1="140" x2="950" y2="280" stroke="#a855f7" stroke-width="1" />
+                    <line x1="200" y1="320" x2="480" y2="350" stroke="#22d3ee" stroke-width="1" />
+                    <line x1="480" y1="350" x2="720" y2="300" stroke="#f472b6" stroke-width="1" />
+                    <line x1="720" y1="300" x2="950" y2="280" stroke="#22d3ee" stroke-width="1" />
+                    <line x1="950" y1="280" x2="1080" y2="480" stroke="#a855f7" stroke-width="1" />
+                    <line x1="200" y1="320" x2="150" y2="540" stroke="#f472b6" stroke-width="1" />
+                    <line x1="480" y1="350" x2="400" y2="560" stroke="#22d3ee" stroke-width="1" />
+                    <line x1="720" y1="300" x2="670" y2="500" stroke="#a855f7" stroke-width="1" />
+                    <line x1="950" y1="280" x2="900" y2="580" stroke="#22d3ee" stroke-width="1" />
+                    <line x1="1080" y1="480" x2="900" y2="580" stroke="#f472b6" stroke-width="1" />
+                    <line x1="150" y1="540" x2="400" y2="560" stroke="#22d3ee" stroke-width="1" />
+                    <line x1="400" y1="560" x2="670" y2="500" stroke="#a855f7" stroke-width="1" />
+                    <line x1="670" y1="500" x2="900" y2="580" stroke="#22d3ee" stroke-width="1" />
+                </svg>
+
+                <!-- Encabezado -->
+                <div
+                    style="display:flex; gap:1rem; justify-content:center; margin-bottom:1.5rem; flex-wrap:wrap; z-index:1;">
+                    <div class="pill pill-gold"><i class="fa-solid fa-gem"></i> Maestría Profesional</div>
+                    <div class="pill pill-cyan" style="letter-spacing:2px; font-size:0.78rem;">PSWE-18
+                        &nbsp;&middot;&nbsp; Aplicaciones de la I.A.</div>
+                </div>
+
+                <!-- Clase -->
+                <p
+                    style="font-size:0.78rem; letter-spacing:4px; text-transform:uppercase; color:var(--c-purple); font-weight:700; margin-bottom:0.6rem; z-index:1;">
+                    Clase 06</p>
+
+                <!-- Título principal -->
+                <h1
+                    style="font-size:clamp(3.2rem, 6vw, 6.5rem); text-align:center; line-height:1.05; margin-bottom:0.8rem; z-index:1; background:linear-gradient(135deg, #fff 25%, var(--c-cyan) 60%, var(--c-purple) 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-2px;">
+                    Agentes<br>Inteligentes</h1>
+
+                <!-- Subtítulo -->
+                <h2
+                    style="font-size:clamp(1rem, 2vw, 1.45rem); margin-bottom:1.2rem; text-align:center; justify-content:center; background:linear-gradient(90deg, var(--c-purple), var(--c-pink)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; z-index:1;">
+                    Fundamentos, Estructura, Arquitectura y Tipos</h2>
+
+                <!-- Frase inspiracional -->
+                <p
+                    style="font-size:1rem; font-style:italic; color:var(--text-muted); max-width:680px; line-height:1.7; margin-bottom:1.8rem; z-index:1;">
+                    "Todo sistema que percibe su entorno y actúa sobre él buscando un objetivo es, en esencia, <strong
+                        style='color:var(--text-main);'>inteligente</strong>."</p>
+
+                <!-- Divisor -->
+                <div
+                    style="width:60%; max-width:400px; height:1px; background:linear-gradient(90deg, transparent, rgba(34,211,238,0.4), transparent); margin-bottom:1.8rem; z-index:1;">
+                </div>
+
+                <!-- Footer con info -->
+                <div
+                    style="display:grid; grid-template-columns: repeat(3,1fr); gap:2rem; width:100%; max-width:900px; z-index:1;">
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+                        <span
+                            style="font-size:0.7rem; letter-spacing:2px; text-transform:uppercase; color:var(--c-cyan); font-weight:700;"><i
+                                class="fa-solid fa-chalkboard-user"></i>&nbsp; Docente</span>
+                        <span style="font-size:1.05rem; color:var(--text-main); font-weight:600;">Dr. J. Ignacio
+                            Borge</span>
+                    </div>
+                    <div
+                        style="display:flex; flex-direction:column; align-items:center; gap:6px; border-left:1px solid rgba(255,255,255,0.08); border-right:1px solid rgba(255,255,255,0.08);">
+                        <span
+                            style="font-size:0.7rem; letter-spacing:2px; text-transform:uppercase; color:var(--c-pink); font-weight:700;"><i
+                                class="fa-solid fa-calendar"></i>&nbsp; Fecha</span>
+                        <span style="font-size:1.05rem; color:var(--text-main); font-weight:600;">27 de Febrero,
+                            2026</span>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+                        <span
+                            style="font-size:0.7rem; letter-spacing:2px; text-transform:uppercase; color:var(--c-green); font-weight:700;"><i
+                                class="fa-solid fa-building-columns"></i>&nbsp; Institución</span>
+                        <span style="font-size:1.05rem; color:var(--text-main); font-weight:600;">Universidad
+                            Cenfotec</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Diapositiva 1: Introducción al Bloque -->
+        <div class="slide">
+            <div class="card" style="align-items: center; justify-content: center;">
+                <div class="pill pill-gold"><i class="fa-solid fa-book-open"></i> Bloque Teórico I</div>
+                <h1 style="font-size: clamp(2.5rem, 4vw, 4rem); text-align: center;">Agentes Inteligentes</h1>
+                <h2
+                    style="justify-content: center; background: linear-gradient(90deg, var(--c-purple), var(--c-cyan)); -webkit-background-clip: text; margin-bottom: 1.5rem; text-align: center;">
+                    Fundamentos, Estructura y Arquitectura</h2>
+
+                <div class="grid-2" style="width: 100%; align-items: center; max-width: 1000px; margin: 0 auto;">
+                    <div style="text-align: right; padding-right: 2rem; border-right: 2px solid rgba(255,255,255,0.1);">
+                        <p style="font-size: 1.4rem; font-style: italic; color: var(--text-main); line-height: 1.6;">
+                            "¿Qué tienen en común un <strong>termostato</strong>, un <strong>auto que se conduce
+                                solo</strong>, un asistente virtual como <strong>Siri</strong> y un bot que juega
+                            <strong>ajedrez</strong>?"
+                        </p>
+                    </div>
+                    <div style="padding-left: 1rem;">
+                        <div style="display: flex; align-items: start; gap: 15px;">
+                            <i class="fa-solid fa-lightbulb"
+                                style="font-size: 2rem; color: var(--c-gold); margin-top: 5px;"></i>
+                            <div>
+                                <p
+                                    style="color: var(--c-cyan); font-weight: 800; font-size: 1.4rem; margin-bottom: 0.5rem;">
+                                    Todos son agentes inteligentes.</p>
+                                <p style="font-size: 1.1rem; color: var(--text-muted);">Hoy vamos a deconstruirlos y
+                                    entender paso a paso cómo funcionan por dentro.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide AGENDA: Mapa de Sesión -->
+        <div class="slide">
+            <div class="card" style="align-items: center; justify-content: center;">
+                <div class="pill pill-cyan"><i class="fa-solid fa-map"></i> Mapa de la Sesión de Hoy</div>
+                <h2 style="text-align: center; margin-bottom: 2.5rem;">¿Hacia dónde vamos?</h2>
+                <div
+                    style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; width: 100%; max-width: 1150px;">
+                    <div
+                        style="background: rgba(250,204,21,0.07); border: 2px solid rgba(250,204,21,0.4); border-radius: 18px; padding: 1.8rem 1.5rem; text-align: center; position: relative;">
+                        <div
+                            style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: var(--c-gold); color: #000; font-weight: 900; font-size: 0.8rem; padding: 3px 12px; border-radius: 20px; letter-spacing: 1px;">
+                            BLOQUE A</div>
+                        <i class="fa-solid fa-lightbulb"
+                            style="font-size: 2.2rem; color: var(--c-gold); margin-bottom: 1rem;"></i>
+                        <p style="font-weight: 800; color: var(--c-gold); font-size: 1.1rem; margin-bottom: 0.5rem;">
+                            Pregunta Gancho</p>
+                        <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">Activación de conocimiento
+                            previo sobre lo que es un agente.</p>
+                        <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--c-gold); font-weight: 700;">~5 min
+                        </p>
+                    </div>
+                    <div
+                        style="background: rgba(34,211,238,0.07); border: 2px solid rgba(34,211,238,0.4); border-radius: 18px; padding: 1.8rem 1.5rem; text-align: center; position: relative;">
+                        <div
+                            style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: var(--c-cyan); color: #000; font-weight: 900; font-size: 0.8rem; padding: 3px 12px; border-radius: 20px; letter-spacing: 1px;">
+                            BLOQUE B</div>
+                        <i class="fa-solid fa-book-open"
+                            style="font-size: 2.2rem; color: var(--c-cyan); margin-bottom: 1rem;"></i>
+                        <p style="font-weight: 800; color: var(--c-cyan); font-size: 1.1rem; margin-bottom: 0.5rem;">
+                            Teoría I: Fundamentos</p>
+                        <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">Definición, estructura,
+                            racionalidad y representación del conocimiento.</p>
+                        <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--c-cyan); font-weight: 700;">~40 min
+                        </p>
+                    </div>
+                    <div
+                        style="background: rgba(216,180,254,0.07); border: 2px solid rgba(216,180,254,0.4); border-radius: 18px; padding: 1.8rem 1.5rem; text-align: center; position: relative;">
+                        <div
+                            style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: var(--c-purple); color: #000; font-weight: 900; font-size: 0.8rem; padding: 3px 12px; border-radius: 20px; letter-spacing: 1px;">
+                            BLOQUE C</div>
+                        <i class="fa-solid fa-layer-group"
+                            style="font-size: 2.2rem; color: var(--c-purple); margin-bottom: 1rem;"></i>
+                        <p style="font-weight: 800; color: var(--c-purple); font-size: 1.1rem; margin-bottom: 0.5rem;">
+                            Teoría II: Tipos</p>
+                        <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">Los 4 tipos de agentes: de
+                            reactivo simple a basado en utilidad.</p>
+                        <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--c-purple); font-weight: 700;">~40
+                            min</p>
+                    </div>
+                    <div
+                        style="background: rgba(244,114,182,0.07); border: 2px solid rgba(244,114,182,0.4); border-radius: 18px; padding: 1.8rem 1.5rem; text-align: center; position: relative;">
+                        <div
+                            style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: var(--c-pink); color: #000; font-weight: 900; font-size: 0.8rem; padding: 3px 12px; border-radius: 20px; letter-spacing: 1px;">
+                            BLOQUE D</div>
+                        <i class="fa-solid fa-users-gear"
+                            style="font-size: 2.2rem; color: var(--c-pink); margin-bottom: 1rem;"></i>
+                        <p style="font-weight: 800; color: var(--c-pink); font-size: 1.1rem; margin-bottom: 0.5rem;">
+                            Caso Práctico ABP</p>
+                        <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">Análisis en equipos:
+                            Supermercado Online con agente inteligente.</p>
+                        <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--c-pink); font-weight: 700;">~50 min
+                            · 5% nota</p>
+                    </div>
+                </div>
+                <p style="margin-top: 1rem; color: var(--text-muted); font-size: 0.95rem; text-align: center;"><i
+                        class="fa-solid fa-circle-info" style="color:var(--c-cyan);"></i> La duración total de la sesión
+                    es de aproximadamente <strong style="color:var(--text-main);">3 horas</strong>. Habrá una pausa
+                    breve entre los bloques B y C.</p>
+            </div>
+        </div>
+
+        <!-- Diapositiva 2: Definición Formal -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-cyan">1. Definición Formal</div>
+                <h2>El Concepto de Agente Inteligente</h2>
+                <p style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.95rem;"><i
+                        class="fa-solid fa-rotate-left" style="color:var(--c-gold);"></i> El <strong
+                        style="color:var(--text-main);">termostato</strong>, <strong
+                        style="color:var(--text-main);">Siri</strong>, el <strong style="color:var(--text-main);">auto
+                        autónomo</strong> y el bot de <strong style="color:var(--text-main);">ajedrez</strong> son todos
+                    agentes — porque cumplen esta misma definición:</p>
+                <p
+                    style="font-size: 1.15rem; margin-bottom: 1rem; border-left: 4px solid var(--c-cyan); padding: 1rem 1.5rem; border-radius: 0 16px 16px 0; background: rgba(34, 211, 238, 0.05);">
+                    <strong>Concepto General:</strong> Un agente es cualquier cosa capaz de percibir su entorno mediante
+                    <strong>sensores</strong> y actuar sobre ese entorno mediante <strong>actuadores</strong>.
+                </p>
+
+                <div class="grid-3">
+                    <div class="concept-box" style="border-top: 4px solid var(--c-pink);">
+                        <h3 style="color: var(--c-pink);"><i class="fa-solid fa-user"></i> Analogía Humana</h3>
+                        <p style="margin-bottom: 0.75rem;">Nosotros actuamos como agentes biológicos en el mundo real.
+                        </p>
+                        <ul style="list-style: none; padding-left: 0;">
+                            <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 10px;"><i
+                                    class="fa-solid fa-eye" style="color:var(--text-muted); width: 25px;"></i>
+                                <div><strong>Sensores:</strong><br><span
+                                        style="color: var(--text-muted); font-size: 0.95em;">Ojos, oídos, piel.</span>
+                                </div>
+                            </li>
+                            <li style="display: flex; align-items: center; gap: 10px;"><i class="fa-solid fa-hand"
+                                    style="color:var(--text-muted); width: 25px;"></i>
+                                <div><strong>Actuadores:</strong><br><span
+                                        style="color: var(--text-muted); font-size: 0.95em;">Manos, piernas, voz.</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="concept-box" style="border-top: 4px solid var(--c-purple);">
+                        <h3 style="color: var(--c-purple);"><i class="fa-solid fa-robot"></i> Analogía de Software</h3>
+                        <p style="margin-bottom: 0.75rem;">Los agentes digitales operan en entornos virtuales.</p>
+                        <ul style="list-style: none; padding-left: 0;">
+                            <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 10px;"><i
+                                    class="fa-solid fa-keyboard" style="color:var(--text-muted); width: 25px;"></i>
+                                <div><strong>Sensores:</strong><br><span
+                                        style="color: var(--text-muted); font-size: 0.95em;">Clics, archivos,
+                                        red.</span></div>
+                            </li>
+                            <li style="display: flex; align-items: center; gap: 10px;"><i class="fa-solid fa-desktop"
+                                    style="color:var(--text-muted); width: 25px;"></i>
+                                <div><strong>Actuadores:</strong><br><span
+                                        style="color: var(--text-muted); font-size: 0.95em;">Pantalla, archivos,
+                                        logs.</span></div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="concept-box" style="border-top: 4px solid var(--c-green); text-align: center;">
+                        <h3 style="color: var(--c-green); justify-content: center;"><i
+                                class="fa-solid fa-arrows-spin"></i> Ciclo Fundamental</h3>
+                        <p style="margin-bottom: 1rem;">Se repite continuamente:</p>
+                        <div
+                            style="margin-top: 0.8rem; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                            <div
+                                style="background: rgba(74, 222, 128, 0.1); border: 1px solid var(--c-green); padding: 8px 20px; border-radius: 8px; font-weight: bold; color: var(--c-green); width: 85%;">
+                                Percibir</div>
+                            <i class="fa-solid fa-arrow-down" style="color: var(--text-muted);"></i>
+                            <div
+                                style="background: rgba(34, 211, 238, 0.1); border: 1px solid var(--c-cyan); padding: 8px 20px; border-radius: 8px; font-weight: bold; color: var(--c-cyan); width: 85%;">
+                                Razonar (Decidir)</div>
+                            <i class="fa-solid fa-arrow-down" style="color: var(--text-muted);"></i>
+                            <div
+                                style="background: rgba(244, 114, 182, 0.1); border: 1px solid var(--c-pink); padding: 8px 20px; border-radius: 8px; font-weight: bold; color: var(--c-pink); width: 85%;">
+                                Actuar</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diapositiva 3: Estructura de un Agente -->
+        <div class="slide">
+            <div class="card">
+                <h2><i class="fa-solid fa-cubes"></i> Estructura de un Agente</h2>
+                <p style="margin-bottom: 2rem;">Todo agente inteligente se compone de tres elementos fundamentales que
+                    trabajan en conjunto:</p>
+                <div class="grid-3">
+                    <div class="concept-box" style="border-top: 4px solid var(--c-cyan);">
+                        <h3 style="color: var(--c-cyan);"><i class="fa-solid fa-microchip"></i> Arquitectura</h3>
+                        <p style="margin-bottom: 1rem;">El <strong>"cuerpo"</strong> o soporte físico/software donde se
+                            ejecuta el agente.</p>
+                        <ul style="list-style: none; padding-left: 0;">
+                            <li style="margin-bottom: 10px;"><i class="fa-solid fa-circle-dot"
+                                    style="color:var(--c-cyan); margin-right:8px; font-size:0.7em;"></i><strong>Robot:</strong>
+                                <span style="color:var(--text-muted);">Motores + cámaras físicas.</span>
+                            </li>
+                            <li style="margin-bottom: 10px;"><i class="fa-solid fa-circle-dot"
+                                    style="color:var(--c-cyan); margin-right:8px; font-size:0.7em;"></i><strong>PC:</strong>
+                                <span style="color:var(--text-muted);">Hardware de cómputo.</span>
+                            </li>
+                            <li><i class="fa-solid fa-circle-dot"
+                                    style="color:var(--c-cyan); margin-right:8px; font-size:0.7em;"></i><strong>Docker:</strong>
+                                <span style="color:var(--text-muted);">Contenedor de software.</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="concept-box" style="border-top: 4px solid var(--c-purple);">
+                        <h3 style="color: var(--c-purple);"><i class="fa-solid fa-brain"></i> Programa del Agente</h3>
+                        <p style="margin-bottom: 1rem;">La <strong>"mente"</strong>: el algoritmo que mapea percepciones
+                            a acciones.</p>
+                        <div class="example-box"
+                            style="margin: 0; border-color: var(--c-purple); background: rgba(216, 180, 254, 0.05); padding: 1rem;">
+                            <p
+                                style="font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: var(--text-main); margin-bottom: 0;">
+                                <span style="color:var(--c-gold);">SI</span> ve_suciedad<br>
+                                <span style="color:var(--c-gold);">ENTONCES</span> <span
+                                    style="color:var(--c-green);">activar_aspiradora</span>
+                            </p>
+                        </div>
+                        <p style="margin-top: 1rem; font-size: 0.95rem; color: var(--text-muted);">El agente aspiradora
+                            aplica esta lógica condicional de forma continua.</p>
+                    </div>
+                    <div class="concept-box" style="border-top: 4px solid var(--c-gold);">
+                        <h3 style="color: var(--c-gold);"><i class="fa-solid fa-trophy"></i> Medida de Rendimiento</h3>
+                        <p style="margin-bottom: 1rem;">El criterio que define el <strong>éxito</strong> del agente. Su
+                            meta a cumplir.</p>
+                        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 1rem;">
+                            <div
+                                style="background: rgba(250,204,21,0.07); border: 1px solid rgba(250,204,21,0.2); border-radius: 10px; padding: 10px 14px;">
+                                <span
+                                    style="color:var(--c-gold); font-size:0.8rem; font-weight:800; letter-spacing:1px;">META
+                                    A</span>
+                                <p style="margin: 4px 0 0 0; font-size:0.95rem; color:var(--text-muted);">Polvo recogido
+                                    en 1 hora.</p>
+                            </div>
+                            <div
+                                style="background: rgba(250,204,21,0.07); border: 1px solid rgba(250,204,21,0.2); border-radius: 10px; padding: 10px 14px;">
+                                <span
+                                    style="color:var(--c-gold); font-size:0.8rem; font-weight:800; letter-spacing:1px;">META
+                                    B</span>
+                                <p style="margin: 4px 0 0 0; font-size:0.95rem; color:var(--text-muted);">% de
+                                    habitación limpia.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diapositiva 4: Racionalidad -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-pink">3. Racionalidad</div>
+                <h2><i class="fa-solid fa-scale-balanced"></i> ¿Qué Significa Ser Racional?</h2>
+                <div class="grid-2">
+                    <div>
+                        <div class="example-box" style="margin-bottom: 1.5rem;">
+                            <p style="font-size:1.2rem; line-height:1.7;">Un agente racional <strong>no es
+                                    omnisciente</strong> — no lo sabe todo. Es aquel que, para cada secuencia de
+                                percepciones, elige la acción que <strong>espera maximice su medida de
+                                    rendimiento</strong>, basándose en la evidencia percibida y su conocimiento interno.
+                            </p>
+                        </div>
+                        <p style="color:var(--text-muted);">La racionalidad no exige perfección: exige la <strong>mejor
+                                decisión posible</strong> dado lo que el agente sabe en ese momento.</p>
+                    </div>
+                    <div>
+                        <div class="concept-box" style="border-top: 4px solid var(--c-green); margin-bottom: 1.5rem;">
+                            <h3 style="color: var(--c-green);"><i class="fa-solid fa-gears"></i> Programa Tradicional
+                            </h3>
+                            <p>Sigue instrucciones <strong>fijas</strong> y predeterminadas. No evalúa contexto ni
+                                opciones alternativas.</p>
+                            <p
+                                style="font-family: 'JetBrains Mono', monospace; font-size:0.9rem; color:var(--text-muted); margin:0;">
+                                IF x == 5 THEN do_y() <span style="color:var(--c-pink);">//siempre</span></p>
+                        </div>
+                        <div class="concept-box" style="border-top: 4px solid var(--c-purple);">
+                            <h3 style="color: var(--c-purple);"><i class="fa-solid fa-robot"></i> Agente Racional</h3>
+                            <p>Evalúa <strong>múltiples opciones</strong> y selecciona la que mejor cumple su objetivo
+                                según el estado actual del entorno.</p>
+                            <p
+                                style="font-family: 'JetBrains Mono', monospace; font-size:0.9rem; color:var(--text-muted); margin:0;">
+                                best_action = argmax(utility) <span style="color:var(--c-green);">✓</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diapositiva 5: Representación del Conocimiento -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-purple">4. Representación del Conocimiento</div>
+                <h2><i class="fa-solid fa-book-bookmark"></i> La Mente del Agente: Modelar el Mundo</h2>
+                <div class="grid-2">
+                    <div>
+                        <p style="margin-bottom:1.5rem;">Para que un agente sea <strong>realmente inteligente</strong>,
+                            no basta con reglas fijas. Necesita un <strong>"modelo"</strong> de cómo funciona el mundo —
+                            una representación del conocimiento.</p>
+                        <div class="example-box"
+                            style="border-color: var(--c-purple); background: rgba(216,180,254,0.05);">
+                            <h3 style="color:var(--c-purple);"><i class="fa-solid fa-hospital-user"></i> Caso: Agente de
+                                Citas Médicas</h3>
+                            <p style="margin-bottom: 0.5rem;">Para funcionar, el agente debe "saber":</p>
+                            <ul style="list-style: none; padding-left: 0; margin: 0;">
+                                <li style="margin-bottom:8px;"><i class="fa-solid fa-check"
+                                        style="color:var(--c-green); margin-right:8px;"></i>¿Qué es un
+                                    <strong>horario</strong>?
+                                </li>
+                                <li style="margin-bottom:8px;"><i class="fa-solid fa-check"
+                                        style="color:var(--c-green); margin-right:8px;"></i>¿Qué es un <strong>conflicto
+                                        de horarios</strong>?</li>
+                                <li><i class="fa-solid fa-check"
+                                        style="color:var(--c-green); margin-right:8px;"></i>¿Qué es un
+                                    <strong>paciente</strong>?
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="concept-box"
+                        style="border-left: 4px solid var(--c-gold); border-radius: 0 16px 16px 0; background: rgba(250,204,21,0.04);">
+                        <h3 style="color:var(--c-gold); margin-bottom:1.5rem;"><i class="fa-solid fa-link"></i>
+                            Referencia: Gelfond &amp; Kahl</h3>
+                        <p style="margin-bottom:1.5rem;">Este conocimiento debe estar <strong>representado
+                                explícitamente</strong> mediante algún formalismo que la IA pueda procesar:</p>
+                        <div style="display:flex; flex-direction:column; gap:10px;">
+                            <div
+                                style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); padding:12px 16px; border-radius:10px; display:flex; align-items:center; gap:12px;">
+                                <i class="fa-solid fa-square-root-variable"
+                                    style="color:var(--c-cyan); font-size:1.3rem;"></i>
+                                <span><strong>Lógica de Primer Orden</strong> — Reglas formales.</span>
+                            </div>
+                            <div
+                                style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); padding:12px 16px; border-radius:10px; display:flex; align-items:center; gap:12px;">
+                                <i class="fa-solid fa-database" style="color:var(--c-green); font-size:1.3rem;"></i>
+                                <span><strong>Bases de Datos</strong> — Hechos estructurados.</span>
+                            </div>
+                            <div
+                                style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); padding:12px 16px; border-radius:10px; display:flex; align-items:center; gap:12px;">
+                                <i class="fa-solid fa-diagram-project"
+                                    style="color:var(--c-purple); font-size:1.3rem;"></i>
+                                <span><strong>Ontologías / Grafos</strong> — Relaciones semánticas.</span>
+                            </div>
+                        </div>
+                        <p style="margin-top:1.5rem; color:var(--c-gold); font-weight:600; font-size:0.95rem;"><i
+                                class="fa-solid fa-arrow-right-long"></i> Puente hacia las próximas semanas y el
+                            proyecto final.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide BRIDGE: Cierre Teoría I → Apertura Teoría II -->
+        <div class="slide">
+            <div class="card" style="align-items: center; justify-content: center; text-align: center;">
+                <div class="pill pill-green"><i class="fa-solid fa-check-double"></i> Bloque B Completado</div>
+                <h2 style="text-align: center; margin-bottom: 2rem;">Lo que acabas de aprender</h2>
+                <div
+                    style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2rem; width: 100%; max-width: 1100px; margin-bottom: 1.5rem;">
+                    <div class="concept-box" style="border-top: 4px solid var(--c-cyan); text-align: left;">
+                        <h3 style="color:var(--c-cyan); font-size: 0.95rem;"><i class="fa-solid fa-circle-check"></i>
+                            Definición</h3>
+                        <p style="font-size: 0.9rem; margin: 0;">Un agente percibe con <strong>sensores</strong> y actúa
+                            con <strong>actuadores</strong> en un ciclo continuo.</p>
+                    </div>
+                    <div class="concept-box" style="border-top: 4px solid var(--c-purple); text-align: left;">
+                        <h3 style="color:var(--c-purple); font-size: 0.95rem;"><i class="fa-solid fa-circle-check"></i>
+                            Estructura</h3>
+                        <p style="font-size: 0.9rem; margin: 0;">Todo agente tiene una <strong>arquitectura</strong>, un
+                            <strong>programa</strong> y una <strong>medida de rendimiento</strong>.
+                        </p>
+                    </div>
+                    <div class="concept-box" style="border-top: 4px solid var(--c-pink); text-align: left;">
+                        <h3 style="color:var(--c-pink); font-size: 0.95rem;"><i class="fa-solid fa-circle-check"></i>
+                            Racionalidad</h3>
+                        <p style="font-size: 0.9rem; margin: 0;">Un agente racional elige la acción que
+                            <strong>maximiza</strong> su rendimiento dado lo que sabe.
+                        </p>
+                    </div>
+                    <div class="concept-box" style="border-top: 4px solid var(--c-gold); text-align: left;">
+                        <h3 style="color:var(--c-gold); font-size: 0.95rem;"><i class="fa-solid fa-circle-check"></i>
+                            Conocimiento</h3>
+                        <p style="font-size: 0.9rem; margin: 0;">Necesita representar el mundo internamente: lógica,
+                            bases de datos u ontologías.</p>
+                    </div>
+                </div>
+                <div
+                    style="background: rgba(216,180,254,0.08); border: 2px solid rgba(216,180,254,0.3); border-radius: 18px; padding: 1.5rem 2.5rem; max-width: 800px;">
+                    <p style="font-size: 1.2rem; margin-bottom: 0.5rem;"><i class="fa-solid fa-arrow-right-long"
+                            style="color:var(--c-purple);"></i> <strong style="color:var(--c-purple);">Siguiente
+                            pregunta:</strong></p>
+                    <p style="font-size: 1.1rem; color: var(--text-muted); margin: 0;">Si todos los agentes siguen esa
+                        definición, ¿por qué un termostato es tan diferente a un auto autónomo? La respuesta está en su
+                        <strong style="color:var(--text-main);">arquitectura interna</strong> — el Bloque C lo explica.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide PAUSA: Break entre Bloque B y C -->
+        <div class="slide">
+            <div class="card"
+                style="align-items: center; justify-content: center; text-align: center; background: radial-gradient(circle at 50% 50%, rgba(30, 27, 75, 0.9), rgba(2, 6, 23, 0.95));">
+                <i class="fa-solid fa-mug-hot"
+                    style="font-size: 5rem; color: var(--c-cyan); margin-bottom: 1.5rem; filter: drop-shadow(0 0 25px rgba(34, 211, 238, 0.5));"></i>
+                <h1 style="font-size: clamp(3rem, 5vw, 5rem); letter-spacing: 6px; margin-bottom: 0.5rem;">PAUSA</h1>
+                <h2 style="justify-content: center; font-size: 1.6rem; margin-bottom: 1.5rem;">10 Minutos de Recarga
+                </h2>
+                <p style="font-size: 1.15rem; max-width: 600px; margin: 0 auto 2rem auto;">Liberen memoria RAM.
+                    Estrítense, tomen agua y preparen el compilador mental para el <strong>Bloque C: Tipos de
+                        Agentes</strong>.</p>
+                <div style="display: flex; gap: 2rem; justify-content: center;">
+                    <div
+                        style="background: rgba(34,211,238,0.08); border: 1px solid rgba(34,211,238,0.3); border-radius: 14px; padding: 0.8rem 1.5rem; display: flex; align-items: center; gap: 10px;">
+                        <i class="fa-solid fa-check-double" style="color:var(--c-green);"></i>
+                        <span style="font-size: 0.95rem; color: var(--text-muted);">Bloque B <strong
+                                style="color:var(--text-main);">completado</strong></span>
+                    </div>
+                    <div
+                        style="background: rgba(216,180,254,0.08); border: 1px solid rgba(216,180,254,0.3); border-radius: 14px; padding: 0.8rem 1.5rem; display: flex; align-items: center; gap: 10px;">
+                        <i class="fa-solid fa-arrow-right" style="color:var(--c-purple);"></i>
+                        <span style="font-size: 0.95rem; color: var(--text-muted);">Siguiente: <strong
+                                style="color:var(--text-main);">Bloque C</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diapositiva 6: Intro Bloque II - Clases de Agentes -->
+        <div class="slide">
+            <div class="card" style="align-items: center; justify-content: center; text-align: center;">
+                <div class="pill pill-gold"><i class="fa-solid fa-layer-group"></i> Bloque Teórico II</div>
+                <h1 style="font-size: clamp(2rem, 3.5vw, 3.5rem);">Clases de Agentes Inteligentes</h1>
+                <p style="font-size: 1.25rem; max-width: 850px; margin: 1.5rem auto;">A medida que aumenta la
+                    inteligencia, los agentes se vuelven más complejos. Exploraremos la <strong>taxonomía</strong>
+                    completa de menor a mayor sofisticación.</p>
+                <div
+                    style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; width: 100%; max-width: 1100px; margin-top: 1.2rem;">
+                    <div
+                        style="background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.3); border-radius: 16px; padding: 1.5rem; text-align: center;">
+                        <i class="fa-solid fa-bolt"
+                            style="font-size: 2rem; color: var(--c-green); margin-bottom: 0.8rem;"></i>
+                        <p style="font-weight: 700; color: var(--c-green); margin: 0; font-size: 0.95rem;">
+                            Reactivo<br>Simple</p>
+                    </div>
+                    <div
+                        style="background: rgba(34,211,238,0.08); border: 1px solid rgba(34,211,238,0.3); border-radius: 16px; padding: 1.5rem; text-align: center;">
+                        <i class="fa-solid fa-memory"
+                            style="font-size: 2rem; color: var(--c-cyan); margin-bottom: 0.8rem;"></i>
+                        <p style="font-weight: 700; color: var(--c-cyan); margin: 0; font-size: 0.95rem;">Basado
+                            en<br>Modelos</p>
+                    </div>
+                    <div
+                        style="background: rgba(244,114,182,0.08); border: 1px solid rgba(244,114,182,0.3); border-radius: 16px; padding: 1.5rem; text-align: center;">
+                        <i class="fa-solid fa-bullseye"
+                            style="font-size: 2rem; color: var(--c-pink); margin-bottom: 0.8rem;"></i>
+                        <p style="font-weight: 700; color: var(--c-pink); margin: 0; font-size: 0.95rem;">Basado
+                            en<br>Objetivos</p>
+                    </div>
+                    <div
+                        style="background: rgba(216,180,254,0.08); border: 1px solid rgba(216,180,254,0.3); border-radius: 16px; padding: 1.5rem; text-align: center;">
+                        <i class="fa-solid fa-chart-pie"
+                            style="font-size: 2rem; color: var(--c-purple); margin-bottom: 0.8rem;"></i>
+                        <p style="font-weight: 700; color: var(--c-purple); margin: 0; font-size: 0.95rem;">Basado
+                            en<br>Utilidad</p>
+                    </div>
+                </div>
+                <div
+                    style="margin-top: 1rem; display: flex; align-items: center; gap: 12px; color: var(--text-muted); font-size: 0.95rem;">
+                    <i class="fa-solid fa-arrow-right-long" style="color: var(--c-gold);"></i>
+                    <span>Complejidad y capacidad de razonamiento se incrementan de izquierda a derecha</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diapositiva 7: Agentes Reactivos Simples -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-green"><i class="fa-solid fa-bolt"></i> Tipo 1 · Reactivos Simples</div>
+                <h2>Agentes Reactivos Simples</h2>
+                <div class="grid-2">
+                    <div>
+                        <div class="concept-box" style="border-top: 4px solid var(--c-green); margin-bottom: 1.5rem;">
+                            <h3 style="color: var(--c-green);"><i class="fa-solid fa-microchip"></i> Mecanismo</h3>
+                            <p style="margin-bottom: 0.8rem;">Seleccionan acciones basándose <strong>solo en la
+                                    percepción actual</strong>. No tienen memoria. Operan con reglas condición-acción.
+                            </p>
+                            <p
+                                style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--text-muted); margin: 0;">
+                                <span style="color:var(--c-gold);">IF</span> &lt;condición&gt; <span
+                                    style="color:var(--c-gold);">THEN</span> &lt;acción&gt;
+                            </p>
+                        </div>
+                        <div
+                            style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 1.2rem;">
+                            <p
+                                style="font-size: 0.85rem; font-weight: 800; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1rem;">
+                                Diagrama de Flujo</p>
+                            <div
+                                style="display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                                <div
+                                    style="background: rgba(74,222,128,0.1); border: 1px solid var(--c-green); padding: 8px 16px; border-radius: 8px; font-size: 0.9rem; font-weight: 700; color: var(--c-green);">
+                                    Percepción</div>
+                                <i class="fa-solid fa-arrow-right" style="color: var(--text-muted);"></i>
+                                <div
+                                    style="background: rgba(250,204,21,0.1); border: 1px solid var(--c-gold); padding: 8px 16px; border-radius: 8px; font-size: 0.9rem; font-weight: 700; color: var(--c-gold);">
+                                    Regla IF-THEN</div>
+                                <i class="fa-solid fa-arrow-right" style="color: var(--text-muted);"></i>
+                                <div
+                                    style="background: rgba(244,114,182,0.1); border: 1px solid var(--c-pink); padding: 8px 16px; border-radius: 8px; font-size: 0.9rem; font-weight: 700; color: var(--c-pink);">
+                                    Acción</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style="margin-bottom:1.2rem;"><i class="fa-solid fa-vacuum"
+                                style="color:var(--c-green);"></i> Ejemplos Clásicos</h3>
+                        <div class="example-box" style="margin-bottom: 1.2rem; border-color: var(--c-green);">
+                            <p style="font-weight: 700; color: var(--text-main); margin-bottom: 0.8rem;"><i
+                                    class="fa-solid fa-wind" style="color:var(--c-green); margin-right: 6px;"></i>Agente
+                                Aspiradora</p>
+                            <p
+                                style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.4rem;">
+                                <span style="color:var(--c-gold);">SI</span> ve_suciedad → <span
+                                    style="color:var(--c-green);">Aspirar</span>
+                            </p>
+                            <p
+                                style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--text-muted); margin: 0;">
+                                <span style="color:var(--c-gold);">SI</span> limpio → <span
+                                    style="color:var(--c-cyan);">Avanzar</span>
+                            </p>
+                        </div>
+                        <div class="example-box" style="border-color: var(--c-cyan);">
+                            <p style="font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;"><i
+                                    class="fa-solid fa-temperature-half"
+                                    style="color:var(--c-cyan); margin-right: 6px;"></i>Termostato</p>
+                            <p
+                                style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--text-muted); margin: 0;">
+                                <span style="color:var(--c-gold);">SI</span> temp &lt; 20°C → <span
+                                    style="color:var(--c-green);">Encender calefacción</span>
+                            </p>
+                        </div>
+                        <p style="margin-top: 1rem; color:var(--text-muted); font-size: 0.95rem;"><i
+                                class="fa-solid fa-triangle-exclamation" style="color:var(--c-gold);"></i>
+                            <strong>Limitación:</strong> Sin memoria del pasado — no puede adaptarse a cambios de
+                            contexto.
+                        </p>
+                    </div>
+                </div>
+                <!-- Diagrama de Flujo: Reactivo Simple -->
+                <div
+                    style="margin-top: 1.2rem; background: rgba(74,222,128,0.04); border: 1px solid rgba(74,222,128,0.15); border-radius: 14px; padding: 0.9rem 1.5rem;">
+                    <p
+                        style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 2px; color: var(--c-green); margin-bottom: 0.7rem; font-weight: 700;">
+                        <i class="fa-solid fa-diagram-project"></i> Flujo Interno
+                    </p>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <div
+                            style="background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.4); border-radius: 10px; padding: 6px 14px; font-size: 0.82rem; font-weight: 700; color: var(--c-green);">
+                            <i class="fa-solid fa-eye"></i> Percepción
+                        </div>
+                        <i class="fa-solid fa-arrow-right" style="color:var(--text-muted); font-size:0.8rem;"></i>
+                        <div
+                            style="background: rgba(250,204,21,0.12); border: 1px solid rgba(250,204,21,0.4); border-radius: 10px; padding: 6px 14px; font-size: 0.82rem; font-weight: 700; color: var(--c-gold);">
+                            <i class="fa-solid fa-code-branch"></i> Regla IF→THEN
+                        </div>
+                        <i class="fa-solid fa-arrow-right" style="color:var(--text-muted); font-size:0.8rem;"></i>
+                        <div
+                            style="background: rgba(244,114,182,0.12); border: 1px solid rgba(244,114,182,0.4); border-radius: 10px; padding: 6px 14px; font-size: 0.82rem; font-weight: 700; color: var(--c-pink);">
+                            <i class="fa-solid fa-bolt"></i> Acción
+                        </div>
+                        <div
+                            style="margin-left: auto; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 4px 12px; font-size: 0.75rem; color: var(--text-muted); font-style: italic;">
+                            Sin memoria &mdash; sin aprendizaje</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diapositiva 8: Agentes Basados en Modelos -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-cyan"><i class="fa-solid fa-memory"></i> Tipo 2 · Basados en Modelos</div>
+                <h2>Agentes Reactivos Basados en Modelos</h2>
+                <div class="grid-2">
+                    <div>
+                        <div class="concept-box" style="border-top: 4px solid var(--c-cyan); margin-bottom: 1.5rem;">
+                            <h3 style="color: var(--c-cyan);"><i class="fa-solid fa-microchip"></i> Mecanismo</h3>
+                            <p>Mantienen un <strong>estado interno</strong> que depende del historial de percepciones.
+                                Esto les permite "modelar" aspectos del mundo que no son visibles en el momento actual.
+                            </p>
+                        </div>
+                        <div class="example-box"
+                            style="border-color: var(--c-cyan); background: rgba(34,211,238,0.04);">
+                            <h3 style="color: var(--c-cyan);"><i class="fa-solid fa-database"></i> Modelo del Mundo</h3>
+                            <p style="margin-bottom: 0;">El agente guarda <strong>información interna</strong> sobre
+                                cómo funciona el entorno y de qué forma sus propias acciones lo afectan. No solo
+                                reacciona — <em>recuerda</em>.</p>
+                        </div>
+                    </div>
+                    <div class="concept-box"
+                        style="border-left: 4px solid var(--c-cyan); border-radius: 0 16px 16px 0;">
+                        <h3 style="color: var(--c-cyan);"><i class="fa-solid fa-traffic-light"></i> Ejemplo: Semáforo
+                            Inteligente</h3>
+                        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 1rem;">
+                            <div style="display: flex; gap: 14px; align-items: flex-start;">
+                                <div
+                                    style="background: rgba(74,222,128,0.15); border: 1px solid var(--c-green); border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; font-weight: 800; color: var(--c-green); white-space: nowrap; margin-top: 3px;">
+                                    PERCIBE</div>
+                                <p style="margin:0; color: var(--text-muted);">Sensores de tráfico en tiempo real:
+                                    cantidad de vehículos en cada carril.</p>
+                            </div>
+                            <div style="display: flex; gap: 14px; align-items: flex-start;">
+                                <div
+                                    style="background: rgba(34,211,238,0.15); border: 1px solid var(--c-cyan); border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; font-weight: 800; color: var(--c-cyan); white-space: nowrap; margin-top: 3px;">
+                                    RECUERDA</div>
+                                <p style="margin:0; color: var(--text-muted);">¿Cuánto tiempo lleva en verde? Su estado
+                                    interno evita cambios demasiado rápidos que causarían accidentes.</p>
+                            </div>
+                            <div style="display: flex; gap: 14px; align-items: flex-start;">
+                                <div
+                                    style="background: rgba(244,114,182,0.15); border: 1px solid var(--c-pink); border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; font-weight: 800; color: var(--c-pink); white-space: nowrap; margin-top: 3px;">
+                                    ACTÚA</div>
+                                <p style="margin:0; color: var(--text-muted);">Decide cuándo cambiar el semáforo
+                                    combinando percepción actual <strong>+</strong> historial interno.</p>
+                            </div>
+                        </div>
+                        <p style="margin-top:1.5rem; font-size:0.95rem; color:var(--text-muted);"><i
+                                class="fa-solid fa-lightbulb" style="color:var(--c-gold);"></i> <em>No "ve" el tiempo
+                                transcurrido — lo "recuerda" en su modelo.</em></p>
+                    </div>
+                </div>
+                <!-- Diagrama de Flujo: Basado en Modelos -->
+                <div
+                    style="margin-top: 1.2rem; background: rgba(34,211,238,0.04); border: 1px solid rgba(34,211,238,0.15); border-radius: 14px; padding: 0.9rem 1.5rem;">
+                    <p
+                        style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 2px; color: var(--c-cyan); margin-bottom: 0.7rem; font-weight: 700;">
+                        <i class="fa-solid fa-diagram-project"></i> Flujo Interno
+                    </p>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <div
+                            style="background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.4); border-radius: 10px; padding: 6px 14px; font-size: 0.82rem; font-weight: 700; color: var(--c-green);">
+                            <i class="fa-solid fa-eye"></i> Percepción
+                        </div>
+                        <i class="fa-solid fa-plus" style="color:var(--text-muted); font-size:0.75rem;"></i>
+                        <div
+                            style="background: rgba(34,211,238,0.12); border: 1px solid rgba(34,211,238,0.4); border-radius: 10px; padding: 6px 14px; font-size: 0.82rem; font-weight: 700; color: var(--c-cyan);">
+                            <i class="fa-solid fa-database"></i> Estado Interno
+                        </div>
+                        <i class="fa-solid fa-arrow-right" style="color:var(--text-muted); font-size:0.8rem;"></i>
+                        <div
+                            style="background: rgba(250,204,21,0.12); border: 1px solid rgba(250,204,21,0.4); border-radius: 10px; padding: 6px 14px; font-size: 0.82rem; font-weight: 700; color: var(--c-gold);">
+                            <i class="fa-solid fa-code-branch"></i> Regla IF→THEN
+                        </div>
+                        <i class="fa-solid fa-arrow-right" style="color:var(--text-muted); font-size:0.8rem;"></i>
+                        <div
+                            style="background: rgba(244,114,182,0.12); border: 1px solid rgba(244,114,182,0.4); border-radius: 10px; padding: 6px 14px; font-size: 0.82rem; font-weight: 700; color: var(--c-pink);">
+                            <i class="fa-solid fa-bolt"></i> Acción
+                        </div>
+                        <div
+                            style="margin-left: auto; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 4px 12px; font-size: 0.75rem; color: var(--text-muted); font-style: italic;">
+                            Con memoria &mdash; sin objetivo explícito</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diapositiva 9: Agentes Basados en Objetivos -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-pink"><i class="fa-solid fa-bullseye"></i> Tipo 3 · Basados en Objetivos</div>
+                <h2>Agentes Basados en Objetivos</h2>
+                <div class="grid-2">
+                    <div>
+                        <div class="concept-box" style="border-top: 4px solid var(--c-pink); margin-bottom: 1.5rem;">
+                            <h3 style="color: var(--c-pink);"><i class="fa-solid fa-microchip"></i> Mecanismo</h3>
+                            <p style="margin-bottom: 0.8rem;">Además del modelo del mundo, tienen información sobre
+                                <strong>situaciones deseables</strong>: sus objetivos. Esto les permite elegir entre
+                                múltiples caminos posibles.
+                            </p>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 0.8rem;">
+                                <span
+                                    style="background: rgba(244,114,182,0.1); border: 1px solid var(--c-pink); border-radius: 20px; padding: 4px 12px; font-size: 0.8rem; color: var(--c-pink); font-weight: 700;">Modelo
+                                    del Mundo</span>
+                                <span style="color: var(--text-muted); line-height: 2;">+</span>
+                                <span
+                                    style="background: rgba(244,114,182,0.1); border: 1px solid var(--c-pink); border-radius: 20px; padding: 4px 12px; font-size: 0.8rem; color: var(--c-pink); font-weight: 700;">Objetivo</span>
+                                <span style="color: var(--text-muted); line-height: 2;">→</span>
+                                <span
+                                    style="background: rgba(74,222,128,0.1); border: 1px solid var(--c-green); border-radius: 20px; padding: 4px 12px; font-size: 0.8rem; color: var(--c-green); font-weight: 700;">Planificación</span>
+                            </div>
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 0.95rem;">La toma de decisiones involucra
+                            <strong>planificación y búsqueda</strong> — temas clave de las próximas semanas.
+                        </p>
+                    </div>
+                    <div class="example-box" style="border-color: var(--c-pink); background: rgba(244,114,182,0.04);">
+                        <h3 style="color: var(--c-pink);"><i class="fa-solid fa-map-location-dot"></i> Ejemplo: GPS
+                            (Waze / Google Maps)</h3>
+                        <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 1.2rem;">
+                            <div style="display: flex; gap: 14px; align-items: flex-start;">
+                                <i class="fa-solid fa-crosshairs"
+                                    style="color:var(--c-gold); font-size:1.2rem; margin-top:2px; width:20px;"></i>
+                                <div><strong style="color:var(--c-gold);">Objetivo:</strong><br><span
+                                        style="color:var(--text-muted);">"Llegar al punto B lo antes posible."</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 14px; align-items: flex-start;">
+                                <i class="fa-solid fa-map"
+                                    style="color:var(--c-cyan); font-size:1.2rem; margin-top:2px; width:20px;"></i>
+                                <div><strong style="color:var(--c-cyan);">Modelo del Mundo:</strong><br><span
+                                        style="color:var(--text-muted);">Mapas + tráfico en tiempo real.</span></div>
+                            </div>
+                            <div style="display: flex; gap: 14px; align-items: flex-start;">
+                                <i class="fa-solid fa-route"
+                                    style="color:var(--c-green); font-size:1.2rem; margin-top:2px; width:20px;"></i>
+                                <div><strong style="color:var(--c-green);">Acciones posibles:</strong><br><span
+                                        style="color:var(--text-muted);">Ruta A (autopista), Ruta B (ciudad), Ruta C
+                                        (puente)...</span></div>
+                            </div>
+                            <div style="display: flex; gap: 14px; align-items: flex-start;">
+                                <i class="fa-solid fa-check-double"
+                                    style="color:var(--c-pink); font-size:1.2rem; margin-top:2px; width:20px;"></i>
+                                <div><strong style="color:var(--c-pink);">Decisión:</strong><br><span
+                                        style="color:var(--text-muted);">Busca y elige la ruta que mejor cumple el
+                                        objetivo.</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Diagrama de Flujo: Basado en Objetivos -->
+                <div
+                    style="margin-top: 1.2rem; background: rgba(244,114,182,0.04); border: 1px solid rgba(244,114,182,0.15); border-radius: 14px; padding: 0.9rem 1.5rem;">
+                    <p
+                        style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 2px; color: var(--c-pink); margin-bottom: 0.7rem; font-weight: 700;">
+                        <i class="fa-solid fa-diagram-project"></i> Flujo Interno
+                    </p>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <div
+                            style="background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.4); border-radius: 10px; padding: 6px 14px; font-size: 0.82rem; font-weight: 700; color: var(--c-green);">
+                            <i class="fa-solid fa-eye"></i> Percepción
+                        </div>
+                        <i class="fa-solid fa-plus" style="color:var(--text-muted); font-size:0.75rem;"></i>
+                        <div
+                            style="background: rgba(34,211,238,0.12); border: 1px solid rgba(34,211,238,0.4); border-radius: 10px; padding: 6px 14px; font-size: 0.82rem; font-weight: 700; color: var(--c-cyan);">
+                            <i class="fa-solid fa-database"></i> Estado
+                        </div>
+                        <i class="fa-solid fa-plus" style="color:var(--text-muted); font-size:0.75rem;"></i>
+                        <div
+                            style="background: rgba(244,114,182,0.12); border: 1px solid rgba(244,114,182,0.4); border-radius: 10px; padding: 6px 14px; font-size: 0.82rem; font-weight: 700; color: var(--c-pink);">
+                            <i class="fa-solid fa-bullseye"></i> Objetivo
+                        </div>
+                        <i class="fa-solid fa-arrow-right" style="color:var(--text-muted); font-size:0.8rem;"></i>
+                        <div
+                            style="background: rgba(250,204,21,0.12); border: 1px solid rgba(250,204,21,0.4); border-radius: 10px; padding: 6px 14px; font-size: 0.82rem; font-weight: 700; color: var(--c-gold);">
+                            <i class="fa-solid fa-route"></i> Planificación
+                        </div>
+                        <i class="fa-solid fa-arrow-right" style="color:var(--text-muted); font-size:0.8rem;"></i>
+                        <div
+                            style="background: rgba(244,114,182,0.12); border: 1px solid rgba(244,114,182,0.4); border-radius: 10px; padding: 6px 14px; font-size: 0.82rem; font-weight: 700; color: var(--c-pink);">
+                            <i class="fa-solid fa-bolt"></i> Acción
+                        </div>
+                        <div
+                            style="margin-left: auto; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 4px 12px; font-size: 0.75rem; color: var(--text-muted); font-style: italic;">
+                            Busca el mejor camino al objetivo</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diapositiva 10: Agentes Basados en Utilidad -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-purple"><i class="fa-solid fa-chart-pie"></i> Tipo 4 · Basados en Utilidad</div>
+                <h2>Agentes Basados en Utilidad</h2>
+                <div class="grid-2">
+                    <div>
+                        <div class="concept-box" style="border-top: 4px solid var(--c-purple); margin-bottom: 1.5rem;">
+                            <h3 style="color: var(--c-purple);"><i class="fa-solid fa-microchip"></i> Mecanismo</h3>
+                            <p style="margin-bottom: 0.8rem;">Tienen una <strong>función de utilidad</strong> que mide
+                                qué tan "deseable" es un estado. Cuando hay <strong>objetivos en conflicto</strong>, la
+                                función de utilidad permite hacer un balance y elegir la acción que <strong>maximiza la
+                                    utilidad esperada</strong>.</p>
+                        </div>
+                        <div class="example-box"
+                            style="border-color: var(--c-gold); background: rgba(250,204,21,0.04);">
+                            <h3 style="color: var(--c-gold);"><i class="fa-solid fa-scale-balanced"></i> Analogía
+                                Económica</h3>
+                            <p style="margin: 0;">No solo se busca ganar dinero <em>(objetivo)</em>, sino
+                                <strong>maximizar la relación riesgo/beneficio</strong> <em>(utilidad)</em> según el
+                                perfil de riesgo del agente.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="concept-box"
+                        style="border-left: 4px solid var(--c-purple); border-radius: 0 16px 16px 0;">
+                        <h3 style="color: var(--c-purple);"><i class="fa-solid fa-chart-line"></i> Ejemplo: Agente de
+                            Trading</h3>
+                        <p style="margin-bottom: 1.2rem;">Su objetivo es "ganar dinero", pero hay múltiples caminos con
+                            diferentes perfiles de riesgo:</p>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <div
+                                style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.4); border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <p style="margin:0; font-weight: 700; color: #f87171;">Acciones de Alto Riesgo</p>
+                                    <p style="margin:0; font-size:0.9rem; color:var(--text-muted);">Gran ganancia
+                                        posible / Gran pérdida posible</p>
+                                </div>
+                                <span
+                                    style="font-family:'JetBrains Mono'; font-size:1.1rem; color:#f87171; font-weight:700;">U
+                                    = ?</span>
+                            </div>
+                            <div
+                                style="background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.4); border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <p style="margin:0; font-weight: 700; color: var(--c-green);">Bonos / Activos
+                                        Seguros</p>
+                                    <p style="margin:0; font-size:0.9rem; color:var(--text-muted);">Ganancia pequeña
+                                        pero predecible</p>
+                                </div>
+                                <span
+                                    style="font-family:'JetBrains Mono'; font-size:1.1rem; color:var(--c-green); font-weight:700;">U
+                                    = ✓</span>
+                            </div>
+                        </div>
+                        <p style="margin-top:1.2rem; font-size:0.95rem; color:var(--text-muted);"><i
+                                class="fa-solid fa-lightbulb" style="color:var(--c-gold);"></i> La función de utilidad
+                            pondera ambas opciones y elige la acción óptima según el perfil de riesgo configurado.</p>
+                    </div>
+                </div>
+                <!-- Diagrama de Flujo: Basado en Utilidad -->
+                <div
+                    style="margin-top: 1.2rem; background: rgba(216,180,254,0.04); border: 1px solid rgba(216,180,254,0.15); border-radius: 14px; padding: 0.9rem 1.5rem;">
+                    <p
+                        style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 2px; color: var(--c-purple); margin-bottom: 0.7rem; font-weight: 700;">
+                        <i class="fa-solid fa-diagram-project"></i> Flujo Interno
+                    </p>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <div
+                            style="background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.4); border-radius: 10px; padding: 6px 14px; font-size: 0.82rem; font-weight: 700; color: var(--c-green);">
+                            <i class="fa-solid fa-eye"></i> Percepción
+                        </div>
+                        <i class="fa-solid fa-plus" style="color:var(--text-muted); font-size:0.75rem;"></i>
+                        <div
+                            style="background: rgba(34,211,238,0.12); border: 1px solid rgba(34,211,238,0.4); border-radius: 10px; padding: 6px 14px; font-size: 0.82rem; font-weight: 700; color: var(--c-cyan);">
+                            <i class="fa-solid fa-database"></i> Estado
+                        </div>
+                        <i class="fa-solid fa-plus" style="color:var(--text-muted); font-size:0.75rem;"></i>
+                        <div
+                            style="background: rgba(244,114,182,0.12); border: 1px solid rgba(244,114,182,0.4); border-radius: 10px; padding: 6px 14px; font-size: 0.82rem; font-weight: 700; color: var(--c-pink);">
+                            <i class="fa-solid fa-bullseye"></i> Objetivo
+                        </div>
+                        <i class="fa-solid fa-plus" style="color:var(--text-muted); font-size:0.75rem;"></i>
+                        <div
+                            style="background: rgba(216,180,254,0.12); border: 1px solid rgba(216,180,254,0.4); border-radius: 10px; padding: 6px 14px; font-size: 0.82rem; font-weight: 700; color: var(--c-purple);">
+                            <i class="fa-solid fa-chart-bar"></i> Utilidad
+                        </div>
+                        <i class="fa-solid fa-arrow-right" style="color:var(--text-muted); font-size:0.8rem;"></i>
+                        <div
+                            style="background: rgba(250,204,21,0.12); border: 1px solid rgba(250,204,21,0.4); border-radius: 10px; padding: 6px 14px; font-size: 0.82rem; font-weight: 700; color: var(--c-gold);">
+                            <i class="fa-solid fa-ranking-star"></i> max(U)
+                        </div>
+                        <i class="fa-solid fa-arrow-right" style="color:var(--text-muted); font-size:0.8rem;"></i>
+                        <div
+                            style="background: rgba(244,114,182,0.12); border: 1px solid rgba(244,114,182,0.4); border-radius: 10px; padding: 6px 14px; font-size: 0.82rem; font-weight: 700; color: var(--c-pink);">
+                            <i class="fa-solid fa-bolt"></i> Acción
+                        </div>
+                        <div
+                            style="margin-left: auto; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 4px 12px; font-size: 0.75rem; color: var(--text-muted); font-style: italic;">
+                            El más sofisticado — balancea múltiples objetivos</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diapositiva 11: Intro Bloque Práctico D -->
+        <div class="slide">
+            <div class="card" style="align-items: center; justify-content: center; text-align: center;">
+                <div class="pill pill-gold"><i class="fa-solid fa-users-gear"></i> Bloque Práctico · 50 min · 5% Nota
+                    Final</div>
+                <h1 style="font-size: clamp(2rem, 3.5vw, 3.5rem);">Estudio de Caso en Equipos</h1>
+                <p style="font-size: 1.2rem; max-width: 800px; margin: 1.5rem auto; color: var(--text-muted);">
+                    Metodología: <strong style="color:var(--text-main);">Aprendizaje Basado en Problemas (ABP)</strong>
+                    — cada equipo aplicará la teoría de agentes a un problema real del mundo empresarial.</p>
+
+                <div class="grid-3" style="margin-top: 1.5rem; max-width: 1000px; width: 100%;">
+                    <div class="concept-box" style="border-top: 4px solid var(--c-cyan); text-align: left;">
+                        <h3 style="color:var(--c-cyan); justify-content: center; font-size: 1rem;"><i
+                                class="fa-solid fa-people-group"></i> Organización</h3>
+                        <p style="font-size: 0.95rem; margin: 0;">Trabajen en los <strong>equipos de proyecto ya
+                                conformados</strong>. Cada equipo analiza el mismo escenario pero llega a conclusiones
+                            propias.</p>
+                    </div>
+                    <div class="concept-box" style="border-top: 4px solid var(--c-pink); text-align: left;">
+                        <h3 style="color:var(--c-pink); justify-content: center; font-size: 1rem;"><i
+                                class="fa-solid fa-file-pen"></i> Entregable</h3>
+                        <p style="font-size: 0.95rem; margin: 0;">Un <strong>reporte breve</strong> (puede ser Google
+                            Doc o PDF) con el análisis argumentado de cada funcionalidad del agente.</p>
+                    </div>
+                    <div class="concept-box" style="border-top: 4px solid var(--c-gold); text-align: left;">
+                        <h3 style="color:var(--c-gold); justify-content: center; font-size: 1rem;"><i
+                                class="fa-solid fa-clock"></i> Tiempo</h3>
+                        <p style="font-size: 0.95rem; margin: 0;"><strong>50 minutos</strong> de trabajo en clase. El
+                            docente rotará entre equipos para orientar el análisis.</p>
+                    </div>
+                </div>
+
+                <div
+                    style="margin-top: 1rem; background: rgba(250,204,21,0.06); border: 1px solid rgba(250,204,21,0.25); border-radius: 14px; padding: 1rem 1.5rem; max-width: 750px;">
+                    <p style="font-size: 1.1rem; font-style: italic; color: var(--text-main); margin: 0;">El escenario:
+                        <strong>"Sistema de Recomendación y Atención para un Supermercado Online"</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diapositiva 12: El Escenario -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-cyan"><i class="fa-solid fa-cart-shopping"></i> El Escenario</div>
+                <h2>Supermercado Online con Agente Inteligente</h2>
+                <p style="margin-bottom: 1.5rem;">Una cadena de supermercados quiere lanzar una plataforma de compras
+                    online. El agente inteligente integrado debe cumplir <strong>4 funciones críticas</strong>:</p>
+                <div class="grid-2">
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div
+                            style="background: rgba(34,211,238,0.06); border: 1px solid rgba(34,211,238,0.25); border-radius: 14px; padding: 1.2rem 1.5rem; display: flex; gap: 14px; align-items: flex-start;">
+                            <div
+                                style="background: var(--c-cyan); color: #000; font-weight: 900; font-size: 1rem; padding: 4px 10px; border-radius: 8px; min-width: 28px; text-align: center;">
+                                1</div>
+                            <div>
+                                <p style="font-weight: 700; color: var(--c-cyan); margin-bottom: 4px;">Recomendar
+                                    Productos</p>
+                                <p style="font-size: 0.95rem; color: var(--text-muted); margin: 0;">Si el cliente pone
+                                    <em>pan</em> en el carrito, el agente sugiere <em>mantequilla</em> o <em>leche</em>,
+                                    basado en patrones de compra de otros clientes.
+                                </p>
+                            </div>
+                        </div>
+                        <div
+                            style="background: rgba(74,222,128,0.06); border: 1px solid rgba(74,222,128,0.25); border-radius: 14px; padding: 1.2rem 1.5rem; display: flex; gap: 14px; align-items: flex-start;">
+                            <div
+                                style="background: var(--c-green); color: #000; font-weight: 900; font-size: 1rem; padding: 4px 10px; border-radius: 8px; min-width: 28px; text-align: center;">
+                                2</div>
+                            <div>
+                                <p style="font-weight: 700; color: var(--c-green); margin-bottom: 4px;">Gestionar el
+                                    Inventario</p>
+                                <p style="font-size: 0.95rem; color: var(--text-muted); margin: 0;">Si un producto está
+                                    agotado, el agente sugiere un sustituto de otra marca o indica cuándo estará
+                                    disponible.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div
+                            style="background: rgba(250,204,21,0.06); border: 1px solid rgba(250,204,21,0.25); border-radius: 14px; padding: 1.2rem 1.5rem; display: flex; gap: 14px; align-items: flex-start;">
+                            <div
+                                style="background: var(--c-gold); color: #000; font-weight: 900; font-size: 1rem; padding: 4px 10px; border-radius: 8px; min-width: 28px; text-align: center;">
+                                3</div>
+                            <div>
+                                <p style="font-weight: 700; color: var(--c-gold); margin-bottom: 4px;">Negociar Cupones
+                                </p>
+                                <p style="font-size: 0.95rem; color: var(--text-muted); margin: 0;">Si el cupón <code
+                                        style="font-size:0.85em;">CUPON10</code> no aplica en electrónica, el agente
+                                    ofrece uno alternativo (<code style="font-size:0.85em;">DESCUENTO5</code>) para
+                                    retener al cliente.</p>
+                            </div>
+                        </div>
+                        <div
+                            style="background: rgba(216,180,254,0.06); border: 1px solid rgba(216,180,254,0.25); border-radius: 14px; padding: 1.2rem 1.5rem; display: flex; gap: 14px; align-items: flex-start;">
+                            <div
+                                style="background: var(--c-purple); color: #000; font-weight: 900; font-size: 1rem; padding: 4px 10px; border-radius: 8px; min-width: 28px; text-align: center;">
+                                4</div>
+                            <div>
+                                <p style="font-weight: 700; color: var(--c-purple); margin-bottom: 4px;">Optimizar la
+                                    Entrega</p>
+                                <p style="font-size: 0.95rem; color: var(--text-muted); margin: 0;">Planifica la ruta
+                                    más eficiente para los camiones, considerando tráfico, distancia y ventanas de
+                                    tiempo elegidas por los clientes.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diapositiva 13: Tarea del Equipo - Preguntas de Análisis -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-pink"><i class="fa-solid fa-magnifying-glass-chart"></i> Tarea del Equipo ·
+                    Análisis Crítico</div>
+                <h2>Tres Preguntas Clave para Resolver</h2>
+                <p style="margin-bottom: 1.5rem;">Para cada una de las 4 funcionalidades, el equipo debe analizar y
+                    documentar lo siguiente:</p>
+                <div class="grid-3">
+                    <div class="concept-box" style="border-top: 4px solid var(--c-cyan);">
+                        <h3 style="color: var(--c-cyan);"><i class="fa-solid fa-tag"></i> Pregunta 1: Identificar</h3>
+                        <p style="margin-bottom: 1rem;">¿Qué <strong>clase de agente</strong> es la más adecuada para
+                            cada funcionalidad?</p>
+                        <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 0.5rem;">
+                            <span
+                                style="background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); border-radius: 8px; padding: 5px 10px; font-size: 0.85rem; color: var(--c-green);">⚡
+                                Reactivo Simple</span>
+                            <span
+                                style="background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.3); border-radius: 8px; padding: 5px 10px; font-size: 0.85rem; color: var(--c-cyan);">🧠
+                                Basado en Modelos</span>
+                            <span
+                                style="background: rgba(244,114,182,0.1); border: 1px solid rgba(244,114,182,0.3); border-radius: 8px; padding: 5px 10px; font-size: 0.85rem; color: var(--c-pink);">🎯
+                                Basado en Objetivos</span>
+                            <span
+                                style="background: rgba(216,180,254,0.1); border: 1px solid rgba(216,180,254,0.3); border-radius: 8px; padding: 5px 10px; font-size: 0.85rem; color: var(--c-purple);">📊
+                                Basado en Utilidad</span>
+                            <span
+                                style="background: rgba(250,204,21,0.1); border: 1px solid rgba(250,204,21,0.3); border-radius: 8px; padding: 5px 10px; font-size: 0.85rem; color: var(--c-gold);">🔗
+                                Combinación</span>
+                        </div>
+                    </div>
+                    <div class="concept-box" style="border-top: 4px solid var(--c-pink);">
+                        <h3 style="color: var(--c-pink);"><i class="fa-solid fa-comments"></i> Pregunta 2: Justificar
+                        </h3>
+                        <p style="margin-bottom: 1rem;">¿Por qué ese tipo y no otro? Usen estas pistas como guía de
+                            razonamiento:</p>
+                        <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px;">
+                            <li style="display: flex; gap: 8px; align-items: flex-start; font-size: 0.93rem;"><i
+                                    class="fa-solid fa-circle-question"
+                                    style="color:var(--c-cyan); margin-top: 3px; flex-shrink:0;"></i> ¿La recomendación
+                                necesita un <em>modelo del mundo</em> (historial) o basta una regla simple?</li>
+                            <li style="display: flex; gap: 8px; align-items: flex-start; font-size: 0.93rem;"><i
+                                    class="fa-solid fa-circle-question"
+                                    style="color:var(--c-gold); margin-top: 3px; flex-shrink:0;"></i> ¿La negociación de
+                                cupones requiere una <em>función de utilidad</em> para decidir si vale retener al
+                                cliente?</li>
+                            <li style="display: flex; gap: 8px; align-items: flex-start; font-size: 0.93rem;"><i
+                                    class="fa-solid fa-circle-question"
+                                    style="color:var(--c-pink); margin-top: 3px; flex-shrink:0;"></i> ¿La optimización
+                                de rutas es un problema de <em>búsqueda de objetivos</em>?</li>
+                        </ul>
+                    </div>
+                    <div class="concept-box" style="border-top: 4px solid var(--c-gold);">
+                        <h3 style="color: var(--c-gold);"><i class="fa-solid fa-arrows-to-dot"></i> Pregunta 3:
+                            Describir</h3>
+                        <p style="margin-bottom: 1rem;">Para cada tarea, ¿qué <strong>sensores</strong> y
+                            <strong>actuadores</strong> tendría el agente?
+                        </p>
+                        <div
+                            style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1rem;">
+                            <p style="font-size: 0.9rem; margin-bottom: 0.5rem;"><strong
+                                    style="color:var(--c-cyan);">Sensores</strong> <span
+                                    style="color:var(--text-muted);">= ¿Qué datos percibe?</span></p>
+                            <p
+                                style="font-size: 0.9rem; color:var(--text-muted); margin-bottom: 1rem; font-style: italic;">
+                                Ej: carrito de compras, historial, mapa de rutas, cupón ingresado...</p>
+                            <p style="font-size: 0.9rem; margin-bottom: 0.5rem;"><strong
+                                    style="color:var(--c-pink);">Actuadores</strong> <span
+                                    style="color:var(--text-muted);">= ¿Qué acciones ejecuta?</span></p>
+                            <p style="font-size: 0.9rem; color:var(--text-muted); margin: 0; font-style: italic;">Ej:
+                                mostrar sugerencias, bloquear cupón, reasignar ruta, enviar notificación...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diapositiva 14: Guía del Reporte -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-purple"><i class="fa-solid fa-file-circle-check"></i> Guía del Entregable ·
+                    Reporte del Equipo</div>
+                <h2>¿Cómo Estructurar su Reporte?</h2>
+                <p style="margin-bottom: 1.5rem;">El reporte es breve pero argumentado. Para cada funcionalidad,
+                    completen la siguiente tabla de análisis:</p>
+                <div class="grid-2">
+                    <div style="display:flex; flex-direction:column; gap:0.9rem;">
+                        <div
+                            style="background: rgba(34,211,238,0.06); border: 1px solid rgba(34,211,238,0.25); border-radius: 14px; padding: 1.1rem 1.3rem;">
+                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:0.6rem;">
+                                <i class="fa-solid fa-star" style="color:var(--c-cyan);"></i>
+                                <span style="font-weight:700; color:var(--c-cyan);">Recomendar Productos</span>
+                            </div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; font-size:0.82rem;">
+                                <div style="background:rgba(0,0,0,0.3); border-radius:8px; padding:6px 8px;"><span
+                                        style="color:var(--text-muted); display:block; font-size:0.7rem; margin-bottom:3px;">TIPO</span><em
+                                        style="color:var(--text-muted);">¿Cuál?</em></div>
+                                <div style="background:rgba(0,0,0,0.3); border-radius:8px; padding:6px 8px;"><span
+                                        style="color:var(--c-cyan); display:block; font-size:0.7rem; margin-bottom:3px;">SENSORES</span><em
+                                        style="color:var(--text-muted);">carrito, historial...</em></div>
+                                <div style="background:rgba(0,0,0,0.3); border-radius:8px; padding:6px 8px;"><span
+                                        style="color:var(--c-pink); display:block; font-size:0.7rem; margin-bottom:3px;">ACTUADORES</span><em
+                                        style="color:var(--text-muted);">mostrar sugerencias...</em></div>
+                            </div>
+                        </div>
+                        <div
+                            style="background: rgba(74,222,128,0.06); border: 1px solid rgba(74,222,128,0.25); border-radius: 14px; padding: 1.1rem 1.3rem;">
+                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:0.6rem;">
+                                <i class="fa-solid fa-boxes-stacked" style="color:var(--c-green);"></i>
+                                <span style="font-weight:700; color:var(--c-green);">Gestionar Inventario</span>
+                            </div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; font-size:0.82rem;">
+                                <div style="background:rgba(0,0,0,0.3); border-radius:8px; padding:6px 8px;"><span
+                                        style="color:var(--text-muted); display:block; font-size:0.7rem; margin-bottom:3px;">TIPO</span><em
+                                        style="color:var(--text-muted);">¿Cuál?</em></div>
+                                <div style="background:rgba(0,0,0,0.3); border-radius:8px; padding:6px 8px;"><span
+                                        style="color:var(--c-cyan); display:block; font-size:0.7rem; margin-bottom:3px;">SENSORES</span><em
+                                        style="color:var(--text-muted);">stock actual, catálogo...</em></div>
+                                <div style="background:rgba(0,0,0,0.3); border-radius:8px; padding:6px 8px;"><span
+                                        style="color:var(--c-pink); display:block; font-size:0.7rem; margin-bottom:3px;">ACTUADORES</span><em
+                                        style="color:var(--text-muted);">sugerir sustituto...</em></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:0.9rem;">
+                        <div
+                            style="background: rgba(250,204,21,0.06); border: 1px solid rgba(250,204,21,0.25); border-radius: 14px; padding: 1.1rem 1.3rem;">
+                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:0.6rem;">
+                                <i class="fa-solid fa-ticket" style="color:var(--c-gold);"></i>
+                                <span style="font-weight:700; color:var(--c-gold);">Negociar Cupones</span>
+                            </div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; font-size:0.82rem;">
+                                <div style="background:rgba(0,0,0,0.3); border-radius:8px; padding:6px 8px;"><span
+                                        style="color:var(--text-muted); display:block; font-size:0.7rem; margin-bottom:3px;">TIPO</span><em
+                                        style="color:var(--text-muted);">¿Cuál?</em></div>
+                                <div style="background:rgba(0,0,0,0.3); border-radius:8px; padding:6px 8px;"><span
+                                        style="color:var(--c-cyan); display:block; font-size:0.7rem; margin-bottom:3px;">SENSORES</span><em
+                                        style="color:var(--text-muted);">cupón, perfil, compra...</em></div>
+                                <div style="background:rgba(0,0,0,0.3); border-radius:8px; padding:6px 8px;"><span
+                                        style="color:var(--c-pink); display:block; font-size:0.7rem; margin-bottom:3px;">ACTUADORES</span><em
+                                        style="color:var(--text-muted);">ofrecer alternativa...</em></div>
+                            </div>
+                        </div>
+                        <div
+                            style="background: rgba(216,180,254,0.06); border: 1px solid rgba(216,180,254,0.25); border-radius: 14px; padding: 1.1rem 1.3rem;">
+                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:0.6rem;">
+                                <i class="fa-solid fa-truck-fast" style="color:var(--c-purple);"></i>
+                                <span style="font-weight:700; color:var(--c-purple);">Optimizar Entrega</span>
+                            </div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; font-size:0.82rem;">
+                                <div style="background:rgba(0,0,0,0.3); border-radius:8px; padding:6px 8px;"><span
+                                        style="color:var(--text-muted); display:block; font-size:0.7rem; margin-bottom:3px;">TIPO</span><em
+                                        style="color:var(--text-muted);">¿Cuál?</em></div>
+                                <div style="background:rgba(0,0,0,0.3); border-radius:8px; padding:6px 8px;"><span
+                                        style="color:var(--c-cyan); display:block; font-size:0.7rem; margin-bottom:3px;">SENSORES</span><em
+                                        style="color:var(--text-muted);">mapa, tráfico, horarios...</em></div>
+                                <div style="background:rgba(0,0,0,0.3); border-radius:8px; padding:6px 8px;"><span
+                                        style="color:var(--c-pink); display:block; font-size:0.7rem; margin-bottom:3px;">ACTUADORES</span><em
+                                        style="color:var(--text-muted);">asignar ruta óptima...</em></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    style="margin-top: 1.5rem; background: rgba(250,204,21,0.06); border: 1px solid rgba(250,204,21,0.2); border-radius: 12px; padding: 1rem 1.5rem; display: flex; align-items: center; gap: 14px;">
+                    <i class="fa-solid fa-lightbulb" style="color:var(--c-gold); font-size: 1.5rem; flex-shrink:0;"></i>
+                    <p style="margin: 0; font-size: 0.95rem;">No hay una sola respuesta correcta — lo que importa es la
+                        <strong>calidad del argumento</strong>. Una funcionalidad puede justificarse con una combinación
+                        de tipos de agentes.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide CIERRE: Takeaways + Próximos Pasos -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-gold"><i class="fa-solid fa-flag-checkered"></i> Cierre de Sesión</div>
+                <h2>Las 3 Ideas que Debes Llevarte Hoy</h2>
+                <div class="grid-3" style="margin-bottom: 1rem;">
+                    <div class="concept-box" style="border-top: 4px solid var(--c-cyan);">
+                        <h3 style="color:var(--c-cyan);"><i class="fa-solid fa-brain"></i> Idea 1: La Definición
+                            Universal</h3>
+                        <p>Un <strong>agente inteligente</strong> es cualquier entidad que percibe su entorno y actúa
+                            sobre él para maximizar un objetivo. Aplica a robots, software, humanos y sistemas
+                            embebidos.</p>
+                    </div>
+                    <div class="concept-box" style="border-top: 4px solid var(--c-purple);">
+                        <h3 style="color:var(--c-purple);"><i class="fa-solid fa-layer-group"></i> Idea 2: La Escala de
+                            Complejidad</h3>
+                        <p>Los agentes van de lo más simple (<strong>reactivo</strong>, sin memoria) a lo más complejo
+                            (<strong>utilidad</strong>, con balance de objetivos). A mayor complejidad, mayor capacidad
+                            de adaptación.</p>
+                    </div>
+                    <div class="concept-box" style="border-top: 4px solid var(--c-gold);">
+                        <h3 style="color:var(--c-gold);"><i class="fa-solid fa-database"></i> Idea 3: El Conocimiento es
+                            el Límite</h3>
+                        <p>La inteligencia real de un agente depende de <strong>cómo representa el mundo</strong>. Sin
+                            un modelo de conocimiento sólido, incluso el agente más complejo actúa a ciegas.</p>
+                    </div>
+                </div>
+                <div
+                    style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 1.5rem 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: center;">
+                    <div>
+                        <p
+                            style="color: var(--c-cyan); font-weight: 800; font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1rem;">
+                            <i class="fa-solid fa-arrow-right"></i> ¿Qué viene la próxima semana?
+                        </p>
+                        <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px;">
+                            <li style="display:flex; gap:10px; align-items:flex-start;"><i
+                                    class="fa-solid fa-calendar-day"
+                                    style="color:var(--c-cyan); margin-top:3px; flex-shrink:0;"></i><span>Exploraremos
+                                    cómo un agente <strong>busca soluciones</strong> — algoritmos de búsqueda y
+                                    planificación.</span></li>
+                            <li style="display:flex; gap:10px; align-items:flex-start;"><i
+                                    class="fa-solid fa-diagram-project"
+                                    style="color:var(--c-purple); margin-top:3px; flex-shrink:0;"></i><span>Introducción
+                                    al <strong>Proyecto Final</strong>: diseño de un agente para un caso de negocio
+                                    real.</span></li>
+                        </ul>
+                    </div>
+                    <div style="text-align: center; border-left: 1px solid rgba(255,255,255,0.1); padding-left: 2rem;">
+                        <i class="fa-solid fa-quote-left"
+                            style="font-size: 1.5rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+                        <p
+                            style="font-size: 1.15rem; font-style: italic; color: var(--text-main); line-height: 1.6; margin-bottom: 1rem;">
+                            "La inteligencia es la capacidad de adaptarse al cambio."</p>
+                        <p style="color: var(--c-gold); font-weight: 700; font-size: 0.9rem; letter-spacing: 1px;">—
+                            Stephen Hawking</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="slideCounter" class="slide-counter">Portada · 1 / 19</div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const progressBar = document.getElementById('progressBar');
+        const slideCounter = document.getElementById('slideCounter');
+        let currentSlide = 0;
+
+        // Mapa de bloques: índice → etiqueta
+        const blockMap = [
+            'Portada',                                     // 0
+            'Intro', 'Intro',                              // 1-2
+            'Bloque B', 'Bloque B', 'Bloque B', 'Bloque B', 'Bloque B', // 3-7
+            'Pausa',                                       // 8
+            'Bloque C', 'Bloque C', 'Bloque C', 'Bloque C', 'Bloque C', // 9-13
+            'Bloque D', 'Bloque D', 'Bloque D', 'Bloque D', // 14-17
+            'Cierre'                                        // 18
+        ];
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle('active', index === currentSlide);
+            });
+            const progress = ((currentSlide + 1) / slides.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            const label = blockMap[currentSlide] || '';
+            slideCounter.textContent = `${label}  ·  ${currentSlide + 1} / ${slides.length}`;
+        }
+
+        // Sistema experto de navegación de diapositivas
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+                if (currentSlide < slides.length - 1) { currentSlide++; updateSlides(); }
+            }
+            if (e.key === 'ArrowLeft') {
+                if (currentSlide > 0) { currentSlide--; updateSlides(); }
+            }
+        });
+
+        // Init
+        updateSlides();
+    </script>
+</body>
+
+</html>
