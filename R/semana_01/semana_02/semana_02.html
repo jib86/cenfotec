@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Semana 2: Manipulación de datos en R</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+
+    <!-- Highlight.js para código R (Tema claro para encajar con el estilo) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+
+    <style>
+        :root {
+            --bg-deep: #0b1928;
+            --bg-gradient: linear-gradient(135deg, #13273e 0%, #0d1e30 40%, #08121d 100%);
+
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+
+            --accent-primary: #9d4edd;
+            /* Morado brillante */
+            --accent-secondary: #00e5ff;
+            /* Cyan neon */
+            --accent-highlight: #ffb703;
+            /* Naranja cálido */
+            --accent-green: #00e676;
+            /* Verde neon */
+
+            --glass-bg: rgba(15, 25, 40, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-blur: blur(20px);
+            --shadow-subtle: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-deep);
+            background-image: var(--bg-gradient);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 20%, rgba(157, 78, 221, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 229, 255, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        #slides-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: scale(0.98);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: all;
+            transform: scale(1);
+            z-index: 10;
+        }
+
+        .slide-indicator {
+            position: fixed;
+            bottom: 40px;
+            right: 50px;
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-numeric: tabular-nums;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 700;
+            z-index: 100;
+            transition: opacity 0.5s;
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 1400px;
+            height: 90%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* TIPOGRAFÍA */
+        .title-primary {
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: 4.5rem;
+            line-height: 1.1;
+            background: linear-gradient(135deg, var(--text-main) 30%, var(--text-muted) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .title-highlight {
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.8rem;
+            color: var(--text-muted);
+            font-weight: 400;
+            text-align: center;
+        }
+
+        /* CAJAS Y GRID */
+        .glass-box {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .box-title {
+            font-size: 1.5rem;
+            margin: 0 0 15px 0;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* CÓDIGO */
+        pre {
+            margin: 0;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.7) !important;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            height: 100%;
+            overflow: auto;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.05rem;
+            line-height: 1.5;
+        }
+
+        pre code {
+            padding: 25px !important;
+            background: transparent !important;
+        }
+
+        .explain-box strong {
+            color: var(--accent-primary);
+        }
+
+        /* MASTER CLASS: Animaciones Escalonadas */
+        .slide-content>div[style*="display: flex"]>div:nth-child(2)>.glass-box {
+            opacity: 0;
+            transform: translateY(25px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .slide.active .slide-content>div[style*="display: flex"]>div:nth-child(2)>.glass-box {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 0.7s;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="slide-indicator" id="slide-indicator">1 / ?</div>
+
+    <div id="slides-container">
+
+        <!-- DIAPOSITIVA 1: Portada -->
+        <div class="slide active">
+            <div class="slide-content" style="align-items: center; justify-content: center; text-align: center;">
+                <div
+                    style="display: inline-flex; align-items: center; gap: 12px; padding: 8px 24px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.3); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: var(--accent-primary); margin-bottom: 40px; letter-spacing: 0.15em;">
+                    <i class="fa-solid fa-code-branch"></i> SINT-604 · CLASE 02
+                </div>
+
+                <h1 class="title-primary" style="margin-bottom: 15px;">
+                    Manipulación de <span class="title-highlight">Datos en R</span>
+                </h1>
+                <h2 class="subtitle" style="margin-bottom: 60px;">
+                    Importar · Transformar · Resumir · Visualizar
+                </h2>
+
+                <div class="glass-box"
+                    style="display: flex; gap: 30px; justify-content: center; padding: 30px 40px; width: 85%; max-width: 900px; border-top: 4px solid var(--accent-green); text-align: left;">
+                    <i class="fa-solid fa-bullseye"
+                        style="font-size: 2.5rem; color: var(--accent-green); margin-top: 5px;"></i>
+                    <div>
+                        <h3 style="margin: 0 0 10px 0; font-size: 1.3rem; color: var(--text-main);">Objetivo explícito
+                        </h3>
+                        <p style="margin: 0; font-size: 1.1rem; line-height: 1.5; color: var(--text-muted);">
+                            Al terminar esta clase podrás usar <strong style="color: var(--text-main);">readr</strong>
+                            para importar datos, <strong style="color: var(--text-main);">dplyr</strong> para filtrar,
+                            crear columnas y agregar, y calcular medias/medianas con <strong
+                                style="color: var(--text-main);">summary()</strong>.<br>
+                            <span
+                                style="display: inline-block; margin-top: 10px; font-style: italic; color: var(--accent-primary);">✅
+                                Cada comando se explica al lado del código.</span>
+                        </p>
+                    </div>
+                </div>
+
+                <p style="margin-top: 40px; font-size: 0.95rem; color: var(--text-muted); opacity: 0.7;">
+                    🧭 Navega con flechas ◀ ▶ o haciendo click en los bordes
+                </p>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 2: Índice -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 40px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Estructura
+                        de la sesión</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Lo que veremos <span style="color: var(--accent-secondary);">hoy</span>
+                    </h2>
+                </div>
+
+                <div class="glass-box"
+                    style="width: 100%; border-top: 4px solid var(--accent-secondary); padding: 40px;">
+                    <ol
+                        style="font-size: 1.4rem; line-height: 2; color: var(--text-main); columns: 2; gap: 60px; margin: 0; padding-left: 25px; font-weight: 500;">
+                        <li><span style="color: var(--accent-primary); font-weight: bold;">Importar CSV</span> con
+                            <code>readr</code>
+                        </li>
+                        <li><span style="color: var(--accent-primary); font-weight: bold;">Tipos de datos</span> y
+                            <code>str()</code>
+                        </li>
+                        <li><span style="color: var(--accent-primary); font-weight: bold;">Crear/modificar</span>
+                            columnas</li>
+                        <li><span style="color: var(--accent-primary); font-weight: bold;"><code>dplyr</code>:</span>
+                            <code>filter</code>, <code>select</code>, <code>mutate</code>
+                        </li>
+                        <li><span style="color: var(--accent-primary); font-weight: bold;">Medidas:</span>
+                            <code>summary</code>, <code>mean</code>, <code>median</code>
+                        </li>
+                        <li><span style="color: var(--accent-primary); font-weight: bold;">Tablas de frecuencia</span> y
+                            gráficos</li>
+                        <li><span style="color: var(--accent-primary); font-weight: bold;">Estudio de caso</span> paso a
+                            paso</li>
+                        <li><span style="color: var(--accent-primary); font-weight: bold;">Cierre</span> y tarea
+                            extraclase</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 3: Antes de Empezar: Preparar el Terreno -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 30px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Antes
+                        de empezar</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Preparar el <span style="color: var(--accent-secondary);">Terreno</span>
+                    </h2>
+                </div>
+
+                <div style="display: flex; gap: 40px; width: 100%; align-items: stretch;">
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 20px;">
+
+                        <!-- Caja 1: Working Directory -->
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-primary); padding: 25px;">
+                            <h3 class="box-title"><i class="fa-solid fa-folder-open"
+                                    style="color: var(--accent-primary);"></i> Directorio de Trabajo</h3>
+                            <p style="font-size: 1.05rem; line-height: 1.5; color: var(--text-main);">
+                                R no sabe dónde guardaste tus archivos. Si intentas leer un CSV, te dará error de
+                                <em>"File not found"</em> si no ubicas a R en tu carpeta correcta primero.
+                            </p>
+                            <div class="explain-box"
+                                style="margin-top: 15px; background: rgba(0,0,0,0.03); padding: 15px;">
+                                <strong style="color: var(--text-main);">¿Cómo hacerlo fácil?</strong><br>
+                                En RStudio, ve al menú superior: <br>
+                                <code>Session</code> > <code>Set Working Directory</code> >
+                                <code>To Source File Location</code>.<br>
+                                <em style="font-size: 0.95rem; color: var(--text-muted);">(Esto le dice a R: "Busca los
+                                    datos en la misma carpeta donde tengo guardado este script").</em>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 20px;">
+
+                        <!-- Caja 2: Asignación y Atajos -->
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-secondary); padding: 25px;">
+                            <h3 class="box-title"><i class="fa-solid fa-keyboard"
+                                    style="color: var(--accent-secondary);"></i> Mecánica Básica</h3>
+
+                            <p style="font-size: 1.05rem; line-height: 1.4; margin-bottom: 20px;">
+                                <strong>La flecha de asignación (<code>&lt;-</code>):</strong> Equivale al signo
+                                <code>=</code>. Significa "toma el cálculo que está a la derecha, y guárdalo bajo el
+                                nombre de la izquierda" para usarlo después.
+                            </p>
+
+                            <div
+                                style="background: rgba(0,229,255,0.05); border-left: 4px solid var(--accent-secondary); padding: 15px; border-radius: 8px;">
+                                <strong
+                                    style="color: var(--accent-secondary); margin-bottom: 8px; display: block;">Atajos
+                                    de oro:</strong>
+                                <ul
+                                    style="list-style: none; padding: 0; margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; line-height: 1.6;">
+                                    <li><kbd
+                                            style="background: rgba(255,255,255,0.1); color: var(--text-main); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Ctrl/Cmd
+                                            + Enter</kbd> Ejecutar línea actual</li>
+                                    <li><kbd
+                                            style="background: rgba(255,255,255,0.1); color: var(--text-main); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold;">Alt
+                                            + -</kbd> Escribe rápidamente la flecha <code>&lt;-</code></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 4: 1. Leer y escribir CSV -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 30px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Paso
+                        1</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Leer y escribir <span style="color: var(--accent-secondary);">CSV</span>
+                    </h2>
+                </div>
+
+                <div style="display: flex; gap: 40px; width: 100%; align-items: stretch;">
+                    <div style="flex: 1.3; display: flex; flex-direction: column;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-primary); padding: 0; overflow: hidden;">
+                            <pre><code class="language-r"># 1. Cargar paquete (instalar si es primera vez)
+# install.packages("readr")
+library(readr)
+
+# 2. R trae datos de prueba. Usaremos 'mtcars' (Motor Trend Cars).
+# write_csv() exporta esa tabla de R a un archivo real en tu compu.
+write_csv(mtcars, "vehiculos.csv")
+
+# 3. read_csv("ruta") -> lee un archivo y lo mete a R
+datos_autos <- read_csv("vehiculos.csv")
+
+# 4. Ver el resultado
+print(datos_autos)</code></pre>
+                        </div>
+                    </div>
+
+                    <div style="flex: 0.7; display: flex; flex-direction: column; gap: 20px;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-secondary); padding: 30px;">
+                            <h3 class="box-title"><i class="fa-solid fa-magnifying-glass"
+                                    style="color: var(--accent-secondary);"></i> ¿Qué hace cada código?</h3>
+                            <p
+                                style="font-size: 1.05rem; line-height: 1.5; color: var(--text-main); margin-bottom: 15px;">
+                                <strong><code>read_csv("archivo.csv")</code></strong>: Lee un archivo guardado en tu
+                                computadora y lo mete adentro de R para que puedas analizarlo.<br><br>
+                                <strong><code>write_csv(tabla, "archivo.csv")</code></strong>: Hace lo contrario. Toma
+                                los datos que tienes en R y los guarda en tu computadora como un archivo Excel/CSV.<br>
+                            </p>
+
+                            <div class="explain-box"
+                                style="padding: 15px; margin-top: auto; border-color: var(--accent-highlight); background: rgba(255, 152, 0, 0.08);">
+                                <h4 style="margin: 0 0 5px 0; color: var(--accent-highlight); font-size: 1rem;"><i
+                                        class="fa-solid fa-triangle-exclamation"></i> Regla de Oro de los Paquetes</h4>
+                                <p style="font-size: 0.95rem; margin: 0; line-height: 1.4;">
+                                    <strong><code>install.packages()</code></strong> es como comprar una cafetera: lo
+                                    haces <em>una sola vez en tu vida</em>.<br>
+                                    <strong><code>library()</code></strong> es como enchufarla: lo debes correr <em>cada
+                                        vez</em> que abres RStudio.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 4: 2. Tipos de datos y operaciones -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 30px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Paso
+                        2</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Tipos de datos y <span style="color: var(--accent-secondary);">Operaciones</span>
+                    </h2>
+                </div>
+
+                <div style="display: flex; gap: 40px; width: 100%; align-items: stretch;">
+                    <div style="flex: 1.3; display: flex; flex-direction: column;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-primary); padding: 0; overflow: hidden;">
+                            <pre><code class="language-r"># str() muestra estructura: tipo de cada columna
+str(datos_autos)
+
+# class() dice la clase de una columna
+class(datos_autos$am)     # "numeric"
+class(datos_autos$mpg)    # "numeric"
+
+# Crear nueva columna (operación vectorial)
+# Calculamos consumo en Litros por 100km (L/100km)
+datos_autos$litros_100km <- 235.21 / datos_autos$mpg
+
+print(datos_autos)</code></pre>
+                        </div>
+                    </div>
+
+                    <div style="flex: 0.7; display: flex; flex-direction: column;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-secondary); padding: 30px;">
+                            <h3 class="box-title"><i class="fa-solid fa-brain"
+                                    style="color: var(--accent-secondary);"></i> Explicación Mental</h3>
+                            <p style="font-size: 1.05rem; line-height: 1.5; color: var(--text-main);">
+                                <strong><code>str(tabla)</code></strong>: ("Structure") Sirve para ver qué hay adentro
+                                de tu tabla. Te dice rápidamente si una columna tiene números o tiene texto. Es vital
+                                hacerlo siempre.<br><br>
+                                <strong>El símbolo <code>$</code></strong>: Es la llave para entrar a tu tabla. Escribes
+                                <code>tabla$columna</code> para decirle a R exactamente con cuál columna quieres
+                                trabajar.<br><br>
+                                <strong>Crear columnas</strong>: Si escribes
+                                <code>tabla$nueva <- tabla$vieja * 2</code>, R va fila por fila, multiplica el número y
+                                guarda el resultado en una columna totalmente nueva.
+                            </p>
+
+                            <div class="explain-box"
+                                style="padding: 15px; margin-top: 15px; border-color: #ef4444; background: rgba(239, 68, 68, 0.08);">
+                                <strong style="color: #ef4444;"><i class="fa-solid fa-bug"></i>
+                                    Troubleshooting:</strong>
+                                <p style="font-size: 0.95rem; margin: 5px 0 0 0; line-height: 1.4;">
+                                    <em>¿Te sale error de "non-numeric argument to binary operator"?</em><br>
+                                    Intentaste multiplicar o sumar una columna que R cree que es texto (`character`).
+                                    Usa `str()` para confirmarlo.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 5: Pausa Activa -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: center; justify-content: center; text-align: center;">
+                <div class="glass-box"
+                    style="padding: 60px 80px; width: 80%; max-width: 800px; border-top: 4px solid var(--accent-highlight);">
+                    <i class="fa-solid fa-mug-hot"
+                        style="font-size: 4rem; color: var(--accent-highlight); margin-bottom: 25px;"></i>
+                    <h2 style="font-size: 3rem; font-weight: 800; color: var(--text-main); margin: 0 0 10px 0;">Pausa
+                        Activa</h2>
+                    <h3
+                        style="font-size: 1.5rem; font-weight: 400; color: var(--text-muted); font-family: 'Playfair Display', serif; margin: 0 0 40px 0;">
+                        Tómate 5 minutos para recargar</h3>
+
+                    <ul
+                        style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 20px; font-size: 1.3rem; color: var(--text-main); text-align: left;">
+                        <li style="display: flex; align-items: center; gap: 15px;">
+                            <i class="fa-solid fa-person-walking"
+                                style="color: var(--accent-primary); width: 30px; text-align: center;"></i>
+                            Ponte de pie, estira brazos y cuello.
+                        </li>
+                        <li style="display: flex; align-items: center; gap: 15px;">
+                            <i class="fa-solid fa-droplet"
+                                style="color: var(--accent-secondary); width: 30px; text-align: center;"></i>
+                            Bebe un poco de agua.
+                        </li>
+                        <li style="display: flex; align-items: center; gap: 15px;">
+                            <i class="fa-solid fa-eye"
+                                style="color: var(--accent-highlight); width: 30px; text-align: center;"></i>
+                            Mira por la ventana a lo lejos para relajar la vista.
+                        </li>
+                    </ul>
+
+                    <div
+                        style="margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.1); font-size: 1.1rem; color: var(--text-muted); font-style: italic;">
+                        Próximo paso al volver: <strong>El poder del paquete dplyr</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 6: 3. dplyr: filter() y select() -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 30px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Paso
+                        3</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        <code>dplyr</code>: <span style="color: var(--accent-secondary);">filter()</span> y <span
+                            style="color: var(--accent-secondary);">select()</span>
+                    </h2>
+                </div>
+
+                <div style="display: flex; gap: 40px; width: 100%; align-items: stretch;">
+                    <div style="flex: 1.3; display: flex; flex-direction: column;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-primary); padding: 0; overflow: hidden;">
+                            <pre><code class="language-r">library(dplyr)
+
+# Usaremos directamente mtcars de ahora en adelante
+# Transformemos la variable 'am' (transmisión) a texto para leerla fácil
+datos <- mtcars |>
+  mutate(Transmision = ifelse(am == 0, "Automático", "Manual"))
+
+# 1. filter(): subconjunto de filas (Solo Automáticos)
+autos_automaticos <- filter(datos, Transmision == "Automático")
+
+# 2. pipe |> : encadena pasos lógicos sin crear variables nuevas
+resultado <- datos |>
+  filter(hp > 150) |>       # Solo autos con más de 150 caballos de fuerza
+  select(mpg, hp, Transmision)  # Retenemos 3 columnas
+  
+print(resultado)</code></pre>
+                        </div>
+                    </div>
+
+                    <div style="flex: 0.7; display: flex; flex-direction: column;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-secondary); padding: 30px;">
+                            <h3 class="box-title"><i class="fa-solid fa-code-merge"
+                                    style="color: var(--accent-secondary);"></i> El Pipe del Data Science</h3>
+                            <p style="font-size: 1.05rem; line-height: 1.5; color: var(--text-main);">
+                                Usamos <strong><code>ifelse()</code></strong> para crear textos legibles a partir de una
+                                variable numérica de ceros y unos.<br><br>
+                                <strong><code>filter()</code></strong>: Filtra las <em>filas</em>. Mantiene
+                                solo donde la condición sea `TRUE`.<br><br>
+                                <strong><code>select()</code></strong>: Selecciona o descarta <em>columnas</em> por
+                                nombre.<br><br>
+                                <strong><code>|></code> (El Pipe)</strong>: Toma la tabla que tiene a su izquierda y la
+                                "conecta" como entrada del código a su derecha. <em>Se lee cómo "Y entonces..."</em>.
+                            </p>
+
+                            <div class="explain-box"
+                                style="padding: 15px; margin-top: 15px; border-color: #ef4444; background: rgba(239, 68, 68, 0.08);">
+                                <strong style="color: #ef4444;"><i class="fa-solid fa-bug"></i>
+                                    Troubleshooting:</strong>
+                                <p style="font-size: 0.95rem; margin: 5px 0 0 0; line-height: 1.4;">
+                                    <em>¿Error "could not find function '|>'" o "filter"?</em><br>
+                                    Probablemente olvidaste correr la línea `library(dplyr)`.
+                                    <br><br>
+                                    <em>¿Error "object 'autos' not found"?</em><br>
+                                    R distingue mayúsculas de minúsculas. 'autos' y 'Autos' son cosas totalmente
+                                    distintas.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 7: 4. mutate(), group_by(), summarise() -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 30px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Paso
+                        4</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Agregaciones: <span style="color: var(--accent-secondary);">group_by()</span>
+                    </h2>
+                </div>
+
+                <div style="display: flex; gap: 40px; width: 100%; align-items: stretch;">
+                    <div style="flex: 1.3; display: flex; flex-direction: column;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-primary); padding: 0; overflow: hidden;">
+                            <pre><code class="language-r"># mutate() crea o modifica columnas, como $ pero integrable al pipe
+datos <- datos |>
+  mutate(Peso_kg = wt * 453.59) # wt está en miles de libras
+
+# El combo letal: group_by + summarise
+por_cilindros <- datos |>
+  group_by(cyl) |>
+  summarise(
+    promedio_caballos = mean(hp),
+    peso_medio_kg = mean(Peso_kg)
+  )
+
+print(por_cilindros)</code></pre>
+                        </div>
+                    </div>
+
+                    <div style="flex: 0.7; display: flex; flex-direction: column;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-secondary); padding: 30px;">
+                            <h3 class="box-title"><i class="fa-solid fa-puzzle-piece"
+                                    style="color: var(--accent-secondary);"></i> Ensamblaje</h3>
+                            <p style="font-size: 1.05rem; line-height: 1.6; color: var(--text-main);">
+                                <strong><code>mutate(nueva = calculo)</code></strong>: Fabrica una columna nueva de
+                                forma rápida y la pega al final de tu tabla, sin borrar las que ya tenías.<br><br>
+                                <strong><code>group_by(columna)</code></strong>: Agrupa tus datos por categorías
+                                invisibles (por ej: separa mentalmente los autos de 4, 6 y 8 cilindros). No hace nada
+                                visual por sí solo.<br><br>
+                                <strong><code>summarise(promedio = mean(x))</code></strong>: Toma esos grupos invisibles
+                                y los "aplasta", calculando un resumen (como el promedio, la suma o el total) para cada
+                                grupo independiente.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 8: 5. summary(), mean(), median() -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 30px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Paso
+                        5</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Vistazo Rápido: <span style="color: var(--accent-secondary);">summary()</span>
+                    </h2>
+                </div>
+
+                <div style="display: flex; gap: 40px; width: 100%; align-items: stretch;">
+                    <div style="flex: 1.3; display: flex; flex-direction: column;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-primary); padding: 0; overflow: hidden;">
+                            <pre><code class="language-r"># summary() da mínimo, cuartiles, media, máximo de cada columna
+summary(datos)
+
+# Medidas individuales
+media_consumo   <- mean(datos$mpg)
+mediana_consumo <- median(datos$mpg)
+var_consumo     <- var(datos$mpg)
+
+cat("Media Mpg:", media_consumo, "| Mediana Mpg:", mediana_consumo)</code></pre>
+                        </div>
+                    </div>
+
+                    <div style="flex: 0.7; display: flex; flex-direction: column;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-secondary); padding: 30px;">
+                            <h3 class="box-title"><i class="fa-solid fa-chart-line"
+                                    style="color: var(--accent-secondary);"></i> Exploración inicial</h3>
+                            <p style="font-size: 1.1rem; line-height: 1.6; color: var(--text-main);">
+                                <strong><code>summary(tabla)</code></strong>: Te da un resumen estadístico automático de
+                                toda tu tabla: el valor más pequeño, el más grande y el promedio. ¡Es oro puro para
+                                conocer tus datos en un segundo!<br><br>
+                                <strong><code>mean(numero)</code></strong>: Calcula el promedio matemático
+                                normal.<br><br>
+                                <strong><code>median(numero)</code></strong>: Calcula la mediana (el número que queda
+                                exactamente en el centro si los ordenas de menor a mayor).<br><br>
+                                <strong><code>var(numero)</code></strong>: Calcula la varianza (qué tan dispersos o
+                                alejados están los datos entre sí).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 9: 6. table(), barplot(), hist() -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 30px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Paso
+                        6</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Gráficos <span style="color: var(--accent-secondary);">Base</span>
+                    </h2>
+                </div>
+
+                <div style="display: flex; gap: 40px; width: 100%; align-items: stretch;">
+                    <div style="flex: 1.3; display: flex; flex-direction: column;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-primary); padding: 0; overflow: hidden;">
+                            <pre><code class="language-r"># table() cuenta número de repeticiones de categorías
+frec_cilindros <- table(datos$cyl)
+print(frec_cilindros)
+
+# Gráfico de barras (Ideal para categóricas)
+barplot(frec_cilindros, 
+        col = "steelblue", 
+        main = "Cantidad de autos por Cilindraje",
+        xlab = "Cilindros")
+
+# Histograma de variable continua
+hist(datos$mpg, 
+     col = "lightgreen", 
+     main = "Distribución del consumo (mpg)",
+     xlab = "Millas por Galón")</code></pre>
+                        </div>
+                    </div>
+
+                    <div style="flex: 0.7; display: flex; flex-direction: column;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-secondary); padding: 30px;">
+                            <h3 class="box-title"><i class="fa-solid fa-chart-bar"
+                                    style="color: var(--accent-secondary);"></i> Diagnóstico visual</h3>
+                            <p style="font-size: 1.1rem; line-height: 1.6; color: var(--text-main);">
+                                <strong><code>table(columna)</code></strong>: Cuenta cosas. Te dice exactamente cuántos
+                                autos hay de 4 cilindros, cuántos de 6, etc.<br><br>
+                                <strong><code>barplot(tabla)</code></strong>: Dibuja un gráfico de barras. Es perfecto
+                                para comparar cantidades de distintas categorías.<br><br>
+                                <strong><code>hist(columna_numerica)</code></strong>: Dibuja un histograma. Es como un
+                                escáner para tus números: te muestra visualmente si la mayoría de los autos consumen
+                                poca gasolina, mucha, o si están en el medio.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 10: ESTUDIO DE CASO CONTEXTO -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: center; justify-content: center; text-align: center;">
+                <div class="glass-box"
+                    style="padding: 50px; width: 85%; max-width: 900px; border-top: 4px solid var(--accent-highlight);">
+                    <i class="fa-solid fa-flask"
+                        style="font-size: 3.5rem; color: var(--accent-highlight); margin-bottom: 20px;"></i>
+                    <h2 style="font-size: 3rem; font-weight: 800; color: var(--text-main); margin: 0 0 15px 0;">Estudio
+                        de Caso</h2>
+                    <h3
+                        style="font-size: 1.5rem; font-weight: 400; color: var(--text-muted); font-family: 'Playfair Display', serif; margin: 0 0 30px 0;">
+                        Análisis de una Flota Vehicular</h3>
+
+                    <div
+                        style="background: rgba(0,0,0,0.2); padding: 25px; border-radius: 12px; text-align: left; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.05);">
+                        <p style="font-size: 1.2rem; color: var(--text-main); margin: 0 0 10px 0;"><strong>El Problema
+                                de Negocio:</strong></p>
+                        <p style="font-size: 1.1rem; color: var(--text-muted); margin: 0;">
+                            Una aseguradora de vehículos necesita analizar una flota para ajustar sus pólizas y nos hace
+                            dos preguntas:<br>
+                            1. ¿Cuáles son los 3 vehículos que más consumen gasolina?<br>
+                            2. ¿Existe una diferencia clara en potencia (caballos de fuerza) entre autos de 4, 6 y 8
+                            cilindros?
+                        </p>
+                    </div>
+
+                    <p style="font-size: 1.05rem; color: var(--text-main); text-align: left;">Usaremos el dataset
+                        <code>mtcars</code>. R guarda los nombres de los carros como "nombres de filas", así que primero
+                        ejecutaremos este código para extraerlos a una columna formal llamada <code>Modelo</code>:
+                    </p>
+                    <div style="text-align: left;">
+                        <pre style="max-height: 200px;"><code class="language-r" style="padding: 15px !important; font-size: 0.9rem;">library(dplyr)
+autos <- mtcars |> 
+  mutate(Modelo = rownames(mtcars)) |> 
+  select(Modelo, mpg, cyl, hp) # Nos quedamos con lo esencial</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 11: CASO PASOS 1-4 -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 30px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Estudio
+                        de Caso</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Pasos 1 a <span style="color: var(--accent-secondary);">4</span>
+                    </h2>
+                </div>
+
+                <div style="display: flex; gap: 40px; width: 100%; align-items: stretch;">
+                    <div style="flex: 1.3; display: flex; flex-direction: column;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-primary); padding: 0; overflow: hidden;">
+                            <pre><code class="language-r">library(dplyr)
+
+# 1. Ya preparamos el dataset 'autos'
+# autos <- mtcars |> mutate(Modelo = rownames(mtcars)) ...
+
+# 2. Primeras filas (inspección)
+head(autos)
+
+# 3. Estructura y tipos de columnas
+str(autos)
+
+# 4. Dimensiones totales (filas, columnas)
+dim(autos)</code></pre>
+                        </div>
+                    </div>
+
+                    <div style="flex: 0.7; display: flex; flex-direction: column;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-secondary); padding: 30px;">
+                            <h3 class="box-title"><i class="fa-solid fa-eye"
+                                    style="color: var(--accent-secondary);"></i> Fase de Reconocimiento</h3>
+                            <p style="font-size: 1.1rem; line-height: 1.6; color: var(--text-main);">
+                                Nunca asumas que tus datos cargaron bien. Hay 3 comandos para revisar tu tabla
+                                rápido:<br><br>
+                                <strong><code>head(tabla)</code></strong>: Te muestra solo las primeras 6 filas. Así
+                                confirmas a simple vista que los datos sí se leyeron correctamente y que las columnas
+                                coinciden.<br><br>
+                                <strong><code>str(tabla)</code></strong>: Como vimos antes, te asegura que dónde
+                                deberían haber números (numeric), el programa sí leyó números.<br><br>
+                                <strong><code>dim(tabla)</code></strong>: ("Dimensions") Te dice exactamente cuántas
+                                filas y columnas tiene tu tabla total, para verificar que no falte nada.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 12: CASO PASOS 5-7 -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 30px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Estudio
+                        de Caso</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Pasos 5 a <span style="color: var(--accent-secondary);">7</span>
+                    </h2>
+                </div>
+
+                <div style="display: flex; gap: 40px; width: 100%; align-items: stretch;">
+                    <div style="flex: 1.3; display: flex; flex-direction: column;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-primary); padding: 0; overflow: hidden;">
+                            <pre><code class="language-r"># Pregunta 1: ¿Cuáles son los 3 vehículos que más gasolina consumen?
+# Nota: Mayor mpg = rinde MÁS millas por galón (consume menos).
+# Así que "más consumen" = Menor mpg
+peores_consumos <- autos |>
+  arrange(mpg) |>        # Ordenar de menor a mayor mpg
+  head(3)                # Tomar los primeros 3
+
+print(peores_consumos)</code></pre>
+                        </div>
+                    </div>
+
+                    <div style="flex: 0.7; display: flex; flex-direction: column;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-secondary); padding: 30px;">
+                            <h3 class="box-title"><i class="fa-solid fa-ranking-star"
+                                    style="color: var(--accent-secondary);"></i> Ordenar y Top</h3>
+                            <p style="font-size: 1.1rem; line-height: 1.6; color: var(--text-main);">
+                                <strong><code>arrange(columna)</code></strong>: Ordena todas las filas de la tabla
+                                usando esa columna específica. Por defecto lo hace del número más pequeño al más
+                                grande.<br><br>
+                                <strong><code>head(3)</code></strong>: Le pedimos a R que corte el resultado gigante y
+                                solo nos muestre los primeros 3 autos de esa lista (los que rinden menos millas).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 13: CASO PASOS 8-10 -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 30px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Estudio
+                        de Caso</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Pasos 8 a <span style="color: var(--accent-secondary);">10</span>
+                    </h2>
+                </div>
+
+                <div style="display: flex; gap: 40px; width: 100%; align-items: stretch;">
+                    <div style="flex: 1.3; display: flex; flex-direction: column;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-primary); padding: 0; overflow: hidden;">
+                            <pre><code class="language-r"># 8. Comportamiento en ventas globales
+summary(ventas$Total_Venta)
+
+# 9. Responder P1: Cantidad de libros literario vendidos
+ventas_por_genero <- ventas |>
+  group_by(Genero) |>
+  summarise(Cantidad_Total = sum(Cantidad))
+
+# 10. Responder P2: Ingresos por sucursal
+ingresos_por_sucursal <- ventas |>
+  group_by(Sucursal) |>
+  summarise(Ingreso_Total = sum(Total_Venta))</code></pre>
+                        </div>
+                    </div>
+
+                    <div style="flex: 0.7; display: flex; flex-direction: column;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-secondary); padding: 30px;">
+                            <h3 class="box-title"><i class="fa-solid fa-list-check"
+                                    style="color: var(--accent-secondary);"></i> Respuestas al Negocio</h3>
+                            <p style="font-size: 1.1rem; line-height: 1.6; color: var(--text-main);">
+                                Con esto respondemos la segunda interrogante de la aseguradora.<br><br>
+                                Al agrupar por cilindros (<strong><code>group_by</code></strong>) y promediar los
+                                caballos de fuerza (<strong><code>mean</code></strong>) de ese grupo, descubrimos la
+                                relación matemática directa.<br><br>
+                                Usamos <strong><code>arrange(desc(potencia_promedio))</code></strong> para que nos
+                                ordene los resultados al revés (del grupo más potente al menos potente).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 14: VISUALIZAR RESULTADOS -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 30px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Cierre
+                        Analítico</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Visualizar los <span style="color: var(--accent-secondary);">Resultados</span>
+                    </h2>
+                </div>
+
+                <div style="display: flex; gap: 40px; width: 100%; align-items: stretch;">
+                    <div style="flex: 1.3; display: flex; flex-direction: column;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-primary); padding: 0; overflow: hidden;">
+                            <pre><code class="language-r"># Barplot: Potencia por Cilindros
+barplot(potencia_cilindros$potencia_promedio,
+        names.arg = potencia_cilindros$cyl,
+        col = c("#66c2a5","#fc8d62","#8da0cb"),
+        main = "Promedio de Caballos de Fuerza",
+        xlab = "Cantidad de Cilindros",
+        ylab = "Caballos (hp)")
+
+# Histograma de todos los caballos de fuerza
+hist(autos$hp, 
+     col = "wheat", 
+     main = "Distribución de Potencia de la Flota Total")</code></pre>
+                        </div>
+                    </div>
+
+                    <div style="flex: 0.7; display: flex; flex-direction: column;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid var(--accent-secondary); padding: 30px;">
+                            <h3 class="box-title"><i class="fa-solid fa-paintbrush"
+                                    style="color: var(--accent-secondary);"></i> Potencia Gráfica</h3>
+                            <p style="font-size: 1.1rem; line-height: 1.6; color: var(--text-main);">
+                                Tu jefe siempre preferirá el gráfico de barras por sobre una tabla aburrida. Nuestro
+                                cerebro entiende las diferencias de tamaño instantáneamente: a más cilindros, más
+                                potencia.<br><br>
+                                El histograma, en cambio, le da a la aseguradora una "radiografía" completa de su flota.
+                                Con un solo vistazo notan que casi todos aseguran carritos normales (barras altas a la
+                                izquierda), y muy pocos aseguran autos deportivos veloces (a la derecha).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 15: SOLUCIONES ESPERADAS -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 30px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Retroalimentación</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Las Soluciones <span style="color: var(--accent-secondary);">Esperadas</span>
+                    </h2>
+                    <p style="font-size: 1.1rem; color: var(--text-muted); margin-top: 10px;">Compara tus resultados con
+                        la consola de RStudio.</p>
+                </div>
+
+                <div style="display: flex; gap: 40px; width: 100%; align-items: stretch;">
+                    <div style="flex: 1; display: flex; flex-direction: column;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid #4CAF50; padding: 0; overflow: hidden; background: #1e1e1e !important; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                            <div
+                                style="background: #2d2d2d; padding: 8px 15px; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #888; border-bottom: 1px solid #444; display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-terminal" style="color: #4CAF50;"></i> Console ~/RStudio
+                            </div>
+                            <pre style="background: transparent !important; border: none; box-shadow: none; margin: 0;"><code class="language-plaintext" style="color: #cccccc !important; font-family: 'JetBrains Mono', 'Consolas', monospace; font-size: 1rem; line-height: 1.5; padding: 25px !important; text-shadow: none !important;">> print(peores_consumos)
+
+                     Modelo  mpg cyl  hp
+1   Lincoln Continental 10.4   8 215
+2    Cadillac Fleetwood 10.4   8 205
+3            Camaro Z28 13.3   8 245</code></pre>
+                        </div>
+                    </div>
+
+                    <div style="flex: 1; display: flex; flex-direction: column;">
+                        <div class="glass-box"
+                            style="flex: 1; border-top: 4px solid #4CAF50; padding: 0; overflow: hidden; background: #1e1e1e !important; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                            <div
+                                style="background: #2d2d2d; padding: 8px 15px; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #888; border-bottom: 1px solid #444; display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-terminal" style="color: #4CAF50;"></i> Console ~/RStudio
+                            </div>
+                            <pre style="background: transparent !important; border: none; box-shadow: none; margin: 0;"><code class="language-plaintext" style="color: #cccccc !important; font-family: 'JetBrains Mono', 'Consolas', monospace; font-size: 1rem; line-height: 1.5; padding: 25px !important; text-shadow: none !important;">> print(potencia_cilindros)
+
+# A tibble: 3 x 3
+    cyl potencia_promedio cantidad_autos
+  &lt;dbl&gt;             &lt;dbl&gt;          &lt;int&gt;
+1     8             209.              14
+2     6             122.               7
+3     4              82.6             11</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-box"
+                    style="margin-top: 30px; width: 100%; padding: 25px 40px; border-left: 6px solid var(--accent-highlight);">
+                    <h3 style="margin: 0 0 10px 0; color: var(--text-main); font-size: 1.2rem;">Preguntas de de rigor:
+                    </h3>
+                    <p style="margin: 0; font-size: 1.1rem; color: var(--text-muted);">
+                        Viendo los números duros, ¿Qué género recomendarías promocionar en redes sociales? ¿Cual la que
+                        requiere menos ayuda comercial? <br>
+                        ¿A qué Sucursal hay que enviarle gerencia para entender las fallas con sus números?
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 16: CHEAT SHEET -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: center; justify-content: center; text-align: center;">
+                <div style="margin-bottom: 20px;">
+                    <span
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Para
+                        Guardar</span>
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Tu <span style="color: var(--accent-secondary);">Cheat Sheet</span>
+                    </h2>
+                    <p style="font-size: 1.1rem; color: var(--text-muted); margin-top: 10px;">¡Toma una captura de
+                        pantalla de esta diapositiva!</p>
+                </div>
+
+                <div class="glass-box"
+                    style="width: 100%; max-width: 1000px; padding: 0; overflow: hidden; border-top: 4px solid var(--accent-highlight);">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 1.05rem;">
+                        <thead>
+                            <tr
+                                style="background: rgba(255,152,0,0.15); border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <th style="padding: 15px 25px; color: var(--accent-highlight); width: 25%;">Comando</th>
+                                <th style="padding: 15px 25px; color: var(--text-main);">¿Para qué sirve de forma
+                                    simple?</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 15px 25px;"><code
+                                        style="color: var(--accent-secondary); background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; font-family: 'JetBrains Mono', monospace;">read_csv()</code>
+                                </td>
+                                <td style="padding: 15px 25px; color: var(--text-muted);">Mete un archivo Excel/CSV
+                                    adentro de R.</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 15px 25px;"><code
+                                        style="color: var(--accent-secondary); background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; font-family: 'JetBrains Mono', monospace;">str()</code>
+                                </td>
+                                <td style="padding: 15px 25px; color: var(--text-muted);">Revisa qué hay dentro de tu
+                                    tabla (números vs texto).</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 15px 25px;"><code
+                                        style="color: var(--accent-secondary); background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; font-family: 'JetBrains Mono', monospace;">|></code>
+                                    (Pipe)</td>
+                                <td style="padding: 15px 25px; color: var(--text-muted);">Conector lógico. Se lee como
+                                    "Y entonces hazle esto...".</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 15px 25px;"><code
+                                        style="color: var(--accent-secondary); background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; font-family: 'JetBrains Mono', monospace;">filter()</code>
+                                </td>
+                                <td style="padding: 15px 25px; color: var(--text-muted);">Corta filas. Se queda solo con
+                                    las que cumplen la regla.</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 15px 25px;"><code
+                                        style="color: var(--accent-secondary); background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; font-family: 'JetBrains Mono', monospace;">select()</code>
+                                </td>
+                                <td style="padding: 15px 25px; color: var(--text-muted);">Corta columnas. Se queda solo
+                                    con las que necesitas.</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 15px 25px;"><code
+                                        style="color: var(--accent-secondary); background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; font-family: 'JetBrains Mono', monospace;">mutate()</code>
+                                </td>
+                                <td style="padding: 15px 25px; color: var(--text-muted);">Fabrica una columna matemática
+                                    nueva y la pega al final.</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 15px 25px;"><code
+                                        style="color: var(--accent-secondary); background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; font-family: 'JetBrains Mono', monospace;">group_by()</code>
+                                </td>
+                                <td style="padding: 15px 25px; color: var(--text-muted);">Agrupa datos en categorías
+                                    para luego resumirlos.</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 15px 25px;"><code
+                                        style="color: var(--accent-secondary); background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; font-family: 'JetBrains Mono', monospace;">summarise()</code>
+                                </td>
+                                <td style="padding: 15px 25px; color: var(--text-muted);">Aplasta los grupos para
+                                    calcular promedios, sumas o totales.</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 15px 25px;"><code
+                                        style="color: var(--accent-secondary); background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; font-family: 'JetBrains Mono', monospace;">arrange()</code>
+                                </td>
+                                <td style="padding: 15px 25px; color: var(--text-muted);">Ordena toda tu tabla del
+                                    número más pequeño al más grande.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 17: CIERRE Y TAREA -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: center; justify-content: center; text-align: center;">
+                <div class="glass-box"
+                    style="padding: 60px 80px; width: 80%; max-width: 900px; border-top: 4px solid var(--accent-secondary);">
+
+                    <h2
+                        style="font-family: 'Inter', sans-serif; font-size: 3rem; font-weight: 800; color: var(--text-main); margin: 0 0 15px 0;">
+                        Actividad Extraclase</h2>
+                    <h3
+                        style="font-size: 1.5rem; font-weight: 400; color: var(--text-muted); font-family: 'Playfair Display', serif; margin: 0 0 40px 0;">
+                        Fortalece tus bases analíticas</h3>
+
+                    <div
+                        style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 12px; font-size: 1.2rem; color: var(--text-main); margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05);">
+                        📌 <strong>Estudio de Caso 2</strong>. El reporte debe finalizarse en casa (Tiempo estimado: 6
+                        horas).
+                    </div>
+
+                    <h4
+                        style="font-size: 1.2rem; color: var(--text-muted); margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.1em; font-family: 'JetBrains Mono', monospace;">
+                        Recursos Oficiales de Referencia</h4>
+
+                    <ul
+                        style="list-style: none; padding: 0; margin: 0 0 40px 0; display: flex; justify-content: center; gap: 30px; font-size: 1.1rem; color: var(--text-main);">
+                        <li><a href="https://readr.tidyverse.org/" target="_blank"
+                                style="color: var(--accent-primary); font-weight: 600; text-decoration: none;"><i
+                                    class="fa-solid fa-book" style="margin-right:8px;"></i>Documentación readr</a></li>
+                        <li><a href="https://dplyr.tidyverse.org/" target="_blank"
+                                style="color: var(--accent-primary); font-weight: 600; text-decoration: none;"><i
+                                    class="fa-solid fa-code" style="margin-right:8px;"></i>Documentación dplyr</a></li>
+                        <li><a href="https://r4ds.had.co.nz/" target="_blank"
+                                style="color: var(--accent-primary); font-weight: 600; text-decoration: none;"><i
+                                    class="fa-solid fa-globe" style="margin-right:8px;"></i>R for Data Science (Libro
+                                Base)</a></li>
+                    </ul>
+
+                    <div
+                        style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 25px; font-size: 1.1rem; color: var(--text-muted); font-style: italic;">
+                        🙏 Mucho ánimo. Recuerda que dominar el Tidyverse y estos verbos es la competencia que te
+                        separará del montón.
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 18: FIN -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: center; justify-content: center; text-align: center;">
+                <div style="position: relative;">
+                    <!-- Decoración circular de fondo -->
+                    <div
+                        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 400px; height: 400px; background: radial-gradient(circle, rgba(124, 58, 237, 0.1) 0%, transparent 70%); border-radius: 50%; filter: blur(20px); z-index: 0; pointer-events: none;">
+                    </div>
+
+                    <i class="fa-solid fa-rocket"
+                        style="font-size: 5rem; color: var(--accent-primary); margin-bottom: 30px; position: relative; z-index: 1;"></i>
+                    <h1 class="title-primary"
+                        style="margin-bottom: 20px; font-size: 5rem; position: relative; z-index: 1;">¡Estás Listo!</h1>
+
+                    <h2 class="subtitle"
+                        style="font-size: 2.2rem; margin-bottom: 30px; position: relative; z-index: 1;">
+                        Ya sabes importar, limpiar, resumir y visualizar.
+                    </h2>
+
+                    <p
+                        style="font-size: 1.2rem; color: var(--text-main); opacity: 0.8; max-width: 600px; margin: 0 auto; position: relative; z-index: 1;">
+                        La programación es memoria muscular de los dedos. Juega con el código que hicimos, rompe los
+                        filtros intencionalmente y descubre porque lanza errores.
+                    </p>
+
+                    <div
+                        style="margin-top: 60px; font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: var(--accent-primary); letter-spacing: 0.1em; background: rgba(255,255,255,0.6); padding: 10px 20px; border-radius: 100px; display: inline-block; border: 1px solid rgba(124, 58, 237, 0.2); position: relative; z-index: 1;">
+                        PRÓXIMA SESIÓN: INTELIGENCIA DE MODELOS Y VISUAL ADVANCADA
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SCRIPTS LÓGICOS DE NAVEGACIÓN Y RENDER -->
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/r.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Highlighting para bloques de código
+            hljs.highlightAll();
+
+            // Render de fórmulas matemáticas (si aplica)
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '$', right: '$', display: false }
+                ],
+                throwOnError: false
+            });
+
+            // Lógica de Diapositivas
+            const slides = document.querySelectorAll('.slide');
+            const indicator = document.getElementById('slide-indicator');
+            let currentSlide = 0;
+
+            function updateSlides() {
+                if (slides.length === 0) return;
+                slides.forEach((slide, index) => {
+                    if (index === currentSlide) {
+                        slide.classList.add('active');
+                    } else {
+                        slide.classList.remove('active');
+                    }
+                });
+                indicator.textContent = `${currentSlide + 1} / ${slides.length}`;
+            }
+
+            function nextSlide() {
+                if (currentSlide < slides.length - 1) {
+                    currentSlide++;
+                    updateSlides();
+                }
+            }
+
+            function prevSlide() {
+                if (currentSlide > 0) {
+                    currentSlide--;
+                    updateSlides();
+                }
+            }
+
+            // Teclado
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' || e.key === 'Space' || e.key === 'PageDown') {
+                    nextSlide();
+                } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                    prevSlide();
+                }
+            });
+
+            // Clicks en los bordes
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('a') || e.target.closest('button') || e.target.closest('pre')) return;
+
+                const clickX = e.clientX;
+                const windowWidth = window.innerWidth;
+
+                if (clickX > windowWidth * 0.7) {
+                    nextSlide();
+                } else if (clickX < windowWidth * 0.3) {
+                    prevSlide();
+                }
+            });
+
+            // Compatibilidad de scroll para avanzar, con debounce suave
+            let wheelTimer;
+            document.addEventListener('wheel', (e) => {
+                if (wheelTimer) return;
+                wheelTimer = setTimeout(() => { wheelTimer = null }, 800);
+
+                if (e.deltaY > 50) nextSlide();
+                else if (e.deltaY < -50) prevSlide();
+            }, { passive: true });
+
+            // Iniciar
+            updateSlides();
+        });
+    </script>
+</body>
+
+</html>
