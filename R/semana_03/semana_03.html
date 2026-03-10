@@ -1,0 +1,1990 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Semana 3: Algoritmos, Visualización y Herramientas de Análisis en R</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+
+    <style>
+        :root {
+            --bg-deep: #0b1928;
+            --bg-gradient: linear-gradient(135deg, #13273e 0%, #0d1e30 40%, #08121d 100%);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-primary: #9d4edd;
+            --accent-secondary: #00e5ff;
+            --accent-highlight: #ffb703;
+            --accent-green: #00e676;
+            --glass-bg: rgba(15, 25, 40, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-blur: blur(20px);
+            --shadow-subtle: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0; padding: 0;
+            background-color: var(--bg-deep);
+            background-image: var(--bg-gradient);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        body::before {
+            content: '';
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 20% 20%, rgba(157, 78, 221, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 229, 255, 0.08) 0%, transparent 50%);
+            pointer-events: none; z-index: -1;
+        }
+
+        #slides-container { position: relative; width: 100%; height: 100%; }
+
+        .slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0; visibility: hidden; pointer-events: none;
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: scale(0.98);
+            display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px;
+        }
+
+        .slide.active {
+            opacity: 1; visibility: visible; pointer-events: all; transform: scale(1); z-index: 10;
+        }
+
+        .slide-indicator {
+            position: fixed; bottom: 40px; right: 50px;
+            font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums;
+            color: var(--text-muted); font-size: 0.9rem; font-weight: 700; z-index: 100;
+        }
+
+        .slide-content {
+            width: 100%; max-width: 1400px; height: 90%;
+            display: flex; flex-direction: column; justify-content: center; position: relative;
+            min-height: 0;   /* allow children to shrink */
+            overflow: hidden;
+        }
+
+        .title-primary {
+            font-family: 'Inter', sans-serif; font-weight: 800; font-size: 4.5rem; line-height: 1.1;
+            background: linear-gradient(135deg, var(--text-main) 30%, var(--text-muted) 100%);
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem; text-align: center;
+        }
+
+        .title-highlight {
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-family: 'Playfair Display', serif; font-style: italic; font-size: 1.8rem;
+            color: var(--text-muted); font-weight: 400; text-align: center;
+        }
+
+        .glass-box {
+            background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border); border-radius: 20px;
+            padding: 30px; box-shadow: var(--shadow-subtle);
+        }
+
+        .box-title {
+            font-size: 1.5rem; margin: 0 0 15px 0; color: var(--text-main);
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        /* Columna izquierda con código: debe poder encogerse para que el scroll funcione */
+        .code-col {
+            flex: 1.3;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .code-window {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            max-height: calc(100vh - 290px);
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+        }
+
+        .code-titlebar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: #1e2a3a;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            flex-shrink: 0;
+        }
+
+        .code-titlebar .dot {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+        }
+        .dot-red   { background: #ff5f57; }
+        .dot-yellow{ background: #febc2e; }
+        .dot-green { background: #28c840; }
+
+        .code-titlebar .filename {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            color: #94a3b8;
+            margin-left: 8px;
+            letter-spacing: 0.03em;
+        }
+
+        .code-body {
+            flex: 1;
+            min-height: 0;           /* ← permite encogerse y activar overflow */
+            overflow-y: auto;
+            overflow-x: auto;
+            background: #161e2d;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(157,78,221,0.4) transparent;
+        }
+
+        .code-body::-webkit-scrollbar { width: 6px; height: 6px; }
+        .code-body::-webkit-scrollbar-track { background: transparent; }
+        .code-body::-webkit-scrollbar-thumb {
+            background: rgba(157,78,221,0.45);
+            border-radius: 3px;
+        }
+
+        pre {
+            margin: 0;
+            background: transparent !important;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            line-height: 1.65;
+        }
+
+        pre code {
+            padding: 22px 26px !important;
+            background: transparent !important;
+            display: block;
+        }
+
+        .explain-box strong { color: var(--accent-primary); }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(157, 78, 221, 0.15);
+            padding: 2px 6px; border-radius: 4px;
+            font-size: 0.9em; color: var(--accent-secondary);
+        }
+
+        pre code { background: transparent !important; padding: 22px 26px !important; }
+
+        /* ── Two-column layout: constrain height so nothing overflows ── */
+        .flex-row {
+            display: flex;
+            gap: 40px;
+            width: 100%;
+            align-items: stretch;
+            flex: 1;          /* grow to fill available space */
+            min-height: 0;    /* critical: allow flex child to shrink */
+            overflow: hidden;
+        }
+
+        /* Right explanation column: scrollable when content is taller than screen */
+        .right-col {
+            flex: 0.7;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(157,78,221,0.35) transparent;
+        }
+        .right-col::-webkit-scrollbar { width: 5px; }
+        .right-col::-webkit-scrollbar-track { background: transparent; }
+        .right-col::-webkit-scrollbar-thumb {
+            background: rgba(157,78,221,0.4);
+            border-radius: 3px;
+        }
+
+        /* ── Tooltip: término subrayado con definición emergente ── */
+        .termino {
+            position: relative;
+            display: inline;
+            border-bottom: 2px dashed var(--accent-secondary);
+            color: inherit;
+            cursor: help;
+            transition: color 0.2s;
+        }
+        .termino:hover {
+            color: var(--accent-secondary);
+        }
+        .termino .tooltip-box {
+            display: none;
+            position: absolute;
+            bottom: calc(100% + 10px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(10, 20, 35, 0.97);
+            border: 1px solid rgba(0, 229, 255, 0.35);
+            border-radius: 12px;
+            padding: 12px 16px;
+            width: 280px;
+            font-size: 0.88rem;
+            line-height: 1.55;
+            color: var(--text-main);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,229,255,0.1);
+            z-index: 9999;
+            pointer-events: none;
+            text-align: left;
+            font-weight: 400;
+            font-family: 'Inter', sans-serif;
+            white-space: normal;
+        }
+        .termino .tooltip-box::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 7px solid transparent;
+            border-top-color: rgba(0, 229, 255, 0.35);
+        }
+        .termino .tooltip-box::before {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: rgba(10, 20, 35, 0.97);
+            z-index: 1;
+        }
+        .termino:hover .tooltip-box,
+        .termino.activo .tooltip-box {
+            display: block;
+            animation: tooltipFadeIn 0.18s ease;
+        }
+        .tooltip-box .tooltip-titulo {
+            display: block;
+            font-weight: 700;
+            color: var(--accent-secondary);
+            margin-bottom: 5px;
+            font-size: 0.92rem;
+        }
+        @keyframes tooltipFadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="slide-indicator" id="slide-indicator">1 / ?</div>
+    <div id="slides-container">
+
+        <!-- DIAPOSITIVA 1: Portada -->
+        <div class="slide active">
+            <div class="slide-content" style="align-items: center; justify-content: center; text-align: center;">
+                <div style="display: inline-flex; align-items: center; gap: 12px; padding: 8px 24px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.3); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: var(--accent-primary); margin-bottom: 40px; letter-spacing: 0.15em;">
+                    <i class="fa-solid fa-chart-line"></i> SINT-604 · CLASE 03
+                </div>
+
+                <h1 class="title-primary" style="margin-bottom: 15px;">
+                    Algoritmos, <span class="title-highlight">Visualización</span> y Análisis
+                </h1>
+                <h2 class="subtitle" style="margin-bottom: 60px;">
+                    EDA · Correlación · Regresión · Regularización
+                </h2>
+
+                <div class="glass-box" style="display: flex; gap: 30px; justify-content: center; padding: 30px 40px; width: 85%; max-width: 900px; border-top: 4px solid var(--accent-green); text-align: left;">
+                    <i class="fa-solid fa-bullseye" style="font-size: 2.5rem; color: var(--accent-green); margin-top: 5px;"></i>
+                    <div>
+                        <h3 style="margin: 0 0 10px 0; font-size: 1.3rem; color: var(--text-main);">Objetivo explícito</h3>
+                        <p style="margin: 0; font-size: 1.1rem; line-height: 1.5; color: var(--text-muted);">
+                            Al terminar esta clase podrás realizar un <strong style="color: var(--text-main);">análisis exploratorio completo</strong>,
+                            construir una <strong style="color: var(--text-main);">matriz de correlaciones</strong>, manejar <strong style="color: var(--text-main);">nulos y resampling</strong>,
+                            ajustar modelos de <strong style="color: var(--text-main);">regresión lineal y logística</strong>, visualizarlos con
+                            <strong style="color: var(--text-main);">Plotly</strong> y aplicar <strong style="color: var(--text-main);">regularización (Ridge/Lasso)</strong>.<br>
+                            <span style="display: inline-block; margin-top: 10px; font-style: italic; color: var(--accent-primary);">✅ Todo el código está explicado línea por línea.</span>
+                        </p>
+                    </div>
+                </div>
+
+                <p style="margin-top: 40px; font-size: 0.95rem; color: var(--text-muted); opacity: 0.7;">
+                    🧭 Navega con flechas ◀ ▶ o haciendo click en los bordes
+                </p>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 2: Índice -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 40px;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Estructura de la sesión</span>
+                    <h2 style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Lo que veremos <span style="color: var(--accent-secondary);">hoy</span>
+                    </h2>
+                </div>
+
+                <div class="glass-box" style="width: 100%; border-top: 4px solid var(--accent-secondary); padding: 40px;">
+                    <ol style="font-size: 1.4rem; line-height: 2; color: var(--text-main); columns: 2; gap: 60px; margin: 0; padding-left: 25px; font-weight: 500;">
+                        <li><span style="color: var(--accent-primary); font-weight: bold;">EDA</span> — Análisis Exploratorio de Datos</li>
+                        <li><span style="color: var(--accent-primary); font-weight: bold;">Correlaciones</span> y matrices visuales</li>
+                        <li><span style="color: var(--accent-primary); font-weight: bold;">Nulos</span> e imputación de datos</li>
+                        <li><span style="color: var(--accent-primary); font-weight: bold;">Resampling</span> — train/test split</li>
+                        <li><span style="color: var(--accent-primary); font-weight: bold;">Regresión Lineal</span> + diagnóstico de residuos + Plotly</li>
+                        <li><span style="color: var(--accent-primary); font-weight: bold;">Regresión Logística</span> + Plotly</li>
+                        <li><span style="color: var(--accent-primary); font-weight: bold;">Selección de variables</span> y diagnóstico</li>
+                        <li><span style="color: var(--accent-primary); font-weight: bold;">¿Qué son Ridge y Lasso?</span> — historia + concepto + código</li>
+                        <li><span style="color: var(--accent-primary); font-weight: bold;">Template</span> completo del proyecto final</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 3: Setup de paquetes -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 20px; flex-shrink: 0;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-green); letter-spacing: 0.1em; text-transform: uppercase;">Antes de empezar</span>
+                    <h2 style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Paquetes que <span style="color: var(--accent-secondary);">necesitamos hoy</span>
+                    </h2>
+                </div>
+
+                <div class="flex-row">
+                    <div class="code-col">
+                        <div class="code-window">
+                            <div class="code-titlebar">
+                                <span class="dot dot-red"></span>
+                                <span class="dot dot-yellow"></span>
+                                <span class="dot dot-green"></span>
+                                <span class="filename">setup_paquetes.R</span>
+                            </div>
+                            <div class="code-body">
+                            <pre><code class="language-r"># Instalar una sola vez (¡no repetir cada sesión!)
+install.packages(c(
+  "tidyverse",   # Incluye ggplot2, dplyr, readr, tidyr
+  "corrplot",    # Matrices de correlación visuales
+  "plotly",      # Gráficos interactivos
+  "glmnet",      # Regularización Ridge y Lasso
+  "ROCR",        # Curvas ROC para clasificación
+  "car"          # VIF para multicolinealidad
+))
+
+# Cargar en cada sesión (van al inicio de tu script)
+library(tidyverse)
+library(corrplot)
+library(plotly)
+library(glmnet)
+library(car)
+
+# Verificar que todo cargó correctamente
+sessionInfo() # Muestra todos los paquetes activos</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="right-col">
+                        <div class="glass-box" style="flex: 1; border-top: 4px solid var(--accent-secondary); padding: 25px;">
+                            <h3 class="box-title"><i class="fa-solid fa-box-open" style="color: var(--accent-secondary);"></i> ¿Por qué estos?</h3>
+                            <p style="font-size: 1.0rem; line-height: 1.6; color: var(--text-main);">
+                                <strong><code>tidyverse</code></strong>: Colección de 8 paquetes que hablan el mismo lenguaje. Con uno solo cargás todo el ecosistema de ciencia de datos.<br><br>
+                                <strong><code>corrplot</code></strong>: Transforma una tabla aburrida de correlaciones en un mapa de calor visual intuitivo.<br><br>
+                                <strong><code>plotly</code></strong>: Hace tus gráficos de ggplot2 <em>interactivos</em> — hover, zoom, click, todo gratis.<br><br>
+                                <strong><code>glmnet</code></strong>: El estándar de la industria para Ridge, Lasso y Elastic Net.
+                            </p>
+                        </div>
+                        <div style="padding: 15px 20px; background: rgba(0, 230, 118, 0.08); border: 1px solid rgba(0, 230, 118, 0.25); border-radius: 12px;">
+                            <strong style="color: var(--accent-green);"><i class="fa-solid fa-lightbulb"></i> Tip:</strong>
+                            <p style="font-size: 0.95rem; margin: 5px 0 0 0; color: var(--text-muted);">
+                                Si usás RStudio Cloud / Posit Cloud, los paquetes del tidyverse <em>ya están instalados</em>. Solo corrés el <code>library()</code>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 4: EDA - Concepto -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 20px; flex-shrink: 0;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Tema 1</span>
+                    <h2 style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        ¿Qué es el <span style="color: var(--accent-secondary);">Análisis Exploratorio?</span>
+                    </h2>
+                </div>
+
+                <div style="display: flex; gap: 30px; width: 100%;">
+                    <div style="flex: 1;" class="glass-box" style="border-top: 4px solid var(--accent-primary);">
+                        <div style="display: flex; align-items: flex-start; gap: 20px; padding: 25px; background: rgba(157,78,221,0.08); border-radius: 14px; border-left: 4px solid var(--accent-primary);">
+                            <i class="fa-solid fa-magnifying-glass-chart" style="font-size: 2.5rem; color: var(--accent-primary); margin-top:4px;"></i>
+                            <div>
+                                <h3 style="margin: 0 0 8px 0; font-size: 1.3rem;">¿Qué es?</h3>
+                                <p style="margin: 0; font-size: 1.05rem; line-height: 1.6; color: var(--text-muted);">
+                                    EDA (Exploratory Data Analysis) es el proceso de <strong style="color:var(--text-main)">conocer tus datos antes de modelarlos</strong>. Lo inventó el estadístico John Tukey en los años 60. La idea: mirar primero, modelar después.
+                                </p>
+                                <div style="padding: 12px 14px; margin-top: 12px; background: linear-gradient(135deg, rgba(0,229,255,0.07), rgba(157,78,221,0.07)); border: 1px solid rgba(0,229,255,0.22); border-radius: 10px; display:flex; align-items:flex-start; gap:10px;">
+                                    <i class="fa-solid fa-bolt" style="color:var(--accent-secondary); margin-top:2px; flex-shrink:0;"></i>
+                                    <p style="margin:0; font-size:0.95rem; line-height:1.6; color:var(--text-main);"><strong style="color:var(--accent-secondary);">La idea en simple:</strong><br>Si saltás el EDA y construís el modelo de inmediato, es como cocinar sin probar los ingredientes. El 80% de los errores en modelos de datos vienen de no haber explorado primero.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="flex: 1;" class="glass-box">
+                        <div style="display: flex; align-items: flex-start; gap: 20px; padding: 25px; background: rgba(0,229,255,0.06); border-radius: 14px; border-left: 4px solid var(--accent-secondary);">
+                            <i class="fa-solid fa-list-check" style="font-size: 2.5rem; color: var(--accent-secondary); margin-top:4px;"></i>
+                            <div>
+                                <h3 style="margin: 0 0 8px 0; font-size: 1.3rem;">¿Qué buscamos?</h3>
+                                <ul style="margin: 0; padding-left: 18px; font-size: 1.05rem; line-height: 1.8; color: var(--text-muted);">
+                                    <li><strong style="color:var(--text-main)">Forma</strong> de la distribución de cada variable</li>
+                                    <li><strong style="color:var(--text-main)">Outliers</strong> — valores extremos o errores</li>
+                                    <li><strong style="color:var(--text-main)">Nulos</strong> — datos faltantes y su patrón</li>
+                                    <li><strong style="color:var(--text-main)">Relaciones</strong> entre variables</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="flex: 1;" class="glass-box">
+                        <div style="display: flex; align-items: flex-start; gap: 20px; padding: 25px; background: rgba(255,183,3,0.06); border-radius: 14px; border-left: 4px solid var(--accent-highlight);">
+                            <i class="fa-solid fa-route" style="font-size: 2.5rem; color: var(--accent-highlight); margin-top:4px;"></i>
+                            <div>
+                                <h3 style="margin: 0 0 8px 0; font-size: 1.3rem;">Flujo de trabajo</h3>
+                                <ol style="margin: 0; padding-left: 18px; font-size: 1.0rem; line-height: 1.8; color: var(--text-muted);">
+                                    <li>Dimensión y tipos de datos</li>
+                                    <li>Estadísticas resumen</li>
+                                    <li>Visualizar distribuciones</li>
+                                    <li>Identificar correlaciones</li>
+                                    <li>Reportar hallazgos</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 5: EDA con código -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 20px; flex-shrink: 0;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Paso 1</span>
+                    <h2 style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        EDA: <span style="color: var(--accent-secondary);">Explorar la estructura</span>
+                    </h2>
+                </div>
+
+                <div class="flex-row">
+                    <div class="code-col">
+                        <div class="code-window">
+                            <div class="code-titlebar">
+                                <span class="dot dot-red"></span>
+                                <span class="dot dot-yellow"></span>
+                                <span class="dot dot-green"></span>
+                                <span class="filename">eda_estructura.R</span>
+                            </div>
+                            <div class="code-body">
+                            <pre><code class="language-r">library(tidyverse)
+
+# Usaremos el dataset 'iris' — 150 flores, 4 medidas, 3 especies
+datos <- iris
+
+# 1. ¿Cuántas filas y columnas tenemos?
+dim(datos)           # Resultado: 150  5
+
+# 2. ¿Cómo se ven los primeros registros?
+head(datos, 6)       # Muestra las 6 primeras filas
+
+# 3. ¿Qué tipo de dato es cada columna?
+str(datos)
+# $ Sepal.Length: num  5.1 4.9 4.7 4.6 5.0 ...
+# $ Species     : Factor w/ 3 levels (¡una categoría!)
+
+# 4. Estadísticas resumen de TODO el dataset de una sola vez
+summary(datos)
+# Min.  1st Qu.  Median  Mean  3rd Qu.  Max.  → para numéricas
+# Conteo por categoría                         → para factors
+
+# 5. ¿Cuántas flores hay de cada especie?
+table(datos$Species)
+# setosa versicolor  virginica 
+#     50         50         50</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="right-col">
+                        <div class="glass-box" style="flex: 1; border-top: 4px solid var(--accent-secondary); padding: 30px;">
+                            <h3 class="box-title"><i class="fa-solid fa-brain" style="color: var(--accent-secondary);"></i> Mentalidad EDA</h3>
+                            <p style="font-size: 1.05rem; line-height: 1.6; color: var(--text-main);">
+                                <strong><code>dim()</code></strong>: Tu primera pregunta siempre. ¿Estoy trabajando con 50 filas o con 5 millones?<br><br>
+                                <strong><code>str()</code></strong>: Detecta si R interpretó mal un número como texto, o una categoría como número. Esto arruina modelos.<br><br>
+                                <strong><code>summary()</code></strong>: En segundos sabes si hay outliers (el Max es 10x mayor que la Media) o si hay NAs (los cuenta automáticamente).<br><br>
+                                <strong><code>table()</code></strong>: Para variables categóricas. ¿Están balanceadas las clases? Un dataset con 98% de "No" y 2% de "Sí" necesita tratamiento especial.
+                            </p>
+                            <div style="padding: 15px; margin-top: 15px; background: rgba(0, 230, 118, 0.08); border: 1px solid rgba(0, 230, 118, 0.25); border-radius: 10px;">
+                                <strong style="color: var(--accent-green);"><i class="fa-solid fa-star"></i> Pro tip:</strong>
+                                <p style="font-size: 0.95rem; margin: 5px 0 0 0; color: var(--text-muted);">
+                                    <code>skimr::skim(datos)</code> hace todo esto en una sola tabla aún más completa. ¡Vale mucho la pena!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 6: EDA Visualización -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 20px; flex-shrink: 0;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Paso 2</span>
+                    <h2 style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        EDA: <span style="color: var(--accent-secondary);">Ver las distribuciones</span>
+                    </h2>
+                </div>
+
+                <div class="flex-row">
+                    <div class="code-col">
+                        <div class="code-window">
+                            <div class="code-titlebar">
+                                <span class="dot dot-red"></span>
+                                <span class="dot dot-yellow"></span>
+                                <span class="dot dot-green"></span>
+                                <span class="filename">eda_visualizacion.R</span>
+                            </div>
+                            <div class="code-body">
+                            <pre><code class="language-r">library(tidyverse)
+datos <- iris
+
+# --- HISTOGRAMA: distribución de una variable continua ---
+ggplot(datos, aes(x = Sepal.Length)) +
+  geom_histogram(bins = 20, fill = "#9d4edd", color = "white", alpha = 0.8) +
+  labs(title = "Distribución del Largo del Sépalo",
+       x = "Largo (cm)", y = "Frecuencia") +
+  theme_minimal()
+
+# --- BOXPLOT: detectar outliers y comparar grupos ---
+ggplot(datos, aes(x = Species, y = Petal.Length, fill = Species)) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c("#9d4edd", "#00e5ff", "#00e676")) +
+  labs(title = "Largo del Pétalo por Especie",
+       x = "Especie", y = "Largo (cm)") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+# --- SCATTER: relación entre dos variables ---
+ggplot(datos, aes(x = Sepal.Length, y = Petal.Length, color = Species)) +
+  geom_point(size = 3, alpha = 0.7) +
+  labs(title = "¿El sépalo predice el pétalo?") +
+  theme_minimal()</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="right-col">
+                        <div class="glass-box" style="flex: 1; border-top: 4px solid var(--accent-secondary); padding: 30px;">
+                            <h3 class="box-title"><i class="fa-solid fa-chart-bar" style="color: var(--accent-secondary);"></i> ¿Qué gráfico para qué?</h3>
+                            <p style="font-size: 1.0rem; line-height: 1.65; color: var(--text-main);">
+                                <strong>Histograma</strong>: ¿Es simétrica mi distribución, o sesgada? ¿Hay dos picos (bimodal)?<br><br>
+                                <strong>Boxplot</strong>: La caja = 50% central de los datos. Los bigotes = rango normal. Los puntos volando = outliers. Ideal para comparar grupos.<br><br>
+                                <strong>Scatter plot</strong>: Detecta relaciones lineales (nube diagonal = correlación). El parámetro <code>color = Species</code> añade una dimensión extra sin agregar ejes.<br><br>
+                                <strong>La anatomía de ggplot2</strong>:<br>
+                                <code>ggplot(datos, aes(...))</code> → el lienzo<br>
+                                <code>geom_*()</code> → el tipo de gráfico<br>
+                                <code>labs()</code> → las etiquetas<br>
+                                <code>theme_*()</code> → el estilo visual
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 7: Pausa Activa -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: center; justify-content: center; text-align: center;">
+                <div class="glass-box" style="padding: 60px 80px; width: 80%; max-width: 800px; border-top: 4px solid var(--accent-highlight);">
+                    <i class="fa-solid fa-mug-hot" style="font-size: 4rem; color: var(--accent-highlight); margin-bottom: 25px;"></i>
+                    <h2 style="font-size: 3rem; font-weight: 800; color: var(--text-main); margin: 0 0 10px 0;">Pausa Activa</h2>
+                    <h3 style="font-size: 1.5rem; font-weight: 400; color: var(--text-muted); font-family: 'Playfair Display', serif; margin: 0 0 40px 0;">Tómate 5 minutos para recargar</h3>
+
+                    <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 20px; font-size: 1.3rem; color: var(--text-main); text-align: left;">
+                        <li style="display: flex; align-items: center; gap: 15px;">
+                            <i class="fa-solid fa-person-walking" style="color: var(--accent-primary); width: 30px; text-align: center;"></i>
+                            Ponte de pie, estira brazos y cuello.
+                        </li>
+                        <li style="display: flex; align-items: center; gap: 15px;">
+                            <i class="fa-solid fa-droplet" style="color: var(--accent-secondary); width: 30px; text-align: center;"></i>
+                            Bebe un poco de agua.
+                        </li>
+                        <li style="display: flex; align-items: center; gap: 15px;">
+                            <i class="fa-solid fa-eye" style="color: var(--accent-highlight); width: 30px; text-align: center;"></i>
+                            Mira por la ventana a lo lejos para relajar la vista.
+                        </li>
+                    </ul>
+
+                    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 1.1rem; color: var(--text-muted); font-style: italic;">
+                        Próximo paso al volver: <strong style="color: var(--text-main);">Matrices de correlación</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 8: Correlaciones -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 20px; flex-shrink: 0;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Tema 2</span>
+                    <h2 style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Matriz de <span style="color: var(--accent-secondary);">Correlaciones</span>
+                    </h2>
+                </div>
+
+                <div class="flex-row">
+                    <div class="code-col">
+                        <div class="code-window">
+                            <div class="code-titlebar">
+                                <span class="dot dot-red"></span>
+                                <span class="dot dot-yellow"></span>
+                                <span class="dot dot-green"></span>
+                                <span class="filename">correlaciones.R</span>
+                            </div>
+                            <div class="code-body">
+                            <pre><code class="language-r">library(corrplot)
+
+# Solo columnas numéricas del dataset iris
+numericas <- iris[, 1:4]
+# Equivalente con dplyr:
+# numericas <- iris |> select(where(is.numeric))
+
+# Calcular la matriz de correlación de Pearson
+# Resultado: tabla 4x4 donde cada celda va de -1 a +1
+matriz_cor <- cor(numericas)
+print(round(matriz_cor, 2))
+
+#               Sepal.L Sepal.W Petal.L Petal.W
+# Sepal.Length     1.00   -0.12    0.87    0.82
+# Sepal.Width     -0.12    1.00   -0.43   -0.37
+# Petal.Length     0.87   -0.43    1.00    0.96
+# Petal.Width      0.82   -0.37    0.96    1.00
+
+# Visualizar la matriz como mapa de calor
+corrplot(matriz_cor,
+         method  = "color",   # Usa colores sólidos
+         type    = "upper",   # Solo triángulo superior (evita repetición)
+         addCoef.col = "black",  # Pone el número dentro de cada celda
+         tl.col  = "white",   # Color de las etiquetas
+         col     = colorRampPalette(c("#00e5ff","white","#9d4edd"))(200))</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="right-col">
+                        <div class="glass-box" style="flex: 1; border-top: 4px solid var(--accent-secondary); padding: 30px;">
+                            <h3 class="box-title"><i class="fa-solid fa-circle-nodes" style="color: var(--accent-secondary);"></i> ¿Qué significa r?</h3>
+                            <p style="font-size: 1.0rem; line-height: 1.6; color: var(--text-main);">
+                                El coeficiente de correlación de Pearson (<strong>r</strong>) mide qué tan fuerte y en qué dirección se mueven juntas dos variables numéricas:
+                            </p>
+                            <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 10px; font-size: 1.0rem;">
+                                <div style="padding: 10px 15px; background: rgba(0,230,118,0.1); border-radius: 8px; border-left: 3px solid var(--accent-green);">
+                                    <strong style="color: var(--accent-green);">r = +0.87</strong> → Correlación positiva fuerte. Si una sube, la otra sube.
+                                </div>
+                                <div style="padding: 10px 15px; background: rgba(239,68,68,0.1); border-radius: 8px; border-left: 3px solid #ef4444;">
+                                    <strong style="color: #ef4444;">r = -0.43</strong> → Correlación negativa moderada. Si una sube, la otra baja.
+                                </div>
+                                <div style="padding: 10px 15px; background: rgba(148,163,184,0.1); border-radius: 8px; border-left: 3px solid var(--text-muted);">
+                                    <strong style="color: var(--text-muted);">r ≈ 0.00</strong> → Sin relación lineal. No implica que no haya relación de otro tipo.
+                                </div>
+                            </div>
+                            <div style="padding: 12px 15px; margin-top: 15px; background: rgba(255,183,3,0.08); border: 1px solid rgba(255,183,3,0.3); border-radius: 10px;">
+                                <strong style="color: var(--accent-highlight);"><i class="fa-solid fa-triangle-exclamation"></i> ¡Correlación ≠ Causalidad!</strong>
+                                <p style="font-size: 0.9rem; margin: 5px 0 0 0; color: var(--text-muted);">Las ventas de helado correlacionan con los ahogamientos. Ambos los causa el verano, no uno al otro.</p>
+                            </div>
+                            <div style="padding: 14px 16px; margin-top: 12px; background: linear-gradient(135deg, rgba(0,229,255,0.07), rgba(157,78,221,0.07)); border: 1px solid rgba(0,229,255,0.22); border-radius: 12px; display:flex; align-items:flex-start; gap:12px;">
+                                <i class="fa-solid fa-bolt" style="color:var(--accent-secondary); font-size:1.2rem; margin-top:2px; flex-shrink:0;"></i>
+                                <p style="margin:0; font-size:0.95rem; line-height:1.65; color:var(--text-main);"><strong style="color:var(--accent-secondary);">La idea en simple:</strong><br>Te dice cuáles variables <em>valen la pena</em> meter en el modelo y cuáles son redundantes. Si dos variables tienen r = 0.98, es casi lo mismo meterlas ambas — con una alcanza, y el modelo queda más limpio.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 9: Nulos e Imputación -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 20px; flex-shrink: 0;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Tema 3</span>
+                    <h2 style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Manejo de <span style="color: var(--accent-secondary);">Nulos (NA)</span>
+                    </h2>
+                </div>
+
+                <div class="flex-row">
+                    <div class="code-col">
+                        <div class="code-window">
+                            <div class="code-titlebar">
+                                <span class="dot dot-red"></span>
+                                <span class="dot dot-yellow"></span>
+                                <span class="dot dot-green"></span>
+                                <span class="filename">manejo_nulos.R</span>
+                            </div>
+                            <div class="code-body">
+                            <pre><code class="language-r"># Creamos datos CON nulos para practicar
+set.seed(42)  # Semilla: hace que lo "aleatorio" sea reproducible
+datos_na <- airquality  # Dataset de calidad del aire (incluye NAs reales)
+
+# --- DETECTAR ---
+sum(is.na(datos_na))           # Total de NAs en todo el dataset: 44
+colSums(is.na(datos_na))       # NAs por columna
+# Ozone  Solar.R Wind Temp Month Day 
+#    37        7    0    0     0   0
+
+# ¿Qué porcentaje? (regla: > 5% requiere decisión cuidadosa)
+round(colMeans(is.na(datos_na)) * 100, 1)  # Ozone: 24.2% ⚠️
+
+# --- ESTRATEGIA 1: Eliminar filas con NA (na.omit) ---
+datos_limpios <- na.omit(datos_na)
+nrow(datos_limpios)  # De 153 quedamos en 111 filas
+
+# --- ESTRATEGIA 2: Imputar con la mediana (más robusta que la media) ---
+datos_imputados <- datos_na |>
+  mutate(Ozone = ifelse(is.na(Ozone), median(Ozone, na.rm = TRUE), Ozone),
+         Solar.R = ifelse(is.na(Solar.R), median(Solar.R, na.rm = TRUE), Solar.R))
+
+sum(is.na(datos_imputados))  # 0 — ¡sin NAs!</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="right-col">
+                        <div class="glass-box" style="flex: 1; border-top: 4px solid var(--accent-secondary); padding: 30px;">
+                            <h3 class="box-title"><i class="fa-solid fa-scissors" style="color: var(--accent-secondary);"></i> ¿Eliminar o imputar?</h3>
+                            <p style="font-size: 1.0rem; line-height: 1.6; color: var(--text-main);">
+                                <strong>Eliminar (<code>na.omit</code>)</strong>: Opción segura si el % de NAs es bajo (&lt;5%) y los NAs son aleatorios (no hay patrón). Riesgo: pierdes filas valiosas.<br><br>
+                                <strong>Imputar con mediana</strong>: Preferible a la media cuando hay outliers. La mediana no se "distorsiona" por valores extremos.<br><br>
+                                <strong>Imputar con media</strong>: Funciona bien en distribuciones simétricas sin outliers.<br><br>
+                                <strong>¿Por qué <code>na.rm = TRUE</code>?</strong> Si no ponés este argumento, <code>mean()</code> y <code>median()</code> devuelven NA si hay aunque sea un solo NA en el vector. Este parámetro le dice: "ignorá los NAs al calcular".
+                            </p>
+                            <div style="padding: 12px 15px; margin-top: 10px; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); border-radius: 10px;">
+                                <strong style="color: #ef4444;"><i class="fa-solid fa-bug"></i> Error común:</strong>
+                                <p style="font-size: 0.9rem; margin: 5px 0 0 0; color: var(--text-muted);">
+                                    <code>mean(Ozone)</code> → devuelve <strong>NA</strong> si hay NAs.<br>
+                                    <code>mean(Ozone, na.rm = TRUE)</code> → devuelve el número correcto.
+                                </p>
+                            </div>
+                            <div style="padding: 14px 16px; margin-top: 12px; background: linear-gradient(135deg, rgba(0,229,255,0.07), rgba(157,78,221,0.07)); border: 1px solid rgba(0,229,255,0.22); border-radius: 12px; display:flex; align-items:flex-start; gap:12px;">
+                                <i class="fa-solid fa-bolt" style="color:var(--accent-secondary); font-size:1.2rem; margin-top:2px; flex-shrink:0;"></i>
+                                <p style="margin:0; font-size:0.95rem; line-height:1.65; color:var(--text-main);"><strong style="color:var(--accent-secondary);">La idea en simple:</strong><br>La mayoría de funciones de R simplemente fallan o dan resultados silenciosamente incorrectos si hay NAs. Tratar los nulos no es opcional — es el pasaporte para que cualquier análisis funcione.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 10: Resampling -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 20px; flex-shrink: 0;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Tema 4</span>
+                    <h2 style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Resampling: <span style="color: var(--accent-secondary);">Train / Test Split</span>
+                    </h2>
+                </div>
+
+                <div class="flex-row">
+                    <div class="code-col">
+                        <div class="code-window">
+                            <div class="code-titlebar">
+                                <span class="dot dot-red"></span>
+                                <span class="dot dot-yellow"></span>
+                                <span class="dot dot-green"></span>
+                                <span class="filename">resampling.R</span>
+                            </div>
+                            <div class="code-body">
+                            <pre><code class="language-r">datos <- na.omit(airquality)  # Partimos de datos limpios
+
+# set.seed() es CRÍTICO: garantiza resultados reproducibles.
+# Cualquier número funciona; el mismo número siempre da el mismo resultado.
+set.seed(2024)
+
+# ¿Cuántas filas tenemos?
+n <- nrow(datos)   # 111 filas
+
+# Generar índices aleatorios para el 80% de las filas (entrenamiento)
+indices_train <- sample(1:n, size = round(0.80 * n))
+
+# Dividir el dataset
+train <- datos[ indices_train, ]   # 80% para entrenar el modelo
+test  <- datos[-indices_train, ]   # 20% para evaluarlo (el "-" excluye)
+
+# Verificar la división
+nrow(train)   # 88 filas
+nrow(test)    # 23 filas
+
+# ¿Mantienen proporciones similares? Verificar con summary()
+cat("Train - Media Ozone:", round(mean(train$Ozone), 1), "\n")
+cat("Test  - Media Ozone:", round(mean(test$Ozone),  1), "\n")</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="right-col">
+                        <div class="glass-box" style="flex: 1; border-top: 4px solid var(--accent-secondary); padding: 30px;">
+                            <h3 class="box-title"><i class="fa-solid fa-scissors" style="color: var(--accent-secondary);"></i> ¿Por qué dividir?</h3>
+                            <p style="font-size: 1.0rem; line-height: 1.6; color: var(--text-main);">
+                                Si entrenas y evalúas con los <em>mismos</em> datos, tu modelo siempre se ve perfecto. Es como estudiar el examen con las respuestas en mano.<br><br>
+                                <strong>Train (80%)</strong>: El modelo aprende los patrones con estos datos.<br><br>
+                                <strong>Test (20%)</strong>: Datos que el modelo <em>nunca vio</em>. Aquí medimos si realmente aprendió, o si solo memorizó.<br><br>
+                                <strong><code>set.seed()</code></strong>: Congela el generador de números aleatorios. Sin él, cada vez que corras el código, la división será distinta y los resultados cambiarán. Con él, cualquier persona que corra tu código obtendrá exactamente el mismo split.
+                            </p>
+                            <div style="padding: 12px 15px; margin-top: 10px; background: rgba(0,230,118,0.08); border: 1px solid rgba(0,230,118,0.25); border-radius: 10px;">
+                                <strong style="color: var(--accent-green);"><i class="fa-solid fa-lightbulb"></i> Regla 80/20:</strong>
+                                <p style="font-size: 0.9rem; margin: 5px 0 0 0; color: var(--text-muted);">
+                                    Es la más común. Con datasets pequeños (< 200 filas) podés usar 70/30. Para datasets muy grandes, hasta 95/5 es razonable.
+                                </p>
+                            </div>
+                            <div style="padding: 14px 16px; margin-top: 12px; background: linear-gradient(135deg, rgba(0,229,255,0.07), rgba(157,78,221,0.07)); border: 1px solid rgba(0,229,255,0.22); border-radius: 12px; display:flex; align-items:flex-start; gap:12px;">
+                                <i class="fa-solid fa-bolt" style="color:var(--accent-secondary); font-size:1.2rem; margin-top:2px; flex-shrink:0;"></i>
+                                <p style="margin:0; font-size:0.95rem; line-height:1.65; color:var(--text-main);"><strong style="color:var(--accent-secondary);">La idea en simple:</strong><br>Sin esta división, tu modelo podría tener un R² de 0.99 y aun así ser inútil en el mundo real. El test set es la única prueba honesta de que tu modelo aprendió algo verdadero, no que memorizó los datos.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 11: Regresión Lineal -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 20px; flex-shrink: 0;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Tema 5</span>
+                    <h2 style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Regresión <span style="color: var(--accent-secondary);">Lineal</span>
+                    </h2>
+                </div>
+
+                <div class="flex-row">
+                    <div class="code-col">
+                        <div class="code-window">
+                            <div class="code-titlebar">
+                                <span class="dot dot-red"></span>
+                                <span class="dot dot-yellow"></span>
+                                <span class="dot dot-green"></span>
+                                <span class="filename">regresion_lineal.R</span>
+                            </div>
+                            <div class="code-body">
+                            <pre><code class="language-r">datos <- na.omit(airquality)
+set.seed(2024)
+n <- nrow(datos)
+train <- datos[sample(1:n, round(0.8*n)), ]
+test  <- datos[-sample(1:n, round(0.8*n)), ]
+
+# AJUSTAR MODELO: ¿puede el viento y la temperatura predecir el ozono?
+# Fórmula: Ozone ~ Wind + Temp  →  "Ozone EN FUNCIÓN DE Wind y Temp"
+modelo_lm <- lm(Ozone ~ Wind + Temp, data = train)
+
+# EXPLORAR EL MODELO en detalle
+summary(modelo_lm)
+# Coefficients:
+#             Estimate Std. Error t value Pr(>|t|)    
+# (Intercept) -71.033     23.470  -3.026  0.00333 ** 
+# Wind         -3.045      0.664  -4.586  1.8e-05 ***
+# Temp          1.839      0.254   7.237  5.8e-10 ***
+# 
+# R-squared: 0.5687  → el modelo explica el 56.9% de la varianza del Ozono
+
+# PREDECIR sobre datos nuevos (test)
+pred_lm <- predict(modelo_lm, newdata = test)
+
+# CALCULAR ERROR: RMSE (raíz del error cuadrático medio)
+rmse <- sqrt(mean((test$Ozone - pred_lm)^2))
+cat("RMSE:", round(rmse, 2), "ppb de ozono\n")</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="right-col">
+                        <div class="glass-box" style="flex: 1; border-top: 4px solid var(--accent-secondary); padding: 30px;">
+                            <h3 class="box-title"><i class="fa-solid fa-chart-line" style="color: var(--accent-secondary);"></i> Leer el summary()</h3>
+                            <p style="font-size: 1.0rem; line-height: 1.6; color: var(--text-main);">
+                                <strong>Estimate (coeficiente)</strong>: Efecto de cada variable. Wind = -3.04 significa que por cada milla/hora más de viento, el ozono baja ~3 ppb, <em>manteniendo la temperatura constante</em>.<br><br>
+                                <strong>Pr(>|t|) — p-value</strong>: Si es &lt; 0.05, la variable es estadísticamente significativa. Los *** indican p &lt; 0.001 (muy significativo).<br><br>
+                                <strong>R² (R-squared)</strong>: Proporción de varianza explicada. Va de 0 a 1. Un R² = 0.57 en ciencias ambientales es razonablemente bueno.<br><br>
+                                <strong>RMSE</strong>: El error promedio en las <em>mismas unidades</em> que la variable respuesta. Más intuitivo que R².
+                            </p>
+                            <div style="padding: 14px 16px; margin-top: 12px; background: linear-gradient(135deg, rgba(0,229,255,0.07), rgba(157,78,221,0.07)); border: 1px solid rgba(0,229,255,0.22); border-radius: 12px; display:flex; align-items:flex-start; gap:12px;">
+                                <i class="fa-solid fa-bolt" style="color:var(--accent-secondary); font-size:1.2rem; margin-top:2px; flex-shrink:0;"></i>
+                                <p style="margin:0; font-size:0.95rem; line-height:1.65; color:var(--text-main);"><strong style="color:var(--accent-secondary);">La idea en simple:</strong><br>Usala cuando querés predecir <em>un número</em>. ¿Cuánto costará esta casa? ¿Qué temperatura habrá mañana? ¿Cuántas ventas habrá en diciembre? Si la respuesta es un valor continuo, empezá por aquí.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 12: Regresión Lineal con Plotly -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 20px; flex-shrink: 0;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Tema 5 — Visualización</span>
+                    <h2 style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Regresión Lineal con <span style="color: var(--accent-secondary);">Plotly</span>
+                    </h2>
+                </div>
+
+                <div class="flex-row">
+                    <div class="code-col">
+                        <div class="code-window">
+                            <div class="code-titlebar">
+                                <span class="dot dot-red"></span>
+                                <span class="dot dot-yellow"></span>
+                                <span class="dot dot-green"></span>
+                                <span class="filename">regresion_lineal_plotly.R</span>
+                            </div>
+                            <div class="code-body">
+                            <pre><code class="language-r">library(plotly)
+library(tidyverse)
+
+datos <- na.omit(airquality)
+modelo_lm <- lm(Ozone ~ Temp, data = datos)
+
+# Crear datos para la línea de regresión
+linea <- data.frame(
+  Temp  = seq(min(datos$Temp), max(datos$Temp), length.out = 100)
+)
+linea$Ozone_pred <- predict(modelo_lm, newdata = linea)
+
+# Gráfico interactivo con Plotly
+fig <- plot_ly() |>
+  # Nube de puntos reales
+  add_trace(data = datos,
+            x = ~Temp, y = ~Ozone,
+            type = "scatter", mode = "markers",
+            marker = list(color = "#9d4edd", size = 8, opacity = 0.7),
+            name = "Datos reales") |>
+  # Línea de regresión ajustada
+  add_trace(data = linea,
+            x = ~Temp, y = ~Ozone_pred,
+            type = "scatter", mode = "lines",
+            line = list(color = "#00e5ff", width = 3),
+            name = "Regresión lineal") |>
+  layout(title = "Ozono vs Temperatura con línea de regresión",
+         xaxis = list(title = "Temperatura (°F)"),
+         yaxis = list(title = "Ozono (ppb)"))
+
+fig  # ¡Hover sobre los puntos para ver los valores exactos!</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="right-col">
+                        <div class="glass-box" style="flex: 1; border-top: 4px solid var(--accent-secondary); padding: 30px;">
+                            <h3 class="box-title"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--accent-secondary);"></i> Anatomía de Plotly</h3>
+                            <p style="font-size: 1.0rem; line-height: 1.6; color: var(--text-main);">
+                                <strong><code>plot_ly()</code></strong>: Crea el lienzo vacío del gráfico.<br><br>
+                                <strong><code>add_trace()</code></strong>: Agrega una "capa" al gráfico. Podés agregar tantas como quieras con el operador <code>|></code>. Cada capa puede ser puntos, líneas, barras, etc.<br><br>
+                                <strong><code>~Temp</code></strong>: La tilde (<code>~</code>) le dice a Plotly que busque esa columna dentro del <code>data</code> que especificaste.<br><br>
+                                <strong><code>layout()</code></strong>: Configura títulos, ejes y el aspecto general del gráfico.<br><br>
+                                <strong>Interactividad automática</strong>: Plotly agrega zoom, pan y hover <em>gratis</em>. No necesitás código extra.
+                            </p>
+                            <div style="padding: 12px 15px; margin-top: 10px; background: rgba(0,230,118,0.08); border: 1px solid rgba(0,230,118,0.25); border-radius: 10px;">
+                                <strong style="color: var(--accent-green);"><i class="fa-solid fa-star"></i> Tip:</strong>
+                                <p style="font-size: 0.9rem; margin: 5px 0 0 0; color: var(--text-muted);">
+                                    Con <code>ggplotly(mi_grafico_ggplot)</code> podés convertir cualquier gráfico de ggplot2 a Plotly interactivo en una línea.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- DIAPOSITIVA 12b: Diagnóstico de Residuos -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 20px; flex-shrink: 0;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Tema 5 — Diagnóstico</span>
+                    <h2 style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        ¿Mi modelo es <span style="color: var(--accent-secondary);">válido?</span> — Residuos
+                    </h2>
+                </div>
+
+                <div class="flex-row">
+                    <div class="code-col">
+                        <div class="code-window">
+                            <div class="code-titlebar">
+                                <span class="dot dot-red"></span>
+                                <span class="dot dot-yellow"></span>
+                                <span class="dot dot-green"></span>
+                                <span class="filename">diagnostico_residuos.R</span>
+                            </div>
+                            <div class="code-body">
+                            <pre><code class="language-r">datos  <- na.omit(airquality)
+modelo_lm <- lm(Ozone ~ Wind + Temp, data = datos)
+
+# R genera 4 gráficos de diagnóstico automáticamente con una sola línea
+# Ponemos par(mfrow) para verlos todos juntos en una grilla 2x2
+par(mfrow = c(2, 2))
+plot(modelo_lm)
+par(mfrow = c(1, 1))  # Restaurar la pantalla a normal
+
+# ── Los 4 gráficos que aparecen ──────────────────────────────
+# 1. Residuals vs Fitted:  ¿Los errores son aleatorios?
+#    ✅ Bueno: puntos dispersos sin patrón
+#    ❌ Malo:  curva o embudo → el modelo no captura algo
+
+# 2. Normal Q-Q:  ¿Los residuos siguen una distribución normal?
+#    ✅ Bueno: puntos sobre la línea diagonal
+#    ❌ Malo:  colas muy desviadas → los supuestos se rompen
+
+# 3. Scale-Location:  ¿La varianza es constante? (homocedasticidad)
+#    ✅ Bueno: línea roja aproximadamente horizontal
+#    ❌ Malo:  línea con pendiente → heterocedasticidad
+
+# 4. Residuals vs Leverage:  ¿Hay puntos influyentes que distorsionan el modelo?
+#    ✅ Bueno: ningún punto cruzando la línea de Cook's distance
+#    ❌ Malo:  un punto en la esquina superior derecha = outlier influyente</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="right-col">
+                        <div class="glass-box" style="border-top: 4px solid var(--accent-secondary); padding: 22px;">
+                            <h3 class="box-title"><i class="fa-solid fa-stethoscope" style="color: var(--accent-secondary);"></i> ¿Por qué revisarlos?</h3>
+                            <p style="font-size: 1.0rem; line-height: 1.6; color: var(--text-main);">
+                                Un R² alto <strong>no garantiza</strong> que el modelo sea correcto. Los supuestos de la regresión lineal exigen que los errores (residuos) sean:<br><br>
+                                <span style="display:flex; align-items:center; gap:8px; margin-bottom:6px;"><i class="fa-solid fa-circle-check" style="color:var(--accent-green);"></i> <strong>Aleatorios</strong> — sin patrón sistemático</span>
+                                <span style="display:flex; align-items:center; gap:8px; margin-bottom:6px;"><i class="fa-solid fa-circle-check" style="color:var(--accent-green);"></i> <strong>Normales</strong> — distribuidos en campana</span>
+                                <span style="display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-circle-check" style="color:var(--accent-green);"></i> <strong>Homocedásticos</strong> — varianza constante</span>
+                            </p>
+                        </div>
+                        <div style="padding: 18px 20px; background: rgba(255,183,3,0.07); border: 1px solid rgba(255,183,3,0.28); border-radius: 12px;">
+                            <strong style="color: var(--accent-highlight);"><i class="fa-solid fa-triangle-exclamation"></i> Regla práctica:</strong>
+                            <p style="font-size: 0.95rem; margin: 8px 0 0 0; color: var(--text-muted); line-height: 1.6;">
+                                Si el gráfico <strong style="color:var(--text-main);">Residuals vs Fitted</strong> muestra un patrón curvo, tu modelo está mal especificado. Probá agregar un término cuadrático: <code>lm(y ~ x + I(x^2), data)</code>
+                            </p>
+                        </div>
+                        <div style="padding: 18px 20px; background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.25); border-radius: 12px;">
+                            <strong style="color: #ef4444;"><i class="fa-solid fa-bug"></i> Outlier influyente detectado:</strong>
+                            <p style="font-size: 0.95rem; margin: 8px 0 0 0; color: var(--text-muted); line-height: 1.6;">
+                                Si un punto cruza Cook's distance, investigalo antes de borrarlo. Puede ser un error de carga de datos — o el caso más interesante de todo tu dataset.
+                            </p>
+                        </div>
+                        <div style="padding: 14px 16px; margin-top: 4px; background: linear-gradient(135deg, rgba(0,229,255,0.07), rgba(157,78,221,0.07)); border: 1px solid rgba(0,229,255,0.22); border-radius: 12px; display:flex; align-items:flex-start; gap:12px;">
+                            <i class="fa-solid fa-bolt" style="color:var(--accent-secondary); font-size:1.2rem; margin-top:2px; flex-shrink:0;"></i>
+                            <p style="margin:0; font-size:0.95rem; line-height:1.65; color:var(--text-main);"><strong style="color:var(--accent-secondary);">La idea en simple:</strong><br>Un R² de 0.95 no significa que el modelo sea correcto — puede ser que estés violando un supuesto matemático sin saberlo. Los gráficos de residuos son la radiografía que confirma que el modelo está sano por dentro, no solo bien en el papel.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 13: Regresión Logística -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 20px; flex-shrink: 0;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Tema 6</span>
+                    <h2 style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Regresión <span style="color: var(--accent-secondary);">Logística</span>
+                    </h2>
+                </div>
+
+                <div class="flex-row">
+                    <div class="code-col">
+                        <div class="code-window">
+                            <div class="code-titlebar">
+                                <span class="dot dot-red"></span>
+                                <span class="dot dot-yellow"></span>
+                                <span class="dot dot-green"></span>
+                                <span class="filename">regresion_logistica.R</span>
+                            </div>
+                            <div class="code-body">
+                            <pre><code class="language-r"># Problema: predecir si un auto es Manual (1) o Automático (0)
+datos <- mtcars
+
+# La variable respuesta DEBE ser 0 o 1
+# 'am': 0 = automático, 1 = manual (ya está en formato correcto)
+
+set.seed(2024)
+n <- nrow(datos)
+idx <- sample(1:n, round(0.75 * n))
+train <- datos[idx,  ]
+test  <- datos[-idx, ]
+
+# AJUSTAR MODELO LOGÍSTICO
+# family = binomial() le dice a R: "la respuesta es 0/1, usa sigmoide"
+modelo_log <- glm(am ~ hp + wt,
+                  data   = train,
+                  family = binomial())
+
+summary(modelo_log)
+# wt (peso) es altamente significativo (***): autos más pesados → más automáticos
+
+# PREDECIR probabilidades sobre test
+prob_manual <- predict(modelo_log, newdata = test, type = "response")
+# type = "response" convierte log-odds a probabilidades (0 a 1)
+
+# CLASIFICAR con umbral 0.5
+pred_clase <- ifelse(prob_manual >= 0.5, 1, 0)
+
+# MATRIZ DE CONFUSIÓN
+table(Real = test$am, Predicho = pred_clase)
+#       Predicho
+# Real   0 1
+#      0 4 1
+#      1 0 3</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="right-col">
+                        <div class="glass-box" style="flex: 1; border-top: 4px solid var(--accent-secondary); padding: 30px;">
+                            <h3 class="box-title"><i class="fa-solid fa-scale-balanced" style="color: var(--accent-secondary);"></i> Lineal vs Logística</h3>
+                            <p style="font-size: 1.0rem; line-height: 1.6; color: var(--text-main);">
+                                <strong>Regresión Lineal</strong>: La variable respuesta es <em>continua</em> (temperatura, precio, ozono). Predice un número.<br><br>
+                                <strong>Regresión Logística</strong>: La variable respuesta es <em>binaria</em> (0/1, sí/no, enfermo/sano). Predice una <strong>probabilidad</strong>.<br><br>
+                                <strong>La función sigmoide</strong> ($\sigma$) transforma cualquier número en un valor entre 0 y 1. Por eso usamos <code>family = binomial()</code>.<br><br>
+                                <strong>Matriz de confusión</strong>: La tabla que compara real vs predicho. De la diagonal (correcto) y fuera de diagonal (errores) extraemos <em>precisión</em>, <em>recall</em> y <em>F1</em>.
+                            </p>
+                            <div style="padding: 12px 15px; margin-top: 10px; background: rgba(255,183,3,0.08); border: 1px solid rgba(255,183,3,0.3); border-radius: 10px;">
+                                <strong style="color: var(--accent-highlight);"><i class="fa-solid fa-lightbulb"></i> Umbral:</strong>
+                                <p style="font-size: 0.9rem; margin: 5px 0 0 0; color: var(--text-muted);">
+                                    El umbral 0.5 no siempre es el óptimo. En diagnóstico médico, preferirías bajar el umbral a 0.3 para no perder ningún caso positivo (aunque haya más falsos positivos).
+                                </p>
+                            </div>
+                            <div style="padding: 14px 16px; margin-top: 12px; background: linear-gradient(135deg, rgba(0,229,255,0.07), rgba(157,78,221,0.07)); border: 1px solid rgba(0,229,255,0.22); border-radius: 12px; display:flex; align-items:flex-start; gap:12px;">
+                                <i class="fa-solid fa-bolt" style="color:var(--accent-secondary); font-size:1.2rem; margin-top:2px; flex-shrink:0;"></i>
+                                <p style="margin:0; font-size:0.95rem; line-height:1.65; color:var(--text-main);"><strong style="color:var(--accent-secondary);">La idea en simple:</strong><br>Usala cuando la respuesta es <em>sí o no</em>. ¿Este correo es spam? ¿Este cliente va a cancelar? ¿Este tumor es maligno? El modelo te devuelve una probabilidad — vos decidís a partir de cuál valor actuás.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 14: Regresión Logística Plotly -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 20px; flex-shrink: 0;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Tema 6 — Visualización</span>
+                    <h2 style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Logística: Curva <span style="color: var(--accent-secondary);">Sigmoide con Plotly</span>
+                    </h2>
+                </div>
+
+                <div class="flex-row">
+                    <div class="code-col">
+                        <div class="code-window">
+                            <div class="code-titlebar">
+                                <span class="dot dot-red"></span>
+                                <span class="dot dot-yellow"></span>
+                                <span class="dot dot-green"></span>
+                                <span class="filename">logistica_plotly.R</span>
+                            </div>
+                            <div class="code-body">
+                            <pre><code class="language-r">library(plotly)
+datos  <- mtcars
+modelo_log <- glm(am ~ hp, data = datos, family = binomial())
+
+# Creamos una secuencia continua de hp para dibujar la curva suave
+curva <- data.frame(hp = seq(min(datos$hp), max(datos$hp), length.out = 200))
+curva$prob_manual <- predict(modelo_log, newdata = curva, type = "response")
+
+# Puntos reales con jitter vertical para no solaparse
+datos$prob_obs <- predict(modelo_log, newdata = datos, type = "response")
+
+fig <- plot_ly() |>
+  # Puntos de datos reales (0 = automático, 1 = manual)
+  add_trace(data = datos,
+            x = ~hp, y = ~am,
+            type = "scatter", mode = "markers",
+            marker = list(color = ~am, colorscale = list(c(0,"#00e5ff"), c(1,"#9d4edd")),
+                          size = 10, opacity = 0.8),
+            name = "Observaciones",
+            text = ~paste("hp:", hp, "| Transmisión:", ifelse(am==1,"Manual","Auto")),
+            hoverinfo = "text") |>
+  # Curva sigmoide ajustada
+  add_trace(data = curva,
+            x = ~hp, y = ~prob_manual,
+            type = "scatter", mode = "lines",
+            line = list(color = "#ffb703", width = 3),
+            name = "P(Manual | hp)") |>
+  # Línea de umbral de decisión
+  add_hline(y = 0.5, line = list(dash = "dash", color = "gray"),
+            annotation_text = "Umbral 0.5") |>
+  layout(title   = "Probabilidad de transmisión Manual según caballos de fuerza",
+         xaxis   = list(title = "Caballos de fuerza (hp)"),
+         yaxis   = list(title = "P(Manual)", range = c(-0.1, 1.1)))
+fig</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="right-col">
+                        <div class="glass-box" style="flex: 1; border-top: 4px solid var(--accent-secondary); padding: 30px;">
+                            <h3 class="box-title"><i class="fa-solid fa-wave-square" style="color: var(--accent-secondary);"></i> ¿Por qué se llama sigmoide?</h3>
+                            <p style="font-size: 1.0rem; line-height: 1.6; color: var(--text-main);">
+                                La función sigmoide tiene forma de "<strong>S</strong>" (la letra griega sigma: σ). Convierte cualquier número real en una probabilidad entre 0 y 1:<br><br>
+                            </p>
+                            <div style="text-align: center; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px; font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-highlight);">
+                                σ(x) = 1 / (1 + e⁻ˣ)
+                            </div>
+                            <p style="font-size: 1.0rem; line-height: 1.6; color: var(--text-main); margin-top: 15px;">
+                                <strong><code>add_hline(y = 0.5)</code></strong>: Agrega una línea horizontal que indica el umbral de clasificación. Los puntos por encima → clasificados como "Manual".<br><br>
+                                <strong><code>text = ~paste(...)</code></strong>: Personaliza el tooltip que aparece al hacer hover sobre cada punto.
+                            </p>
+                            <div style="padding: 14px 16px; margin-top: 12px; background: linear-gradient(135deg, rgba(0,229,255,0.07), rgba(157,78,221,0.07)); border: 1px solid rgba(0,229,255,0.22); border-radius: 12px; display:flex; align-items:flex-start; gap:12px;">
+                                <i class="fa-solid fa-bolt" style="color:var(--accent-secondary); font-size:1.2rem; margin-top:2px; flex-shrink:0;"></i>
+                                <p style="margin:0; font-size:0.95rem; line-height:1.65; color:var(--text-main);"><strong style="color:var(--accent-secondary);">¿Para qué la quiero yo?</strong><br>Sin la sigmoide, la regresión logística podría predecir "probabilidades" de 150% o -30%, que no tienen ningún sentido. La sigmoide es el candado que fuerza cualquier salida a vivir entre 0 y 1 — donde las probabilidades realmente existen.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 15: Selección de Variables -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 20px; flex-shrink: 0;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Tema 7</span>
+                    <h2 style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Selección de Variables <span style="color: var(--accent-secondary);">y Diagnóstico</span>
+                    </h2>
+                </div>
+
+                <div class="flex-row">
+                    <div class="code-col">
+                        <div class="code-window">
+                            <div class="code-titlebar">
+                                <span class="dot dot-red"></span>
+                                <span class="dot dot-yellow"></span>
+                                <span class="dot dot-green"></span>
+                                <span class="filename">seleccion_variables.R</span>
+                            </div>
+                            <div class="code-body">
+                            <pre><code class="language-r">library(car)
+
+# --- MODELO COMPLETO (todas las variables) ---
+modelo_completo <- lm(mpg ~ ., data = mtcars)
+# El punto "." significa: "todas las demás columnas como predictores"
+
+# --- AIC: Akaike Information Criterion ---
+# Penaliza la complejidad. Menor AIC = mejor modelo.
+AIC(modelo_completo)   # 163.7
+
+# --- step(): Selección automática por AIC (stepwise backward) ---
+# Prueba eliminar cada variable de a una. Si al eliminarla el AIC baja → se va.
+modelo_opt <- step(modelo_completo, direction = "backward", trace = 0)
+# trace = 0 silencia el proceso (trace = 1 lo muestra paso a paso)
+
+summary(modelo_opt)
+# Variables seleccionadas: wt, qsec, am  →  R² = 0.8497
+
+AIC(modelo_opt)   # 156.0 → ¡Mejor que el completo con menos variables!
+
+# --- VIF: Variance Inflation Factor (detecta multicolinealidad) ---
+# Regla de oro: VIF > 10 = problema. VIF > 5 = sospecha.
+vif(modelo_opt)
+#        wt      qsec        am
+#  2.482952  1.364339  2.541农
+
+# Resultado limpio: ninguna variable está inflada. ¡Buenas noticias!</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="right-col">
+                        <div class="glass-box" style="flex: 1; border-top: 4px solid var(--accent-secondary); padding: 30px;">
+                            <h3 class="box-title"><i class="fa-solid fa-stethoscope" style="color: var(--accent-secondary);"></i> Los 3 diagnósticos clave</h3>
+                            <p style="font-size: 1.0rem; line-height: 1.6; color: var(--text-main);">
+                                <strong>AIC (Akaike)</strong>: Equilibra bondad de ajuste vs complejidad. Un modelo con más variables no es necesariamente mejor — puede estar "memorizando ruido" (overfitting). Siempre compará modelos con AIC.<br><br>
+                                <strong>step() — Stepwise</strong>: Busca automáticamente la mejor combinación de variables. No es perfecto, pero es un excelente punto de partida.<br><br>
+                                <strong>VIF (multicolinealidad)</strong>: Si dos predictores están muy correlacionados entre sí (ej: hp y disp en mtcars), el modelo se "confunde" y los coeficientes se vuelven inestables. VIF lo detecta. Si VIF > 10, eliminá una de las dos variables correlacionadas.
+                            </p>
+                            <div style="padding: 14px 16px; margin-top: 12px; background: linear-gradient(135deg, rgba(0,229,255,0.07), rgba(157,78,221,0.07)); border: 1px solid rgba(0,229,255,0.22); border-radius: 12px; display:flex; align-items:flex-start; gap:12px;">
+                                <i class="fa-solid fa-bolt" style="color:var(--accent-secondary); font-size:1.2rem; margin-top:2px; flex-shrink:0;"></i>
+                                <p style="margin:0; font-size:0.95rem; line-height:1.65; color:var(--text-main);"><strong style="color:var(--accent-secondary);">La idea en simple:</strong><br>Menos variables no significa peor modelo — a menudo significa mejor. Un modelo con 3 variables claras es más fácil de explicarle a tu jefe, más rápido de calcular y, en la mayoría de casos, comete menos errores con datos nuevos.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 16a: ¿Qué son Ridge y Lasso? -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 25px 80px;">
+                <div style="margin-bottom: 12px; flex-shrink: 0;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.0rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Tema 8 — Concepto</span>
+                    <h2 style="font-family: 'Inter', sans-serif; font-size: 2.8rem; font-weight: 800; color: var(--text-main); margin: 6px 0 0 0; line-height: 1.1;">
+                        ¿Qué son <span style="color: var(--accent-secondary);">Ridge y Lasso?</span>
+                    </h2>
+                </div>
+
+                <!-- Fila superior: 3 tarjetas -->
+                <div style="display: flex; gap: 18px; width: 100%; flex-shrink: 0;">
+
+                    <!-- Tarjeta: Origen -->
+                    <div class="glass-box" style="flex: 1; border-top: 3px solid var(--accent-highlight); padding: 16px 18px;">
+                        <h3 style="color: var(--accent-highlight); margin: 0 0 8px 0; font-size: 1.05rem; display:flex; align-items:center; gap:8px;">
+                            <i class="fa-solid fa-book-open"></i> ¿Son apellidos?
+                        </h3>
+                        <p style="font-size: 0.88rem; line-height: 1.55; color: var(--text-main); margin:0;">
+                            No exactamente. Son <strong>métodos estadísticos</strong>, pero sus nombres sí tienen historia:<br><br>
+                            <strong style="color:var(--accent-highlight)">Ridge</strong> (en inglés: "cresta") fue propuesto por <em>Hoerl y Kennard</em> en 1970. El nombre hace referencia a la forma geométrica de la solución.<br><br>
+                            <strong style="color:var(--accent-secondary)">Lasso</strong> es un acrónimo: <em>"Least Absolute Shrinkage and Selection Operator"</em>. Lo propuso <em>Robert Tibshirani</em> en 1996 en Stanford.
+                        </p>
+                    </div>
+
+                    <!-- Tarjeta: Problema que resuelven -->
+                    <div class="glass-box" style="flex: 1; border-top: 3px solid #ef4444; padding: 16px 18px;">
+                        <h3 style="color: #ef4444; margin: 0 0 8px 0; font-size: 1.05rem; display:flex; align-items:center; gap:8px;">
+                            <i class="fa-solid fa-fire"></i> El problema: Overfitting
+                        </h3>
+                        <p style="font-size: 0.88rem; line-height: 1.55; color: var(--text-main); margin:0;">
+                            Imaginá que estudiás memorizando las respuestas exactas — pero en el examen real las preguntas son distintas y fallás.<br><br>
+                            Eso es <strong style="color:#ef4444">overfitting</strong>: el modelo aprende el ruido de los datos de entrenamiento y falla en datos nuevos.<br><br>
+                            Ridge y Lasso buscan el modelo que <em>más generaliza</em>, no el que más ajusta.
+                        </p>
+                    </div>
+
+                    <!-- Tarjeta: Diferencia clave -->
+                    <div class="glass-box" style="flex: 1; border-top: 3px solid var(--accent-primary); padding: 16px 18px;">
+                        <h3 style="color: var(--accent-primary); margin: 0 0 8px 0; font-size: 1.05rem; display:flex; align-items:center; gap:8px;">
+                            <i class="fa-solid fa-scale-unbalanced"></i> La diferencia clave
+                        </h3>
+                        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem;">
+                            <div style="padding: 10px 12px; background: rgba(0,229,255,0.08); border-radius: 8px; border-left: 3px solid var(--accent-secondary);">
+                                <strong style="color: var(--accent-secondary);">Ridge (L2)</strong> — El "dial suavizador"<br>
+                                <span style="color:var(--text-muted);">Achica coeficientes hacia cero, pero <em>nunca los elimina</em>.</span>
+                            </div>
+                            <div style="padding: 10px 12px; background: rgba(157,78,221,0.08); border-radius: 8px; border-left: 3px solid var(--accent-primary);">
+                                <strong style="color: var(--accent-primary);">Lasso (L1)</strong> — El "bisturí"<br>
+                                <span style="color:var(--text-muted);">Lleva coeficientes a <strong style="color:var(--text-main);">exactamente cero</strong>. Elimina variables automáticamente.</span>
+                            </div>
+                            <div style="padding: 10px 12px; background: rgba(255,183,3,0.07); border-radius: 8px; border-left: 3px solid var(--accent-highlight);">
+                                <strong style="color: var(--accent-highlight);">¿Cuándo usar cuál?</strong><br>
+                                <span style="color:var(--text-muted);">Variables irrelevantes → <strong style="color:var(--text-main)">Lasso</strong>. Variables correlacionadas → <strong style="color:var(--text-main)">Ridge</strong>.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fila inferior: uso práctico -->
+                <div style="margin-top: 14px; background: linear-gradient(135deg, rgba(0,229,255,0.06), rgba(157,78,221,0.08)); border: 1px solid rgba(0,229,255,0.2); border-radius: 14px; padding: 16px 20px; flex-shrink: 0;">
+                    <h3 style="margin: 0 0 12px 0; font-size: 1.05rem; color: var(--text-main); display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-wrench" style="color:var(--accent-secondary);"></i>
+                        ¿Para qué los uso en la práctica?
+                    </h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.87rem;">
+                        <div style="display:flex; align-items:flex-start; gap:10px; padding: 10px 12px; background: rgba(0,229,255,0.06); border-radius: 8px;">
+                            <i class="fa-solid fa-database" style="color:var(--accent-secondary); font-size:1.1rem; margin-top:2px; flex-shrink:0;"></i>
+                            <div><strong style="color:var(--accent-secondary);">Tenés 50+ variables y no sabés cuáles importan</strong><br>
+                            <span style="color:var(--text-muted);">Usá <strong style="color:var(--text-main)">Lasso</strong>. Descarta automáticamente las irrelevantes. Ahorra horas de prueba y error manual.</span></div>
+                        </div>
+                        <div style="display:flex; align-items:flex-start; gap:10px; padding: 10px 12px; background: rgba(157,78,221,0.06); border-radius: 8px;">
+                            <i class="fa-solid fa-arrows-to-circle" style="color:var(--accent-primary); font-size:1.1rem; margin-top:2px; flex-shrink:0;"></i>
+                            <div><strong style="color:var(--accent-primary);">Tus variables están muy correlacionadas entre sí</strong><br>
+                            <span style="color:var(--text-muted);">Usá <strong style="color:var(--text-main)">Ridge</strong>. Las suaviza sin eliminar ninguna, manejando mejor la multicolinealidad.</span></div>
+                        </div>
+                        <div style="display:flex; align-items:flex-start; gap:10px; padding: 10px 12px; background: rgba(0,230,118,0.06); border-radius: 8px;">
+                            <i class="fa-solid fa-chart-simple" style="color:var(--accent-green); font-size:1.1rem; margin-top:2px; flex-shrink:0;"></i>
+                            <div><strong style="color:var(--accent-green);">Tu modelo entrena bien pero falla con datos nuevos</strong><br>
+                            <span style="color:var(--text-muted);">Síntoma clásico de overfitting. Cualquiera de los dos disciplina al modelo para que aprenda, no memorice.</span></div>
+                        </div>
+                        <div style="display:flex; align-items:flex-start; gap:10px; padding: 10px 12px; background: rgba(255,183,3,0.06); border-radius: 8px;">
+                            <i class="fa-solid fa-file-lines" style="color:var(--accent-highlight); font-size:1.1rem; margin-top:2px; flex-shrink:0;"></i>
+                            <div><strong style="color:var(--accent-highlight);">Necesitás explicar el modelo a alguien no técnico</strong><br>
+                            <span style="color:var(--text-muted);">Usá <strong style="color:var(--text-main)">Lasso</strong> para quedarte con 4-5 variables clave, luego corrés un <code>lm()</code> simple con esas.</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 16b: Regularización — Código -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 20px; flex-shrink: 0;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Tema 8 — Código</span>
+                    <h2 style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Ridge y Lasso <span style="color: var(--accent-secondary);">en R con glmnet</span>
+                    </h2>
+                </div>
+
+                <div class="flex-row">
+                    <div class="code-col">
+                        <div class="code-window">
+                            <div class="code-titlebar">
+                                <span class="dot dot-red"></span>
+                                <span class="dot dot-yellow"></span>
+                                <span class="dot dot-green"></span>
+                                <span class="filename">regularizacion.R</span>
+                            </div>
+                            <div class="code-body">
+                            <pre><code class="language-r">library(glmnet)
+
+# glmnet NO acepta data.frames directamente — necesita matrices
+# model.matrix() convierte automáticamente variables categóricas a dummies
+X <- model.matrix(mpg ~ ., data = mtcars)[, -1]  # [,-1] elimina el intercepto
+y <- mtcars$mpg
+
+# RIDGE (alpha = 0): achica coeficientes pero nunca los elimina
+modelo_ridge <- glmnet(X, y, alpha = 0)
+
+# LASSO (alpha = 1): puede poner coeficientes exactamente en CERO
+modelo_lasso <- glmnet(X, y, alpha = 1)
+
+# Buscar el lambda óptimo con validación cruzada (10 particiones)
+cv_lasso <- cv.glmnet(X, y, alpha = 1, nfolds = 10)
+
+# Ver los coeficientes con el lambda que minimiza el error
+coefs <- coef(cv_lasso, s = "lambda.min")
+print(coefs)
+
+# ── Cómo interpretar la salida ──────────────────────────────
+# (Intercept)  37.2851
+# cyl           .        ← PUNTO = coeficiente = 0 → Lasso la eliminó
+# disp          .        ← esta variable NO aporta al modelo
+# hp           -0.0215   ← esta SÍ aporta (coeficiente distinto de 0)
+# drat          .
+# wt           -3.7152   ← variable más importante (mayor magnitud)
+# qsec          .
+# vs            .
+# am            2.5202
+# gear          .
+# carb         -0.0785
+
+# Las variables con punto (.) son irrelevantes según Lasso
+# Podés usarlas para simplificar tu modelo final
+vars_relevantes <- rownames(coefs)[which(coefs != 0)]
+cat("Variables seleccionadas:", vars_relevantes, "\n")</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="right-col">
+                        <div class="glass-box" style="border-top: 4px solid var(--accent-secondary); padding: 24px;">
+                            <h3 class="box-title"><i class="fa-solid fa-sliders" style="color: var(--accent-secondary);"></i> El dial λ (lambda)</h3>
+                            <p style="font-size: 0.97rem; line-height: 1.6; color: var(--text-main); margin:0;">
+                                Lambda controla <strong>qué tan fuerte</strong> es la penalización:
+                            </p>
+                            <div style="margin-top: 12px; display:flex; flex-direction:column; gap:8px; font-size:0.93rem;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <span style="color:var(--accent-green); font-family:'JetBrains Mono',monospace; font-weight:700;">λ = 0</span>
+                                    <span style="color:var(--text-muted);">→ regresión lineal normal, sin penalización</span>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <span style="color:var(--accent-highlight); font-family:'JetBrains Mono',monospace; font-weight:700;">λ óptimo</span>
+                                    <span style="color:var(--text-muted);">→ encontrado por <code>cv.glmnet()</code> automáticamente</span>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <span style="color:#ef4444; font-family:'JetBrains Mono',monospace; font-weight:700;">λ = ∞</span>
+                                    <span style="color:var(--text-muted);">→ todos los coeficientes → 0, modelo inútil</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="padding: 18px 20px; background: rgba(0,230,118,0.07); border: 1px solid rgba(0,230,118,0.25); border-radius: 12px;">
+                            <strong style="color: var(--accent-green);"><i class="fa-solid fa-lightbulb"></i> El punto (.) en la salida:</strong>
+                            <p style="font-size: 0.93rem; margin: 8px 0 0 0; color: var(--text-muted); line-height: 1.6;">
+                                Cuando Lasso pone un coeficiente en <strong style="color:var(--text-main)">0</strong>, R lo muestra como <strong style="color:var(--text-main)">.</strong> para ahorrar espacio. Esa variable no aporta nada al modelo según Lasso — podés excluirla en tu versión final con <code>lm()</code>.
+                            </p>
+                        </div>
+                        <div style="padding: 18px 20px; background: rgba(255,183,3,0.07); border: 1px solid rgba(255,183,3,0.25); border-radius: 12px;">
+                            <strong style="color: var(--accent-highlight);"><i class="fa-solid fa-route"></i> Flujo recomendado:</strong>
+                            <p style="font-size: 0.93rem; margin: 8px 0 0 0; color: var(--text-muted); line-height: 1.6;">
+                                Usá Lasso para <em>descubrir</em> qué variables importan → luego ajustá un <code>lm()</code> clásico solo con esas → así tenés un modelo interpretable y liviano.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 17: Cheat Sheet -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 20px; flex-shrink: 0;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-highlight); letter-spacing: 0.1em; text-transform: uppercase;">Referencia rápida</span>
+                    <h2 style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Cheat Sheet <span style="color: var(--accent-secondary);">Semana 3</span>
+                    </h2>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; width: 100%;">
+                    <div class="glass-box" style="border-top: 4px solid var(--accent-primary); padding: 20px;">
+                        <h4 style="color: var(--accent-primary); margin: 0 0 12px 0; font-size: 1.1rem;"><i class="fa-solid fa-magnifying-glass"></i> EDA</h4>
+                        <code style="display:block; background:none; padding:0; color:var(--text-muted); font-size:0.88rem; line-height:2;">
+                            dim(datos)<br>
+                            str(datos)<br>
+                            summary(datos)<br>
+                            head(datos, 10)<br>
+                            table(datos$col)<br>
+                            colSums(is.na(datos))
+                        </code>
+                    </div>
+                    <div class="glass-box" style="border-top: 4px solid var(--accent-secondary); padding: 20px;">
+                        <h4 style="color: var(--accent-secondary); margin: 0 0 12px 0; font-size: 1.1rem;"><i class="fa-solid fa-circle-nodes"></i> Correlación y NAs</h4>
+                        <code style="display:block; background:none; padding:0; color:var(--text-muted); font-size:0.88rem; line-height:2;">
+                            cor(datos_num)<br>
+                            corrplot(matriz)<br>
+                            na.omit(datos)<br>
+                            mean(x, na.rm=T)<br>
+                            mutate(col = ifelse(is.na(col),<br>
+                            &nbsp;&nbsp;median(col,na.rm=T), col))
+                        </code>
+                    </div>
+                    <div class="glass-box" style="border-top: 4px solid var(--accent-highlight); padding: 20px;">
+                        <h4 style="color: var(--accent-highlight); margin: 0 0 12px 0; font-size: 1.1rem;"><i class="fa-solid fa-scissors"></i> Resampling</h4>
+                        <code style="display:block; background:none; padding:0; color:var(--text-muted); font-size:0.88rem; line-height:2;">
+                            set.seed(2024)<br>
+                            idx &lt;- sample(1:n, 0.8*n)<br>
+                            train &lt;- datos[idx, ]<br>
+                            test &lt;- datos[-idx, ]
+                        </code>
+                    </div>
+                    <div class="glass-box" style="border-top: 4px solid var(--accent-green); padding: 20px;">
+                        <h4 style="color: var(--accent-green); margin: 0 0 12px 0; font-size: 1.1rem;"><i class="fa-solid fa-chart-line"></i> Modelos</h4>
+                        <code style="display:block; background:none; padding:0; color:var(--text-muted); font-size:0.88rem; line-height:2;">
+                            lm(y ~ x1 + x2, data)<br>
+                            glm(y ~ x, family=binomial)<br>
+                            predict(modelo, test)<br>
+                            predict(m, test, type="response")<br>
+                            summary(modelo)<br>
+                            AIC(modelo)
+                        </code>
+                    </div>
+                    <div class="glass-box" style="border-top: 4px solid #ef4444; padding: 20px;">
+                        <h4 style="color: #ef4444; margin: 0 0 12px 0; font-size: 1.1rem;"><i class="fa-solid fa-sliders"></i> Regularización</h4>
+                        <code style="display:block; background:none; padding:0; color:var(--text-muted); font-size:0.88rem; line-height:2;">
+                            X &lt;- model.matrix(y~., d)[,-1]<br>
+                            glmnet(X, y, alpha=0) # Ridge<br>
+                            glmnet(X, y, alpha=1) # Lasso<br>
+                            cv.glmnet(X, y, alpha=1)<br>
+                            coef(cv, s="lambda.min")
+                        </code>
+                    </div>
+                    <div class="glass-box" style="border-top: 4px solid var(--accent-secondary); padding: 20px;">
+                        <h4 style="color: var(--accent-secondary); margin: 0 0 12px 0; font-size: 1.1rem;"><i class="fa-solid fa-chart-area"></i> Plotly</h4>
+                        <code style="display:block; background:none; padding:0; color:var(--text-muted); font-size:0.88rem; line-height:2;">
+                            plot_ly() |><br>
+                            add_trace(x=~col, y=~col,<br>
+                            &nbsp;&nbsp;type="scatter",<br>
+                            &nbsp;&nbsp;mode="markers") |><br>
+                            layout(title="...")<br>
+                            ggplotly(mi_ggplot)
+                        </code>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- DIAPOSITIVA 17b: Template del Proyecto Final -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 20px; flex-shrink: 0;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-green); letter-spacing: 0.1em; text-transform: uppercase;">Puente hacia el proyecto</span>
+                    <h2 style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Esqueleto mínimo del <span style="color: var(--accent-secondary);">Proyecto Final</span>
+                    </h2>
+                </div>
+
+                <div class="flex-row">
+                    <div class="code-col">
+                        <div class="code-window">
+                            <div class="code-titlebar">
+                                <span class="dot dot-red"></span>
+                                <span class="dot dot-yellow"></span>
+                                <span class="dot dot-green"></span>
+                                <span class="filename">mi_proyecto_final.R</span>
+                            </div>
+                            <div class="code-body">
+                            <pre><code class="language-r">library(tidyverse)
+library(corrplot)
+library(plotly)
+
+# ── PASO 1: CARGAR DATOS ──────────────────────────────────────
+# Opción A — CSV propio:
+datos <- read_csv("mi_dataset.csv")
+# Opción B — Dataset de R:
+datos <- na.omit(airquality)   # ← reemplazá con el tuyo
+
+# ── PASO 2: EDA ───────────────────────────────────────────────
+dim(datos)          # ¿Cuántas filas y columnas?
+str(datos)          # ¿Qué tipo de dato es cada columna?
+summary(datos)      # Estadísticas resumen
+colSums(is.na(datos))  # ¿Hay nulos?
+
+# Visualización de una variable clave
+ggplot(datos, aes(x = Ozone)) +   # ← cambiá "Ozone" por tu variable
+  geom_histogram(bins = 20, fill = "#9d4edd") + theme_minimal()
+
+# ── PASO 3: LIMPIAR ───────────────────────────────────────────
+datos <- datos |>
+  mutate(across(where(is.numeric),
+         ~ifelse(is.na(.), median(., na.rm = TRUE), .)))
+
+# ── PASO 4: CORRELACIONES ─────────────────────────────────────
+corrplot(cor(select(datos, where(is.numeric))),
+         method = "color", type = "upper", addCoef.col = "black")
+
+# ── PASO 5: MODELO ────────────────────────────────────────────
+set.seed(2024)
+n   <- nrow(datos)
+idx <- sample(1:n, round(0.8 * n))
+train <- datos[idx, ];  test <- datos[-idx, ]
+
+modelo <- lm(Ozone ~ ., data = train)   # ← cambiá "Ozone" por tu variable
+summary(modelo)
+
+# ── PASO 6: VISUALIZAR CON PLOTLY ─────────────────────────────
+pred <- predict(modelo, newdata = test)
+plot_ly(x = test$Ozone, y = pred,
+        type = "scatter", mode = "markers",
+        marker = list(color = "#9d4edd")) |>
+  add_lines(x = range(test$Ozone),
+            y = range(test$Ozone),
+            line = list(color = "#00e5ff", dash = "dash")) |>
+  layout(title = "Real vs Predicho",
+         xaxis = list(title = "Valor real"),
+         yaxis = list(title = "Valor predicho"))</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="right-col">
+                        <div class="glass-box" style="border-top: 4px solid var(--accent-green); padding: 22px;">
+                            <h3 class="box-title"><i class="fa-solid fa-map-signs" style="color: var(--accent-green);"></i> El flujo de punta a punta</h3>
+                            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.95rem; margin-top: 5px;">
+                                <div style="display:flex; align-items:center; gap:12px; padding: 8px 12px; background: rgba(0,230,118,0.07); border-radius: 8px;">
+                                    <span style="font-family:'JetBrains Mono',monospace; color:var(--accent-green); font-weight:700; min-width:28px;">01</span>
+                                    <span><strong>Cargar</strong> — leer el CSV o dataset de R</span>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:12px; padding: 8px 12px; background: rgba(0,229,255,0.07); border-radius: 8px;">
+                                    <span style="font-family:'JetBrains Mono',monospace; color:var(--accent-secondary); font-weight:700; min-width:28px;">02</span>
+                                    <span><strong>EDA</strong> — entender la estructura y distribuciones</span>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:12px; padding: 8px 12px; background: rgba(157,78,221,0.07); border-radius: 8px;">
+                                    <span style="font-family:'JetBrains Mono',monospace; color:var(--accent-primary); font-weight:700; min-width:28px;">03</span>
+                                    <span><strong>Limpiar</strong> — tratar nulos e imputar</span>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:12px; padding: 8px 12px; background: rgba(255,183,3,0.07); border-radius: 8px;">
+                                    <span style="font-family:'JetBrains Mono',monospace; color:var(--accent-highlight); font-weight:700; min-width:28px;">04</span>
+                                    <span><strong>Correlaciones</strong> — identificar relaciones clave</span>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:12px; padding: 8px 12px; background: rgba(239,68,68,0.07); border-radius: 8px;">
+                                    <span style="font-family:'JetBrains Mono',monospace; color:#ef4444; font-weight:700; min-width:28px;">05</span>
+                                    <span><strong>Modelar</strong> — ajustar regresión y evaluar</span>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:12px; padding: 8px 12px; background: rgba(0,230,118,0.07); border-radius: 8px;">
+                                    <span style="font-family:'JetBrains Mono',monospace; color:var(--accent-green); font-weight:700; min-width:28px;">06</span>
+                                    <span><strong>Visualizar</strong> — Plotly para el storytelling</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="padding: 16px 18px; background: rgba(255,183,3,0.07); border: 1px solid rgba(255,183,3,0.25); border-radius: 12px;">
+                            <strong style="color: var(--accent-highlight);"><i class="fa-solid fa-lightbulb"></i> Cómo usar este template:</strong>
+                            <p style="font-size: 0.93rem; margin: 8px 0 0 0; color: var(--text-muted); line-height: 1.6;">
+                                Copiá este esqueleto en tu RStudio, cambiá <code>airquality</code> por tu dataset y <code>"Ozone"</code> por tu variable a predecir. El flujo completo ya está armado — solo necesitás llenarlo con tus datos.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 18: Cierre y Tarea -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: flex-start; justify-content: center; padding: 40px 80px;">
+                <div style="margin-bottom: 20px; flex-shrink: 0;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 0.1em; text-transform: uppercase;">Cierre de sesión</span>
+                    <h2 style="font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0 0 0; line-height: 1.1;">
+                        Actividad extraclase: <span style="color: var(--accent-secondary);">Proyecto Final</span>
+                    </h2>
+                </div>
+
+                <div style="display: flex; gap: 30px; width: 100%;">
+                    <div style="flex: 1.2;" class="glass-box">
+                        <div style="padding: 5px; border-top: 4px solid var(--accent-green); border-radius: 16px; padding: 25px;">
+                            <h3 style="color: var(--accent-green); margin: 0 0 20px 0; font-size: 1.3rem;"><i class="fa-solid fa-list-check"></i> Lo que deben entregar (6 horas est.)</h3>
+                            <ol style="padding-left: 20px; font-size: 1.05rem; line-height: 2.2; color: var(--text-main); margin: 0;">
+                                <li><strong>Elegir un dataset</strong> (Kaggle, UCI Repository, o datos propios).</li>
+                                <li><strong>EDA completo</strong>: dim, str, summary, boxplots, histogramas.</li>
+                                <li><strong>Matriz de correlaciones</strong> visualizada con corrplot.</li>
+                                <li><strong>Tratamiento de nulos</strong>: documentar estrategia usada.</li>
+                                <li><strong>Modelo predictivo</strong>: lineal o logístico según el problema.</li>
+                                <li><strong>Al menos un gráfico interactivo</strong> con Plotly.</li>
+                                <li><strong>Presentar hallazgos</strong> en formato R Markdown.</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div style="flex: 0.8; display: flex; flex-direction: column; gap: 20px;">
+                        <div class="glass-box" style="border-top: 4px solid var(--accent-highlight); padding: 25px;">
+                            <h3 style="color: var(--accent-highlight); margin: 0 0 12px 0; font-size: 1.2rem;"><i class="fa-solid fa-database"></i> Fuentes de datos recomendadas</h3>
+                            <ul style="padding-left: 20px; font-size: 1.0rem; line-height: 2; color: var(--text-main); margin: 0;">
+                                <li><strong>Kaggle.com</strong> — miles de datasets públicos</li>
+                                <li><strong>UCI ML Repository</strong> — clásicos de ML</li>
+                                <li><strong>datos.go.cr</strong> — datos abiertos de Costa Rica</li>
+                                <li><strong>R built-in</strong>: <code>data()</code> para ver todos</li>
+                            </ul>
+                        </div>
+
+                        <div class="glass-box" style="border-top: 4px solid var(--accent-primary); padding: 25px;">
+                            <h3 style="color: var(--accent-primary); margin: 0 0 12px 0; font-size: 1.2rem;"><i class="fa-solid fa-star"></i> Criterio para elegir dataset</h3>
+                            <ul style="padding-left: 20px; font-size: 1.0rem; line-height: 2; color: var(--text-muted); margin: 0;">
+                                <li>Mínimo <strong style="color:var(--text-main)">100 filas</strong></li>
+                                <li>Mínimo <strong style="color:var(--text-main)">5 columnas</strong></li>
+                                <li>Que te <strong style="color:var(--text-main)">interese</strong> el tema</li>
+                                <li>Que tenga una <strong style="color:var(--text-main)">variable a predecir</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 19: FIN -->
+        <div class="slide">
+            <div class="slide-content" style="align-items: center; justify-content: center; text-align: center;">
+                <div style="display: inline-flex; align-items: center; gap: 12px; padding: 8px 24px; background: rgba(0, 230, 118, 0.1); border: 1px solid rgba(0, 230, 118, 0.3); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: var(--accent-green); margin-bottom: 40px; letter-spacing: 0.15em;">
+                    <i class="fa-solid fa-check-circle"></i> SINT-604 · CLASE 03 COMPLETADA
+                </div>
+
+                <h1 class="title-primary" style="font-size: 4rem; margin-bottom: 20px;">
+                    ¡Excelente trabajo <span class="title-highlight">hoy!</span>
+                </h1>
+
+                <h2 class="subtitle" style="margin-bottom: 50px;">
+                    Ya tenés las herramientas para analizar datos como un profesional
+                </h2>
+
+                <div style="display: flex; gap: 25px; justify-content: center; flex-wrap: wrap;">
+                    <div class="glass-box" style="padding: 25px 35px; border-top: 3px solid var(--accent-primary); text-align: left; min-width: 220px;">
+                        <i class="fa-solid fa-check" style="color: var(--accent-green); margin-right: 10px;"></i>
+                        <strong>EDA</strong> — Explorar datos
+                    </div>
+                    <div class="glass-box" style="padding: 25px 35px; border-top: 3px solid var(--accent-secondary); text-align: left; min-width: 220px;">
+                        <i class="fa-solid fa-check" style="color: var(--accent-green); margin-right: 10px;"></i>
+                        <strong>Correlaciones</strong> visuales
+                    </div>
+                    <div class="glass-box" style="padding: 25px 35px; border-top: 3px solid var(--accent-highlight); text-align: left; min-width: 220px;">
+                        <i class="fa-solid fa-check" style="color: var(--accent-green); margin-right: 10px;"></i>
+                        <strong>Nulos</strong> e imputación
+                    </div>
+                    <div class="glass-box" style="padding: 25px 35px; border-top: 3px solid var(--accent-green); text-align: left; min-width: 220px;">
+                        <i class="fa-solid fa-check" style="color: var(--accent-green); margin-right: 10px;"></i>
+                        <strong>Regresión</strong> lineal y logística
+                    </div>
+                    <div class="glass-box" style="padding: 25px 35px; border-top: 3px solid #ef4444; text-align: left; min-width: 220px;">
+                        <i class="fa-solid fa-check" style="color: var(--accent-green); margin-right: 10px;"></i>
+                        <strong>Regularización</strong> Ridge/Lasso
+                    </div>
+                </div>
+
+                <p style="margin-top: 50px; font-size: 1rem; color: var(--text-muted); opacity: 0.6;">
+                    Próxima clase → Semana 4: Desarrollo guiado del proyecto final
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/r.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Syntax highlighting
+            document.querySelectorAll('pre code').forEach((el) => {
+                hljs.highlightElement(el);
+            });
+
+            // KaTeX
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '$', right: '$', display: false }
+                ],
+                throwOnError: false
+            });
+
+            // Lógica de diapositivas
+            const slides = document.querySelectorAll('.slide');
+            const indicator = document.getElementById('slide-indicator');
+            let currentSlide = 0;
+
+            function updateSlides() {
+                if (slides.length === 0) return;
+                slides.forEach((slide, index) => {
+                    slide.classList.toggle('active', index === currentSlide);
+                });
+                indicator.textContent = `${currentSlide + 1} / ${slides.length}`;
+            }
+
+            function nextSlide() {
+                if (currentSlide < slides.length - 1) { currentSlide++; updateSlides(); }
+            }
+
+            function prevSlide() {
+                if (currentSlide > 0) { currentSlide--; updateSlides(); }
+            }
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'F2') {
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen();
+                    } else {
+                        document.exitFullscreen();
+                    }
+                    return;
+                }
+                if (e.key === 'ArrowRight' || e.key === 'Space' || e.key === 'PageDown') nextSlide();
+                else if (e.key === 'ArrowLeft' || e.key === 'PageUp') prevSlide();
+            });
+
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('a') || e.target.closest('button') || e.target.closest('pre')) return;
+                const clickX = e.clientX;
+                const windowWidth = window.innerWidth;
+                if (clickX > windowWidth * 0.7) nextSlide();
+                else if (clickX < windowWidth * 0.3) prevSlide();
+            });
+
+            let wheelTimer;
+            document.addEventListener('wheel', (e) => {
+                if (wheelTimer) return;
+                wheelTimer = setTimeout(() => { wheelTimer = null; }, 800);
+                if (e.deltaY > 50) nextSlide();
+                else if (e.deltaY < -50) prevSlide();
+            }, { passive: true });
+
+            updateSlides();
+        });
+    </script>
+    <script>
+        // ── Sistema de tooltips para términos técnicos ──────────────────
+        const glosario = {
+            "multicolinealidad": "Cuando dos o más variables predictoras están muy correlacionadas entre sí. Ej: 'peso del auto' y 'tamaño del motor' casi siempre van juntas. Esto confunde al modelo: no sabe a cuál de las dos atribuirle el efecto.",
+            "overfitting": "El modelo 'memoriza' los datos de entrenamiento en vez de aprender los patrones reales. Se ve perfecto en los datos que conoce, pero falla con datos nuevos. Es como estudiar copiando las respuestas exactas del examen.",
+            "VIF": "Variance Inflation Factor. Mide qué tanto se infla la incertidumbre de un coeficiente por culpa de la multicolinealidad. Regla práctica: VIF > 10 es señal de alerta — considerá eliminar una de las variables correlacionadas.",
+            "RMSE": "Root Mean Squared Error (Raíz del Error Cuadrático Medio). Mide el error promedio de predicción en las mismas unidades que la variable respuesta. Si predecís temperaturas en °C y RMSE = 2.3, en promedio te equivocás ~2.3°C.",
+            "R²": "R-cuadrado. Proporción de la varianza de la variable respuesta que el modelo logra explicar. Va de 0 a 1: R²=0.70 significa que el modelo explica el 70% de la variación de los datos.",
+            "lambda": "El parámetro de penalización en Ridge y Lasso. Controla qué tan agresivo es el modelo al reducir coeficientes. Lambda alto → más penalización → modelo más simple. Se elige con validación cruzada (cv.glmnet).",
+            "p-value": "Probabilidad de obtener este resultado si la variable no tuviera ningún efecto real. Si p < 0.05, hay menos del 5% de probabilidad de que el resultado sea solo ruido — convencionalmente se considera significativo.",
+            "AIC": "Akaike Information Criterion. Penaliza la complejidad del modelo: premia el ajuste pero castiga tener demasiadas variables. Sirve para comparar modelos: menor AIC = mejor balance entre ajuste y simplicidad.",
+            "sigmoide": "Función matemática con forma de 'S' que transforma cualquier número real en un valor entre 0 y 1. Imprescindible en regresión logística para que las salidas sean probabilidades válidas (no puede salir 150% ni -30%).",
+            "imputación": "Proceso de reemplazar valores faltantes (NA) con un valor estimado. La estrategia más simple es usar la media o mediana de la variable. Alternativas más sofisticadas usan modelos para predecir el valor faltante.",
+            "resampling": "Técnica de dividir el dataset en partes para entrenar y evaluar el modelo de forma honesta. La división más común es 80% para entrenamiento y 20% para prueba. Evita evaluar el modelo con los mismos datos que usó para aprender."
+        };
+
+        function aplicarTooltips() {
+            // Seleccionar todos los nodos de texto en el documento
+            const walker = document.createTreeWalker(
+                document.body,
+                NodeFilter.SHOW_TEXT,
+                {
+                    acceptNode(node) {
+                        // Evitar scripts, estilos y nodos que ya son .termino
+                        const parent = node.parentElement;
+                        if (!parent) return NodeFilter.FILTER_REJECT;
+                        const tag = parent.tagName.toLowerCase();
+                        if (['script','style','code','pre'].includes(tag)) return NodeFilter.FILTER_REJECT;
+                        if (parent.classList.contains('termino')) return NodeFilter.FILTER_REJECT;
+                        if (parent.closest('.termino')) return NodeFilter.FILTER_REJECT;
+                        return NodeFilter.FILTER_ACCEPT;
+                    }
+                }
+            );
+
+            const nodos = [];
+            while (walker.nextNode()) nodos.push(walker.currentNode);
+
+            // Para cada término del glosario, buscar y envolver
+            nodos.forEach(nodo => {
+                const texto = nodo.textContent;
+                // Buscar cualquier término del glosario (case-insensitive, palabra completa)
+                const terminos = Object.keys(glosario);
+                const regex = new RegExp(
+                    '(' + terminos.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')',
+                    'gi'
+                );
+
+                if (!regex.test(texto)) return;
+                regex.lastIndex = 0;
+
+                const frag = document.createDocumentFragment();
+                let lastIndex = 0, match;
+
+                while ((match = regex.exec(texto)) !== null) {
+                    // Texto antes del término
+                    if (match.index > lastIndex) {
+                        frag.appendChild(document.createTextNode(texto.slice(lastIndex, match.index)));
+                    }
+
+                    // Buscar la clave en el glosario (case-insensitive)
+                    const clave = Object.keys(glosario).find(k => k.toLowerCase() === match[0].toLowerCase());
+                    const definicion = glosario[clave];
+
+                    const span = document.createElement('span');
+                    span.className = 'termino';
+                    span.textContent = match[0];
+
+                    const tooltip = document.createElement('span');
+                    tooltip.className = 'tooltip-box';
+                    tooltip.innerHTML = `<span class="tooltip-titulo">📖 ${clave}</span>${definicion}`;
+                    span.appendChild(tooltip);
+
+                    frag.appendChild(span);
+                    lastIndex = regex.lastIndex;
+                }
+
+                if (lastIndex < texto.length) {
+                    frag.appendChild(document.createTextNode(texto.slice(lastIndex)));
+                }
+
+                nodo.parentNode.replaceChild(frag, nodo);
+            });
+
+            // Click para activar/desactivar en mobile o si se prefiere click
+            document.addEventListener('click', (e) => {
+                const t = e.target.closest('.termino');
+                document.querySelectorAll('.termino.activo').forEach(el => {
+                    if (el !== t) el.classList.remove('activo');
+                });
+                if (t) t.classList.toggle('activo');
+            });
+        }
+
+        // Ejecutar después de que el DOM esté listo
+        document.addEventListener('DOMContentLoaded', aplicarTooltips);
+    </script>
+</body>
+</html>
