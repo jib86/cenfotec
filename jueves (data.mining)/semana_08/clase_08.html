@@ -1,0 +1,1672 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Minería de Datos - Clase 08</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lato:wght@300;400;700;900&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, .05);
+            --glass-border: rgba(255, 255, 255, .1);
+            --glass-highlight: rgba(255, 255, 255, .05);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-primary: #38bdf8;
+            --accent-secondary: #c084fc;
+            --code-bg: #1a1b26;
+            --c-cyan: #22d3ee;
+            --c-pink: #f472b6;
+            --c-green: #4ade80;
+            --c-orange: #f59e0b;
+            --c-red: #f87171
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #0f172a;
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden
+        }
+
+        .slides-container {
+            height: 100%;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            background: radial-gradient(circle at 10% 10%, rgba(56, 189, 248, .12), transparent 40%), radial-gradient(circle at 90% 90%, rgba(192, 132, 252, .12), transparent 40%)
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            opacity: 0;
+            transform: scale(.95) translateY(20px);
+            transition: opacity .5s ease, transform .5s cubic-bezier(.34, 1.56, .64, 1);
+            pointer-events: none;
+            filter: blur(8px)
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            pointer-events: all;
+            z-index: 10;
+            filter: blur(0)
+        }
+
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-top: 1px solid rgba(255, 255, 255, .15);
+            border-radius: 28px;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 1280px;
+            max-height: 95vh;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, .2), inset 0 0 0 1px var(--glass-highlight);
+            display: flex;
+            flex-direction: column;
+            position: relative
+        }
+
+        h1 {
+            font-family: 'Lato', sans-serif;
+            font-weight: 900;
+            font-size: 4.5rem;
+            line-height: 1;
+            margin-bottom: .5rem;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -2px
+        }
+
+        h2 {
+            font-family: 'Lato', sans-serif;
+            font-weight: 800;
+            font-size: 2.2rem;
+            margin-bottom: .4rem;
+            display: inline-block;
+            background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            color: var(--text-main);
+            margin-top: .8rem;
+            margin-bottom: .4rem;
+            font-weight: 600
+        }
+
+        p,
+        li {
+            font-size: .95rem;
+            line-height: 1.5;
+            color: var(--text-muted);
+            margin-bottom: .4rem
+        }
+
+        strong {
+            color: var(--text-main);
+            font-weight: 600
+        }
+
+        .cb {
+            background: rgba(255, 255, 255, .03);
+            padding: 1rem;
+            border-radius: 14px;
+            border: 1px solid var(--glass-border);
+            transition: transform .3s, border-color .3s, background .3s
+        }
+
+        .cb:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, .05);
+            border-color: var(--accent-primary)
+        }
+
+        .mch {
+            display: flex;
+            align-items: center;
+            padding: 8px 14px;
+            background: #2a2b3d;
+            border-bottom: 1px solid rgba(255, 255, 255, .07);
+            position: relative
+        }
+
+        .mch .dots {
+            display: flex;
+            gap: 6px
+        }
+
+        .mch .dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%
+        }
+
+        .dot-r {
+            background: #ff5f57
+        }
+
+        .dot-y {
+            background: #ffbd2e
+        }
+
+        .dot-g {
+            background: #28c840
+        }
+
+        .mch .mt {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Fira Code', monospace;
+            font-size: .72rem;
+            color: rgba(255, 255, 255, .35)
+        }
+
+        pre {
+            background: var(--code-bg);
+            padding: 1.2rem;
+            border-radius: 14px;
+            font-family: 'Fira Code', monospace;
+            font-size: .82rem;
+            overflow-x: auto;
+            border: 1px solid rgba(255, 255, 255, .05);
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, .3);
+            margin: 0;
+            line-height: 1.65
+        }
+
+        .code-wrap {
+            background: var(--code-bg);
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, .07);
+            overflow: hidden
+        }
+
+        .code-wrap pre {
+            padding: 1rem 1.2rem !important;
+            font-size: .8rem !important;
+            line-height: 1.6 !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            max-height: 500px !important;
+            overflow-y: auto !important;
+            overflow-x: auto !important;
+            display: block !important;
+        }
+
+        .code-wrap pre::-webkit-scrollbar {
+            width: 8px
+        }
+
+        .code-wrap pre::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, .08)
+        }
+
+        .code-wrap pre::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .2);
+            border-radius: 4px
+        }
+
+        .code-wrap pre::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, .35)
+        }
+
+        .fn {
+            position: fixed;
+            bottom: 25px;
+            right: 35px;
+            z-index: 100
+        }
+
+        .sc {
+            font-family: 'Fira Code', monospace;
+            color: rgba(255, 255, 255, .4);
+            font-size: 1rem;
+            letter-spacing: 2px
+        }
+
+        #pb {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            width: 0%;
+            transition: width .3s;
+            z-index: 200;
+            box-shadow: 0 0 10px var(--accent-primary)
+        }
+
+        .tag {
+            background: rgba(255, 255, 255, .1);
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-family: 'Fira Code', monospace;
+            font-size: .82rem
+        }
+
+        .co {
+            background: rgba(255, 255, 255, .04);
+            border-left: 3px solid;
+            padding: .8rem 1.2rem;
+            border-radius: 0 10px 10px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px
+        }
+
+        /* TOOLTIP */
+        .g {
+            position: relative;
+            color: var(--accent-primary);
+            -webkit-text-fill-color: currentColor;
+            border-bottom: 1.5px dashed rgba(56, 189, 248, .5);
+            cursor: pointer;
+            font-weight: 500;
+            transition: color .2s, border-color .2s
+        }
+
+        .g:hover,
+        .g:active {
+            color: #fff;
+            border-bottom-color: #fff
+        }
+
+        .g .t {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: calc(100% + 10px);
+            left: 50%;
+            transform: translateX(-50%) translateY(6px);
+            background: #1e293b;
+            border: 1px solid var(--accent-primary);
+            border-radius: 12px;
+            padding: 10px 14px;
+            width: max-content;
+            max-width: 320px;
+            font-size: .8rem;
+            font-weight: 400;
+            color: #e2e8f0;
+            line-height: 1.5;
+            z-index: 500;
+            pointer-events: none;
+            transition: opacity .25s, transform .25s, visibility .25s;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .4);
+            font-family: 'Inter', sans-serif
+        }
+
+        .g .t::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: var(--accent-primary)
+        }
+
+        .g:hover .t,
+        .g:active .t {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(0)
+        }
+
+        .gl .t {
+            left: 0;
+            transform: translateX(0) translateY(6px)
+        }
+
+        .gl:hover .t,
+        .gl:active .t {
+            transform: translateX(0) translateY(0)
+        }
+
+        .gl .t::after {
+            left: 20px;
+            transform: none
+        }
+
+        .gr .t {
+            left: auto;
+            right: 0;
+            transform: translateX(0) translateY(6px)
+        }
+
+        .gr:hover .t,
+        .gr:active .t {
+            transform: translateX(0) translateY(0)
+        }
+
+        .gr .t::after {
+            left: auto;
+            right: 20px;
+            transform: none
+        }
+
+        @media(max-width:768px) {
+            h1 {
+                font-size: 2.8rem
+            }
+
+            h2 {
+                font-size: 1.8rem
+            }
+
+            .card {
+                padding: 1.2rem
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="pb"></div>
+    <div class="slides-container">
+
+        <!-- S1: PORTADA -->
+        <div class="slide active">
+            <div class="card" style="text-align:center;justify-content:center;height:60vh">
+                <p
+                    style="color:var(--accent-primary);letter-spacing:2px;text-transform:uppercase;font-size:.85rem;font-weight:700">
+                    Módulo 4 · Sesión 8</p>
+                <h1>Minería de Datos en<br />Redes Sociales y la Web</h1>
+                <p style="font-size:1rem;color:var(--text-muted);margin-top:4px">Casos de uso específicos para minería
+                    de datos no estructurados.</p>
+                <div
+                    style="margin-top:1.5rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;text-align:left;width:100%;border-top:1px solid rgba(255,255,255,.1);padding-top:25px">
+                    <div style="display:flex;gap:10px">
+                        <div style="background:rgba(6,182,212,.1);padding:12px;border-radius:8px;color:var(--c-cyan)"><i
+                                class="fa-solid fa-user-tie"></i></div>
+                        <div>
+                            <h4
+                                style="font-size:.75rem;text-transform:uppercase;letter-spacing:2px;color:#64748b;margin:0 0 4px;font-weight:600">
+                                Profesor</h4>
+                            <p style="font-size:1rem;color:#fff;margin:0">Dr. J. Ignacio Borge</p>
+                            <p style="font-size:.85rem;color:var(--c-cyan);margin:2px 0 0;font-style:italic">Científico
+                                computacional</p>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:10px">
+                        <div style="background:rgba(236,72,153,.1);padding:12px;border-radius:8px;color:var(--c-pink)">
+                            <i class="fa-regular fa-calendar-check"></i>
+                        </div>
+                        <div>
+                            <h4
+                                style="font-size:.75rem;text-transform:uppercase;letter-spacing:2px;color:#64748b;margin:0 0 4px;font-weight:600">
+                                Fecha</h4>
+                            <p style="font-size:1rem;color:#fff;margin:0">Jueves 12 de Marzo</p>
+                            <p style="font-size:.85rem;color:var(--text-muted);margin:2px 0 0">2026</p>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:10px">
+                        <div style="background:rgba(74,222,128,.1);padding:12px;border-radius:8px;color:var(--c-green)">
+                            <i class="fa-solid fa-building-columns"></i>
+                        </div>
+                        <div>
+                            <h4
+                                style="font-size:.75rem;text-transform:uppercase;letter-spacing:2px;color:#64748b;margin:0 0 4px;font-weight:600">
+                                Institución</h4>
+                            <p style="font-size:1rem;color:#fff;margin:0">Universidad CENFOTEC</p>
+                            <p style="font-size:.85rem;color:var(--text-muted);margin:2px 0 0">Escuela de Sistemas
+                                Inteligentes</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- S2: OBJETIVOS -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:10px">Objetivos de la Clase</h2>
+                <div class="co" style="border-color:#fbbf24;margin-bottom:14px"><i class="fa-solid fa-bullseye"
+                        style="color:#fbbf24;font-size:1rem;margin-top:2px"></i>
+                    <p style="margin:0;font-size:.95rem;color:#e2e8f0;line-height:1.4;font-style:italic"><strong
+                            style="color:#fbbf24;font-style:normal">Al finalizar esta sesión</strong> podrás extraer,
+                        procesar y analizar datos provenientes de redes sociales y aplicaciones web para descubrir
+                        patrones de valor empresarial.</p>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                    <div class="cb"
+                        style="padding:.9rem 1.2rem;border-left:4px solid var(--accent-primary);background:rgba(56,189,248,.05);display:flex;align-items:center;gap:14px">
+                        <div
+                            style="background:rgba(56,189,248,.15);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <i class="fa-solid fa-share-nodes" style="color:var(--accent-primary);font-size:.9rem"></i>
+                        </div>
+                        <p style="margin:0;font-size:.95rem;color:#e2e8f0"><strong
+                                style="color:var(--accent-primary)">Comprender</strong> qué tipos de datos generan las
+                            redes sociales y las aplicaciones web, y por qué son valiosos.</p>
+                    </div>
+                    <div class="cb"
+                        style="padding:.9rem 1.2rem;border-left:4px solid var(--accent-secondary);background:rgba(192,132,252,.05);display:flex;align-items:center;gap:14px">
+                        <div
+                            style="background:rgba(192,132,252,.15);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <i class="fa-solid fa-spider" style="color:var(--accent-secondary);font-size:.9rem"></i>
+                        </div>
+                        <p style="margin:0;font-size:.95rem;color:#e2e8f0"><strong
+                                style="color:var(--accent-secondary)">Aplicar</strong> técnicas de <span class="g">web
+                                scraping<span class="t">Técnica para extraer datos de sitios web de forma automática,
+                                    leyendo y parseando el código HTML de las páginas.</span></span> y consumo de <span
+                                class="g">APIs<span class="t">Application Programming Interface — puerta de acceso
+                                    oficial que un servicio ofrece para que programas externos lean o escriban datos de
+                                    forma estructurada.</span></span> para recopilar datos de la web.</p>
+                    </div>
+                    <div class="cb"
+                        style="padding:.9rem 1.2rem;border-left:4px solid var(--c-cyan);background:rgba(34,211,238,.05);display:flex;align-items:center;gap:14px">
+                        <div
+                            style="background:rgba(34,211,238,.15);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <i class="fa-solid fa-diagram-project" style="color:var(--c-cyan);font-size:.9rem"></i>
+                        </div>
+                        <p style="margin:0;font-size:.95rem;color:#e2e8f0"><strong
+                                style="color:var(--c-cyan)">Analizar</strong> datos de comportamiento web (<span
+                                class="g">clickstream<span class="t">Registro secuencial de todos los clics que un
+                                    usuario hace al navegar un sitio web: qué páginas visitó, en qué orden y cuánto
+                                    tiempo pasó en cada una.</span></span>) y relaciones sociales (<span
+                                class="g">grafos<span class="t">Estructura matemática compuesta por nodos (puntos) y
+                                    aristas (conexiones). En redes sociales, los nodos son personas y las aristas son
+                                    interacciones como "seguir" o "mencionar".</span></span>).</p>
+                    </div>
+                    <div class="cb"
+                        style="padding:.9rem 1.2rem;border-left:4px solid var(--c-green);background:rgba(74,222,128,.05);display:flex;align-items:center;gap:14px">
+                        <div
+                            style="background:rgba(74,222,128,.15);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <i class="fa-solid fa-briefcase" style="color:var(--c-green);font-size:.9rem"></i>
+                        </div>
+                        <p style="margin:0;font-size:.95rem;color:#e2e8f0"><strong
+                                style="color:var(--c-green)">Conocer</strong> casos de uso reales en industrias como
+                            e-commerce, salud, finanzas y marketing.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- S3: POR QUE -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">¿Por qué minar redes sociales y la web?</h2>
+                <p
+                    style="color:var(--accent-primary);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">
+                    La mina de oro digital</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px">
+                    <div class="cb" style="text-align:center;padding:1.2rem .8rem">
+                        <div
+                            style="font-size:2.2rem;font-weight:900;font-family:'Lato',sans-serif;color:var(--accent-primary)">
+                            5.24B</div>
+                        <p style="margin:4px 0 0;font-size:.85rem">usuarios activos en redes sociales a nivel mundial
+                            (2025)</p>
+                    </div>
+                    <div class="cb" style="text-align:center;padding:1.2rem .8rem">
+                        <div
+                            style="font-size:2.2rem;font-weight:900;font-family:'Lato',sans-serif;color:var(--accent-secondary)">
+                            500M</div>
+                        <p style="margin:4px 0 0;font-size:.85rem">tweets publicados cada día en la plataforma X</p>
+                    </div>
+                    <div class="cb" style="text-align:center;padding:1.2rem .8rem">
+                        <div
+                            style="font-size:2.2rem;font-weight:900;font-family:'Lato',sans-serif;color:var(--c-green)">
+                            2.5<span class="g">EB<span class="t">Exabyte = 1 millón de Terabytes. 2.5 EB equivalen a
+                                    ~500 mil millones de fotos en alta resolución.</span></span></div>
+                        <p style="margin:4px 0 0;font-size:.85rem">de datos generados por día en internet</p>
+                    </div>
+                </div>
+                <div class="co" style="border-color:var(--c-cyan)"><i class="fa-solid fa-lightbulb"
+                        style="color:var(--c-cyan);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.92rem;color:#e2e8f0;line-height:1.5"><strong
+                            style="color:var(--c-cyan)">¿Qué significa?</strong> Cada "me gusta", cada comentario, cada
+                        clic es un dato no estructurado que revela patrones de comportamiento, opiniones y tendencias
+                        que ninguna encuesta podría capturar.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- S4: TIPOS DE DATOS -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1150px">
+                <h2 style="font-size:2rem;margin-bottom:12px">Tipos de datos en redes sociales y la web</h2>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                    <div class="cb"
+                        style="padding:1rem 1.2rem;border-left:4px solid var(--accent-primary);background:rgba(56,189,248,.04)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><i
+                                class="fa-solid fa-pen-to-square" style="color:var(--accent-primary)"></i><strong
+                                style="color:#fff;font-size:.95rem">Contenido generado por usuarios</strong></div>
+                        <p style="margin:0;font-size:.88rem">Publicaciones, comentarios, reseñas, hilos, respuestas a
+                            encuestas abiertas.</p>
+                    </div>
+                    <div class="cb"
+                        style="padding:1rem 1.2rem;border-left:4px solid var(--accent-secondary);background:rgba(192,132,252,.04)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><i
+                                class="fa-solid fa-hand-pointer" style="color:var(--accent-secondary)"></i><strong
+                                style="color:#fff;font-size:.95rem">Metadatos de interacción</strong></div>
+                        <p style="margin:0;font-size:.88rem">Likes, shares, <span class="g">retweets<span
+                                    class="t">Acción de republicar el contenido de otro usuario en X (antes Twitter),
+                                    amplificando su alcance en la red.</span></span>, tiempo de lectura, frecuencia de
+                            publicación.</p>
+                    </div>
+                    <div class="cb"
+                        style="padding:1rem 1.2rem;border-left:4px solid var(--c-green);background:rgba(74,222,128,.04)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><i
+                                class="fa-solid fa-circle-nodes" style="color:var(--c-green)"></i><strong
+                                style="color:#fff;font-size:.95rem">Datos de conexión (grafo social)</strong></div>
+                        <p style="margin:0;font-size:.88rem">Seguidores, amigos, menciones, etiquetas, comunidades,
+                            <span class="g">influenciadores<span class="t">Usuarios con alta centralidad en una red
+                                    social: muchas conexiones y publicaciones que generan gran cantidad de
+                                    interacciones.</span></span>.
+                        </p>
+                    </div>
+                    <div class="cb"
+                        style="padding:1rem 1.2rem;border-left:4px solid var(--c-orange);background:rgba(245,158,11,.04)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><i
+                                class="fa-solid fa-globe" style="color:var(--c-orange)"></i><strong
+                                style="color:#fff;font-size:.95rem">Datos de navegación web (clickstream)</strong></div>
+                        <p style="margin:0;font-size:.88rem">URLs visitadas, secuencia de clics, tiempo en cada página,
+                            fuente de tráfico, dispositivo.</p>
+                    </div>
+                </div>
+                <div class="co" style="border-color:var(--c-pink);margin-top:12px"><i class="fa-solid fa-store"
+                        style="color:var(--c-pink);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.88rem;color:#e2e8f0"><strong style="color:var(--c-pink)">Para su
+                            proyecto:</strong> En un e-commerce, las reseñas son <em>contenido de usuarios</em> y los
+                        clics en categorías son <em>clickstream</em>. Ambos son minables.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- S5: APIs vs SCRAPING -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1150px">
+                <h2 style="font-size:2rem;margin-bottom:6px">¿Cómo obtenemos estos datos?</h2>
+                <p
+                    style="color:var(--accent-primary);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">
+                    APIs vs Web Scraping</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                    <div class="cb" style="padding:1.2rem;border-top:3px solid var(--c-green)">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                            <div style="background:rgba(74,222,128,.15);border-radius:10px;padding:8px 10px"><i
+                                    class="fa-solid fa-plug" style="color:var(--c-green)"></i></div>
+                            <h3 style="margin:0;font-size:1.15rem;color:#fff"><span class="g gl">API<span
+                                        class="t">Application Programming Interface — interfaz oficial que un servicio
+                                        expone para que programas externos lean o escriban datos de forma estructurada y
+                                        controlada.</span></span> (oficial)</h3>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:6px;font-size:.88rem">
+                            <div style="display:flex;gap:6px"><span style="color:var(--c-green)">✓</span><span
+                                    style="color:#e2e8f0">Datos estructurados (<span class="g gl">JSON<span
+                                            class="t">JavaScript Object Notation — formato ligero de intercambio de
+                                            datos con pares clave-valor, ej: {"nombre":"Ana","edad":25}. Estándar de
+                                            facto en APIs web.</span></span>)</span></div>
+                            <div style="display:flex;gap:6px"><span style="color:var(--c-green)">✓</span><span
+                                    style="color:#e2e8f0">Legal y estable</span></div>
+                            <div style="display:flex;gap:6px"><span style="color:var(--c-green)">✓</span><span
+                                    style="color:#e2e8f0">Autenticación clara (<span class="g gl">API keys<span
+                                            class="t">Clave única que identifica a tu app ante el servicio. Funciona
+                                            como contraseña para aplicar límites de uso y rastrear
+                                            solicitudes.</span></span>)</span></div>
+                            <div style="display:flex;gap:6px"><span style="color:var(--c-red)">✗</span><span
+                                    style="color:var(--text-muted)">Limitada por <span class="g gl">rate limits<span
+                                            class="t">Restricción sobre cuántas solicitudes puedes hacer por
+                                            minuto/hora. Ej: la API de X permite ~300 requests cada 15
+                                            minutos.</span></span> y costo</span></div>
+                            <div style="display:flex;gap:6px"><span style="color:var(--c-red)">✗</span><span
+                                    style="color:var(--text-muted)">No todos los sitios ofrecen API</span></div>
+                        </div>
+                    </div>
+                    <div class="cb" style="padding:1.2rem;border-top:3px solid var(--accent-primary)">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                            <div style="background:rgba(56,189,248,.15);border-radius:10px;padding:8px 10px"><i
+                                    class="fa-solid fa-spider" style="color:var(--accent-primary)"></i></div>
+                            <h3 style="margin:0;font-size:1.15rem;color:#fff">Web Scraping</h3>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:6px;font-size:.88rem">
+                            <div style="display:flex;gap:6px"><span style="color:var(--c-green)">✓</span><span
+                                    style="color:#e2e8f0">Funciona con cualquier sitio público</span></div>
+                            <div style="display:flex;gap:6px"><span style="color:var(--c-green)">✓</span><span
+                                    style="color:#e2e8f0">Acceso gratuito al contenido</span></div>
+                            <div style="display:flex;gap:6px"><span style="color:var(--c-green)">✓</span><span
+                                    style="color:#e2e8f0">Flexible: extraes exactamente lo que necesitas</span></div>
+                            <div style="display:flex;gap:6px"><span style="color:var(--c-red)">✗</span><span
+                                    style="color:var(--text-muted)">Frágil si el <span class="g">HTML<span
+                                            class="t">HyperText Markup Language — lenguaje que define la estructura de
+                                            páginas web. Cada elemento tiene una etiqueta que BeautifulSoup puede leer y
+                                            navegar.</span></span> del sitio cambia</span></div>
+                            <div style="display:flex;gap:6px"><span style="color:var(--c-red)">✗</span><span
+                                    style="color:var(--text-muted)">Puede violar los Términos de Servicio</span></div>
+                        </div>
+                        <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+                            <span class="tag" style="color:var(--accent-primary)"><span class="g gl"
+                                    style="border-bottom-color:rgba(56,189,248,.3)">BeautifulSoup<span
+                                        class="t">Librería de Python que convierte HTML en un árbol de objetos
+                                        navegable, permitiendo buscar y extraer datos específicos de cualquier página
+                                        web.</span></span></span>
+                            <span class="tag" style="color:var(--accent-primary)"><span class="g"
+                                    style="border-bottom-color:rgba(56,189,248,.3)">Selenium<span class="t">Herramienta
+                                        que controla un navegador real (Chrome, Firefox) de forma programática. Útil
+                                        para sitios con contenido dinámico cargado por JavaScript.</span></span></span>
+                            <span class="tag" style="color:var(--accent-primary)"><span class="g gr"
+                                    style="border-bottom-color:rgba(56,189,248,.3)">Scrapy<span class="t">Framework de
+                                        Python para web scraping a gran escala. Incluye sistema de colas, concurrencia y
+                                        exportación automática. Ideal para scrapear miles de
+                                        páginas.</span></span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- S6: DEMO SCRAPING -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1250px">
+                <h2 style="font-size:2rem;margin-bottom:4px">[Demo] Web Scraping de Productos</h2>
+                <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:12px">Extraemos títulos y precios de
+                    libros desde una página web pública de práctica.</p>
+                <div style="display:grid;grid-template-columns:1.15fr .85fr;gap:14px;align-items:start">
+                    <div class="code-wrap">
+                        <div class="mch">
+                            <div class="dots">
+                                <div class="dot dot-r"></div>
+                                <div class="dot dot-y"></div>
+                                <div class="dot dot-g"></div>
+                            </div><span class="mt">python — scraping_productos.py</span>
+                        </div>
+                        <pre><span style="color:#c084fc">import</span> <span style="color:#38bdf8">requests</span>
+<span style="color:#c084fc">from</span> <span style="color:#38bdf8">bs4</span> <span style="color:#c084fc">import</span> <span style="color:#fff">BeautifulSoup</span>
+
+<span style="color:#64748b"># 1. Descargamos el HTML de la página</span>
+<span style="color:#94a3b8">url</span> <span style="color:#c084fc">=</span> <span style="color:#4ade80">"https://books.toscrape.com/"</span>
+<span style="color:#94a3b8">respuesta</span> <span style="color:#c084fc">=</span> <span style="color:#38bdf8">requests</span>.<span style="color:#38bdf8">get</span>(<span style="color:#94a3b8">url</span>)
+
+<span style="color:#64748b"># 2. Parseamos el HTML con BeautifulSoup</span>
+<span style="color:#94a3b8">soup</span> <span style="color:#c084fc">=</span> <span style="color:#38bdf8">BeautifulSoup</span>(<span style="color:#94a3b8">respuesta</span>.text, <span style="color:#4ade80">"html.parser"</span>)
+
+<span style="color:#64748b"># 3. Buscamos todos los artículos de libros</span>
+<span style="color:#94a3b8">libros</span> <span style="color:#c084fc">=</span> <span style="color:#94a3b8">soup</span>.<span style="color:#38bdf8">find_all</span>(<span style="color:#4ade80">"article"</span>, class_=<span style="color:#4ade80">"product_pod"</span>)
+
+<span style="color:#c084fc">for</span> <span style="color:#94a3b8">libro</span> <span style="color:#c084fc">in</span> <span style="color:#94a3b8">libros</span>[:<span style="color:#f59e0b">5</span>]:
+    <span style="color:#94a3b8">titulo</span> <span style="color:#c084fc">=</span> <span style="color:#94a3b8">libro</span>.<span style="color:#38bdf8">h3</span>.<span style="color:#38bdf8">a</span>[<span style="color:#4ade80">"title"</span>]
+    <span style="color:#94a3b8">precio</span> <span style="color:#c084fc">=</span> <span style="color:#94a3b8">libro</span>.<span style="color:#38bdf8">find</span>(<span style="color:#4ade80">"p"</span>, class_=<span style="color:#4ade80">"price_color"</span>).text
+    <span style="color:#94a3b8">rating</span> <span style="color:#c084fc">=</span> <span style="color:#94a3b8">libro</span>.<span style="color:#38bdf8">p</span>[<span style="color:#4ade80">"class"</span>][<span style="color:#f59e0b">1</span>]
+    <span style="color:#38bdf8">print</span>(f<span style="color:#4ade80">"📕 {titulo} | {precio} | ⭐ {rating}"</span>)</pre>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:12px">
+                        <div class="cb"
+                            style="padding:1rem 1.2rem;border-left:3px solid var(--accent-secondary);background:rgba(192,132,252,.04)">
+                            <p style="margin:0 0 6px;font-size:.9rem"><strong style="color:#e2e8f0">¿Qué hace cada
+                                    línea?</strong></p>
+                            <p style="margin:0;font-size:.85rem;color:var(--text-muted);line-height:1.6"><span
+                                    class="tag" style="color:var(--accent-primary)">requests.get()</span> descarga el
+                                HTML como lo haría un navegador.<br /><span class="tag"
+                                    style="color:var(--accent-primary)">BeautifulSoup()</span> convierte ese HTML en un
+                                árbol navegable.<br /><span class="tag"
+                                    style="color:var(--accent-primary)">find_all()</span> busca elementos por <span
+                                    class="g gl">selector CSS<span class="t">Patrón que identifica elementos HTML por
+                                        etiqueta, clase o id. Ej: "article.product_pod" busca todos los &lt;article&gt;
+                                        con clase "product_pod".</span></span>.</p>
+                        </div>
+                        <div
+                            style="background:#0d1117;border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden">
+                            <div
+                                style="padding:6px 12px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:8px">
+                                <i class="fa-solid fa-terminal" style="color:var(--c-green);font-size:.7rem"></i><span
+                                    style="font-family:'Fira Code',monospace;font-size:.7rem;color:#64748b">Output
+                                    esperado</span>
+                            </div>
+                            <pre
+                                style="padding:.8rem 1rem;font-size:.78rem;line-height:1.7;color:#94a3b8;border:none;box-shadow:none">📕 A Light in the Attic | £51.77 | ⭐ Three
+📕 Tipping the Velvet | £53.74 | ⭐ One
+📕 Soumission | £50.10 | ⭐ One
+📕 Sharp Objects | £47.82 | ⭐ Four
+📕 Sapiens | £54.23 | ⭐ Five</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- S7: HTML a DataFrame -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1250px">
+                <h2 style="font-size:2rem;margin-bottom:4px">[Demo] De HTML a <span class="g">DataFrame<span
+                            class="t">Estructura tabular de Pandas — piensen en ella como una hoja de Excel dentro de
+                            Python: filas, columnas, filtros y fórmulas, todo programable.</span></span></h2>
+                <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:12px">Convertimos los datos scrapeados
+                    en una tabla de <span class="g">Pandas<span class="t">Librería de Python estándar para manipulación
+                            de datos tabulares. Permite leer CSV/Excel, filtrar, agrupar, calcular estadísticas y
+                            más.</span></span> para aplicar minería.</p>
+                <div style="display:grid;grid-template-columns:1.15fr .85fr;gap:14px;align-items:start">
+                    <div class="code-wrap">
+                        <div class="mch">
+                            <div class="dots">
+                                <div class="dot dot-r"></div>
+                                <div class="dot dot-y"></div>
+                                <div class="dot dot-g"></div>
+                            </div><span class="mt">python — scraping_a_dataframe.py</span>
+                        </div>
+                        <pre><span style="color:#c084fc">import</span> <span style="color:#38bdf8">pandas</span> <span style="color:#c084fc">as</span> <span style="color:#94a3b8">pd</span>
+
+<span style="color:#64748b"># Construimos una lista de diccionarios</span>
+<span style="color:#94a3b8">datos</span> <span style="color:#c084fc">=</span> []
+<span style="color:#c084fc">for</span> <span style="color:#94a3b8">libro</span> <span style="color:#c084fc">in</span> <span style="color:#94a3b8">libros</span>:
+    <span style="color:#94a3b8">datos</span>.<span style="color:#38bdf8">append</span>({
+        <span style="color:#4ade80">"titulo"</span>: <span style="color:#94a3b8">libro</span>.<span style="color:#38bdf8">h3</span>.<span style="color:#38bdf8">a</span>[<span style="color:#4ade80">"title"</span>],
+        <span style="color:#4ade80">"precio"</span>: <span style="color:#38bdf8">float</span>(<span style="color:#94a3b8">libro</span>.<span style="color:#38bdf8">find</span>(<span style="color:#4ade80">"p"</span>, class_=<span style="color:#4ade80">"price_color"</span>).text[<span style="color:#f59e0b">1:</span>]),
+        <span style="color:#4ade80">"rating"</span>: <span style="color:#94a3b8">libro</span>.<span style="color:#38bdf8">p</span>[<span style="color:#4ade80">"class"</span>][<span style="color:#f59e0b">1</span>]
+    })
+
+<span style="color:#94a3b8">df</span> <span style="color:#c084fc">=</span> <span style="color:#38bdf8">pd</span>.<span style="color:#38bdf8">DataFrame</span>(<span style="color:#94a3b8">datos</span>)
+<span style="color:#94a3b8">mapa</span> <span style="color:#c084fc">=</span> {<span style="color:#4ade80">"One"</span>:<span style="color:#f59e0b">1</span>,<span style="color:#4ade80">"Two"</span>:<span style="color:#f59e0b">2</span>,<span style="color:#4ade80">"Three"</span>:<span style="color:#f59e0b">3</span>,<span style="color:#4ade80">"Four"</span>:<span style="color:#f59e0b">4</span>,<span style="color:#4ade80">"Five"</span>:<span style="color:#f59e0b">5</span>}
+<span style="color:#94a3b8">df</span>[<span style="color:#4ade80">"rating_num"</span>] <span style="color:#c084fc">=</span> <span style="color:#94a3b8">df</span>[<span style="color:#4ade80">"rating"</span>].<span style="color:#38bdf8">map</span>(<span style="color:#94a3b8">mapa</span>)
+
+<span style="color:#64748b"># Guardamos nuestros datos listos para el análisis</span>
+<span style="color:#94a3b8">df</span>.<span style="color:#38bdf8">to_csv</span>(<span style="color:#4ade80">"mis_libros.csv"</span>, index=<span style="color:#f59e0b">False</span>)
+<span style="color:#38bdf8">print</span>(<span style="color:#4ade80">"✅ DataFrame guardado exitosamente."</span>)</pre>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:12px">
+                        <div class="cb"
+                            style="padding:1rem 1.2rem;border-left:3px solid var(--c-green);background:rgba(74,222,128,.04)">
+                            <i class="fa-solid fa-arrow-right" style="color:var(--c-green);font-size:.85rem"></i>
+                            <p style="margin:4px 0 0;font-size:.88rem;color:#e2e8f0;line-height:1.6"><strong
+                                    style="color:#fff">El patrón clave:</strong><br />Web → HTML → BeautifulSoup → Lista
+                                de dicts → DataFrame → CSV → ¡Listo para minería!</p>
+                        </div>
+                        <div class="co" style="border-color:var(--c-orange)"><i class="fa-solid fa-triangle-exclamation"
+                                style="color:var(--c-orange);margin-top:2px"></i>
+                            <p style="margin:0;font-size:.85rem;color:var(--text-muted);line-height:1.5"><strong
+                                    style="color:var(--c-orange)">Ética:</strong> Siempre revisar el archivo <span
+                                    class="g gl">robots.txt<span class="t">Archivo en la raíz de cada sitio (ej:
+                                        sitio.com/robots.txt) que indica a bots qué páginas pueden y no pueden acceder.
+                                        Es un estándar de cortesía y legalidad.</span></span> del sitio antes de
+                                scrapear.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- S8: ÉTICA -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">Ética y Legalidad en Scraping y Minería Social</h2>
+                <p
+                    style="color:var(--c-red);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">
+                    Lo que TODO profesional debe saber</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+                    <div class="cb"
+                        style="padding:1rem 1.2rem;border-left:4px solid var(--c-red);background:rgba(248,113,113,.04)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i
+                                class="fa-solid fa-file-contract" style="color:var(--c-red)"></i><strong
+                                style="color:#fff;font-size:.92rem">robots.txt y ToS</strong></div>
+                        <p style="margin:0;font-size:.85rem">Siempre revisar robots.txt antes de scrapear. Si un sitio
+                            prohíbe scraping en sus Términos de Servicio, no lo hagas.</p>
+                    </div>
+                    <div class="cb"
+                        style="padding:1rem 1.2rem;border-left:4px solid var(--c-orange);background:rgba(245,158,11,.04)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i
+                                class="fa-solid fa-gauge-high" style="color:var(--c-orange)"></i><strong
+                                style="color:#fff;font-size:.92rem">Rate Limiting</strong></div>
+                        <p style="margin:0;font-size:.85rem">No bombardear un servidor con miles de requests. Agregar
+                            pausas (<span class="tag"
+                                style="color:var(--c-orange);font-size:.78rem">time.sleep(2)</span>) entre solicitudes.
+                        </p>
+                    </div>
+                    <div class="cb"
+                        style="padding:1rem 1.2rem;border-left:4px solid var(--accent-secondary);background:rgba(192,132,252,.04)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i
+                                class="fa-solid fa-user-shield" style="color:var(--accent-secondary)"></i><strong
+                                style="color:#fff;font-size:.92rem">Datos personales y <span class="g gl">GDPR<span
+                                        class="t">General Data Protection Regulation — regulación europea de protección
+                                        de datos. Costa Rica tiene legislación similar (Ley 8968). Aplica a cualquier
+                                        dato personal.</span></span></strong></div>
+                        <p style="margin:0;font-size:.85rem">Nunca recopilar nombres, correos o datos personales sin
+                            consentimiento. "Datos públicos" ≠ "datos de uso libre".</p>
+                    </div>
+                    <div class="cb"
+                        style="padding:1rem 1.2rem;border-left:4px solid var(--accent-primary);background:rgba(56,189,248,.04)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i
+                                class="fa-solid fa-scale-balanced" style="color:var(--accent-primary)"></i><strong
+                                style="color:#fff;font-size:.92rem">Público ≠ libre</strong></div>
+                        <p style="margin:0;font-size:.85rem">Un tweet público NO te autoriza a almacenarlo masivamente,
+                            crear perfiles o revenderlo. Verificar <span class="g gr">copyright<span class="t">Derecho
+                                    de propiedad intelectual que protege el contenido original. Los usuarios retienen
+                                    derechos sobre su contenido aunque sea público.</span></span> y licencias.</p>
+                    </div>
+                </div>
+                <div class="co" style="border-color:var(--c-green)"><i class="fa-solid fa-check-circle"
+                        style="color:var(--c-green);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.88rem;color:#e2e8f0"><strong style="color:var(--c-green)">Regla de
+                            oro:</strong> Si tienes duda sobre si puedes scrapear algo, probablemente no deberías. Usa
+                        APIs oficiales cuando existan y siempre anonimiza datos personales.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- S9: CLICKSTREAM -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">Análisis de Clickstream</h2>
+                <p
+                    style="color:var(--accent-primary);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">
+                    ¿Qué hacen los usuarios en tu sitio web?</p>
+                <div class="co" style="border-color:var(--accent-secondary);margin-bottom:14px"><i
+                        class="fa-solid fa-mouse-pointer" style="color:var(--accent-secondary);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.92rem;color:#e2e8f0;line-height:1.5">Un <strong
+                            style="color:#fff">clickstream</strong> es la secuencia de clics de un usuario al navegar un
+                        sitio. Cada clic registra: la página, el <span class="g">timestamp<span class="t">Marca temporal
+                                exacta de un evento, ej: "2026-03-12T14:30:05Z". Permite calcular duraciones y ordenar
+                                eventos.</span></span>, la duración y de dónde vino.</p>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+                    <div class="cb" style="padding:.9rem 1rem;text-align:center"><i class="fa-solid fa-route"
+                            style="color:var(--accent-primary);font-size:1.3rem;margin-bottom:6px"></i>
+                        <p style="margin:0;font-size:.85rem"><strong style="color:#fff">Navegación
+                                típica</strong><br />¿Qué camino siguen los usuarios más frecuentemente?</p>
+                    </div>
+                    <div class="cb" style="padding:.9rem 1rem;text-align:center"><i
+                            class="fa-solid fa-right-from-bracket"
+                            style="color:var(--c-red);font-size:1.3rem;margin-bottom:6px"></i>
+                        <p style="margin:0;font-size:.85rem"><strong style="color:#fff"><span class="g">Tasa de
+                                    abandono<span class="t">Bounce rate — porcentaje de sesiones donde el usuario se va
+                                        tras ver una sola página. Alta tasa = algo no atrae al
+                                        usuario.</span></span></strong><br />¿En qué página dejan el sitio?</p>
+                    </div>
+                    <div class="cb" style="padding:.9rem 1rem;text-align:center"><i class="fa-solid fa-filter"
+                            style="color:var(--c-green);font-size:1.3rem;margin-bottom:6px"></i>
+                        <p style="margin:0;font-size:.85rem"><strong style="color:#fff"><span class="g">Embudo de
+                                    conversión<span class="t">Modelo que visualiza el recorrido del usuario hasta la
+                                        acción deseada (compra). Se llama "embudo" porque en cada paso se pierden
+                                        usuarios.</span></span></strong><br />¿Cuántos llegan al checkout?</p>
+                    </div>
+                </div>
+                <div
+                    style="display:flex;align-items:center;gap:8px;justify-content:center;padding:10px;background:rgba(255,255,255,.03);border-radius:12px;border:1px solid var(--glass-border)">
+                    <span class="tag"
+                        style="color:var(--accent-primary);padding:6px 14px;font-size:.85rem">Home</span><i
+                        class="fa-solid fa-arrow-right" style="color:#475569;font-size:.7rem"></i>
+                    <span class="tag"
+                        style="color:var(--accent-secondary);padding:6px 14px;font-size:.85rem">Catálogo</span><i
+                        class="fa-solid fa-arrow-right" style="color:#475569;font-size:.7rem"></i>
+                    <span class="tag" style="color:var(--c-cyan);padding:6px 14px;font-size:.85rem">Producto</span><i
+                        class="fa-solid fa-arrow-right" style="color:#475569;font-size:.7rem"></i>
+                    <span class="tag" style="color:var(--c-green);padding:6px 14px;font-size:.85rem">Carrito</span><i
+                        class="fa-solid fa-arrow-right" style="color:#475569;font-size:.7rem"></i>
+                    <span class="tag" style="color:#fbbf24;padding:6px 14px;font-size:.85rem">Checkout ✓</span>
+                    <span style="margin-left:12px;font-size:.78rem;color:#64748b">← embudo típico</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- S10: DEMO CLICKSTREAM -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1250px">
+                <h2 style="font-size:2rem;margin-bottom:4px">[Demo] Análisis de Clickstream con Pandas</h2>
+                <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:12px">Simulamos datos de navegación y
+                    analizamos patrones de conversión.</p>
+                <div style="display:grid;grid-template-columns:1.15fr .85fr;gap:14px;align-items:start">
+                    <div class="code-wrap">
+                        <div class="mch">
+                            <div class="dots">
+                                <div class="dot dot-r"></div>
+                                <div class="dot dot-y"></div>
+                                <div class="dot dot-g"></div>
+                            </div><span class="mt">python — clickstream_analysis.py</span>
+                        </div>
+                        <pre><span style="color:#c084fc">import</span> <span style="color:#38bdf8">pandas</span> <span style="color:#c084fc">as</span> <span style="color:#94a3b8">pd</span>
+
+<span style="color:#94a3b8">clicks</span> <span style="color:#c084fc">=</span> <span style="color:#38bdf8">pd</span>.<span style="color:#38bdf8">DataFrame</span>({
+  <span style="color:#4ade80">"sesion"</span>: [<span style="color:#4ade80">"S1"</span>,<span style="color:#4ade80">"S1"</span>,<span style="color:#4ade80">"S1"</span>,<span style="color:#4ade80">"S2"</span>,<span style="color:#4ade80">"S2"</span>,<span style="color:#4ade80">"S3"</span>,<span style="color:#4ade80">"S3"</span>,<span style="color:#4ade80">"S3"</span>,<span style="color:#4ade80">"S3"</span>,<span style="color:#4ade80">"S4"</span>],
+  <span style="color:#4ade80">"pagina"</span>: [<span style="color:#4ade80">"Home"</span>,<span style="color:#4ade80">"Catálogo"</span>,<span style="color:#4ade80">"Producto"</span>,<span style="color:#4ade80">"Home"</span>,<span style="color:#4ade80">"Catálogo"</span>,
+             <span style="color:#4ade80">"Home"</span>,<span style="color:#4ade80">"Catálogo"</span>,<span style="color:#4ade80">"Carrito"</span>,<span style="color:#4ade80">"Checkout"</span>,<span style="color:#4ade80">"Home"</span>],
+  <span style="color:#4ade80">"duracion_seg"</span>: [<span style="color:#f59e0b">12</span>,<span style="color:#f59e0b">45</span>,<span style="color:#f59e0b">90</span>,<span style="color:#f59e0b">8</span>,<span style="color:#f59e0b">20</span>,<span style="color:#f59e0b">15</span>,<span style="color:#f59e0b">60</span>,<span style="color:#f59e0b">30</span>,<span style="color:#f59e0b">120</span>,<span style="color:#f59e0b">5</span>]
+})
+
+<span style="color:#38bdf8">print</span>(<span style="color:#94a3b8">clicks</span>[<span style="color:#4ade80">"pagina"</span>].<span style="color:#38bdf8">value_counts</span>())
+
+<span style="color:#94a3b8">total</span> <span style="color:#c084fc">=</span> <span style="color:#94a3b8">clicks</span>[<span style="color:#4ade80">"sesion"</span>].<span style="color:#38bdf8">nunique</span>()
+<span style="color:#94a3b8">conv</span> <span style="color:#c084fc">=</span> <span style="color:#94a3b8">clicks</span>[<span style="color:#94a3b8">clicks</span>[<span style="color:#4ade80">"pagina"</span>]==<span style="color:#4ade80">"Checkout"</span>][<span style="color:#4ade80">"sesion"</span>].<span style="color:#38bdf8">nunique</span>()
+<span style="color:#38bdf8">print</span>(f<span style="color:#4ade80">"Tasa de conversión: {conv/total*100:.0f}%"</span>)</pre>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:10px">
+                        <div
+                            style="background:#0d1117;border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden">
+                            <div
+                                style="padding:6px 12px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:8px">
+                                <i class="fa-solid fa-terminal" style="color:var(--c-green);font-size:.7rem"></i><span
+                                    style="font-family:'Fira Code',monospace;font-size:.7rem;color:#64748b">Output</span>
+                            </div>
+                            <pre
+                                style="padding:.7rem 1rem;font-size:.78rem;line-height:1.7;color:#94a3b8;border:none;box-shadow:none">Home        <span style="color:#f59e0b">4</span>
+Catálogo    <span style="color:#f59e0b">3</span>
+Producto    <span style="color:#f59e0b">1</span>
+Carrito     <span style="color:#f59e0b">1</span>
+Checkout    <span style="color:#f59e0b">1</span>
+
+Tasa de conversión: <span style="color:var(--c-green)">25%</span></pre>
+                        </div>
+                        <div class="cb"
+                            style="padding:.9rem 1.1rem;border-left:3px solid var(--accent-primary);background:rgba(56,189,248,.04)">
+                            <p style="margin:0;font-size:.85rem;color:#e2e8f0;line-height:1.5"><strong
+                                    style="color:var(--accent-primary)">Insight:</strong> Solo 1 de 4 sesiones completa
+                                la compra. S2 y S4 abandonan antes de ver un producto — ¿el catálogo no es atractivo?
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- S11: GRAFOS -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">Análisis de Redes Sociales como Grafos</h2>
+                <p
+                    style="color:var(--accent-primary);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">
+                    <span class="g gl">Social Network Analysis<span class="t">Disciplina que estudia las relaciones
+                            entre actores usando teoría de grafos y métricas de centralidad para entender la estructura
+                            de la red.</span></span> (SNA)
+                </p>
+                <div class="co" style="border-color:var(--accent-secondary);margin-bottom:14px"><i
+                        class="fa-solid fa-circle-nodes" style="color:var(--accent-secondary);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.92rem;color:#e2e8f0">Las redes sociales son naturalmente <strong
+                            style="color:#fff">grafos</strong>: los usuarios son <strong
+                            style="color:var(--accent-primary)">nodos</strong> y las interacciones son <strong
+                            style="color:var(--accent-secondary)">aristas</strong>.</p>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+                    <div class="cb" style="padding:1rem;border-left:4px solid var(--accent-primary);position:relative">
+                        <p style="margin:0 0 4px;font-size:.9rem"><strong style="color:var(--accent-primary)"><span
+                                    class="g gl">Centralidad de grado<span class="t">Degree centrality — mide cuántas
+                                        conexiones tiene un nodo. A más conexiones, mayor centralidad. La métrica más
+                                        simple de influencia.</span></span></strong></p>
+                        <p style="margin:0;font-size:.82rem">¿Quién tiene más conexiones? → Identifica <em>hubs</em>.
+                        </p>
+                        <div
+                            style="margin-top:10px;text-align:center;font-family:'Fira Code', monospace;color:var(--accent-primary);font-size:.7rem;line-height:1.2;background:rgba(0,0,0,.2);padding:10px;border-radius:8px">
+                            Ana ➔ <strong style="color:#fff">Carlos</strong> ➔ Diana<br>
+                            Beto ⬈ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ⬉ Luis
+                        </div>
+                    </div>
+                    <div class="cb" style="padding:1rem;border-left:4px solid var(--accent-secondary)">
+                        <p style="margin:0 0 4px;font-size:.9rem"><strong style="color:var(--accent-secondary)"><span
+                                    class="g">Centralidad de intermediación<span class="t">Betweenness centrality —
+                                        cuántas veces un nodo aparece en el camino más corto entre otros. Identifica
+                                        "puentes" entre comunidades.</span></span></strong></p>
+                        <p style="margin:0;font-size:.82rem">¿Quién conecta grupos? → Identifica <em>brokers</em>.</p>
+                    </div>
+                    <div class="cb" style="padding:1rem;border-left:4px solid var(--c-green)">
+                        <p style="margin:0 0 4px;font-size:.9rem"><strong style="color:var(--c-green)">Detección de
+                                comunidades</strong></p>
+                        <p style="margin:0;font-size:.82rem">¿Hay subgrupos? → <span class="g gl">Clústeres<span
+                                    class="t">Grupos de nodos densamente conectados entre sí pero con pocas conexiones
+                                    hacia el resto. Equivalente a "grupos de amigos".</span></span> de usuarios que
+                            interactúan frecuentemente.</p>
+                    </div>
+                </div>
+                <div class="co" style="border-color:var(--c-orange);margin-top:12px"><i class="fa-solid fa-store"
+                        style="color:var(--c-orange);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.85rem;color:#e2e8f0"><strong style="color:var(--c-orange)">Ejemplo
+                            real:</strong> Amazon usa grafos de co-compra: "Clientes que compraron X también compraron
+                        Y". Cada producto = nodo, cada co-compra = arista.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- S12: DEMO NETWORKX -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1250px">
+                <h2 style="font-size:2rem;margin-bottom:4px">[Demo] Grafos con <span class="g">NetworkX<span
+                            class="t">Librería de Python para crear, manipular y estudiar grafos. Incluye algoritmos de
+                            centralidad, detección de comunidades, caminos más cortos y visualización.</span></span>
+                </h2>
+                <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:12px">Construimos un grafo de menciones
+                    y encontramos al influenciador principal.</p>
+                <div style="display:grid;grid-template-columns:1.15fr .85fr;gap:14px;align-items:start">
+                    <div class="code-wrap">
+                        <div class="mch">
+                            <div class="dots">
+                                <div class="dot dot-r"></div>
+                                <div class="dot dot-y"></div>
+                                <div class="dot dot-g"></div>
+                            </div><span class="mt">python — social_graph.py</span>
+                        </div>
+                        <pre><span style="color:#c084fc">import</span> <span style="color:#38bdf8">networkx</span> <span style="color:#c084fc">as</span> <span style="color:#94a3b8">nx</span>
+
+<span style="color:#94a3b8">G</span> <span style="color:#c084fc">=</span> <span style="color:#38bdf8">nx</span>.<span style="color:#38bdf8">DiGraph</span>()
+<span style="color:#94a3b8">menciones</span> <span style="color:#c084fc">=</span> [
+    (<span style="color:#4ade80">"Ana"</span>,<span style="color:#4ade80">"Carlos"</span>), (<span style="color:#4ade80">"Ana"</span>,<span style="color:#4ade80">"Luis"</span>),
+    (<span style="color:#4ade80">"Beto"</span>,<span style="color:#4ade80">"Carlos"</span>), (<span style="color:#4ade80">"Beto"</span>,<span style="color:#4ade80">"Ana"</span>),
+    (<span style="color:#4ade80">"Carlos"</span>,<span style="color:#4ade80">"Diana"</span>), (<span style="color:#4ade80">"Luis"</span>,<span style="color:#4ade80">"Carlos"</span>),
+    (<span style="color:#4ade80">"Diana"</span>,<span style="color:#4ade80">"Carlos"</span>), (<span style="color:#4ade80">"Eva"</span>,<span style="color:#4ade80">"Diana"</span>),
+]
+<span style="color:#94a3b8">G</span>.<span style="color:#38bdf8">add_edges_from</span>(<span style="color:#94a3b8">menciones</span>)
+
+<span style="color:#94a3b8">centralidad</span> <span style="color:#c084fc">=</span> <span style="color:#38bdf8">nx</span>.<span style="color:#38bdf8">in_degree_centrality</span>(<span style="color:#94a3b8">G</span>)
+<span style="color:#94a3b8">top</span> <span style="color:#c084fc">=</span> <span style="color:#38bdf8">max</span>(<span style="color:#94a3b8">centralidad</span>, key=<span style="color:#94a3b8">centralidad</span>.get)
+<span style="color:#38bdf8">print</span>(f<span style="color:#4ade80">"Influenciador: {top}"</span>)
+<span style="color:#38bdf8">print</span>(f<span style="color:#4ade80">"Centralidad: {centralidad[top]:.2f}"</span>)</pre>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:10px">
+                        <div
+                            style="background:#0d1117;border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden">
+                            <div
+                                style="padding:6px 12px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:8px">
+                                <i class="fa-solid fa-terminal" style="color:var(--c-green);font-size:.7rem"></i><span
+                                    style="font-family:'Fira Code',monospace;font-size:.7rem;color:#64748b">Output</span>
+                            </div>
+                            <pre
+                                style="padding:.7rem 1rem;font-size:.8rem;line-height:1.8;color:#94a3b8;border:none;box-shadow:none">Influenciador: <span style="color:#4ade80">Carlos</span>
+Centralidad: <span style="color:#f59e0b">0.80</span></pre>
+                        </div>
+                        <div class="cb"
+                            style="padding:1rem 1.2rem;border-left:3px solid var(--accent-primary);background:rgba(56,189,248,.04)">
+                            <p style="margin:0;font-size:.85rem;color:#e2e8f0;line-height:1.6"><strong
+                                    style="color:#fff">¿Qué significa 0.80?</strong> Carlos recibe menciones del 80% del
+                                resto de los usuarios participantes, de acuerdo a la fórmula N/N-1. Definitivamente, es
+                                la figura central del grupo.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- S13: PIPELINE -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">Pipeline: Redes Sociales → Insight</h2>
+                <p
+                    style="color:var(--accent-primary);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">
+                    De datos crudos a decisiones de negocio</p>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                    <div class="cb"
+                        style="padding:.9rem 1.2rem;border-left:4px solid var(--accent-primary);background:rgba(56,189,248,.04);display:flex;gap:12px">
+                        <div
+                            style="background:var(--accent-primary);color:#0f172a;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0">
+                            1</div>
+                        <p style="margin:0;font-size:.92rem;color:#e2e8f0"><strong
+                                style="color:#fff">Recolección:</strong> Scraping de reseñas o consumo de API (X,
+                            Reddit, YouTube).</p>
+                    </div>
+                    <div class="cb"
+                        style="padding:.9rem 1.2rem;border-left:4px solid var(--accent-secondary);background:rgba(192,132,252,.04);display:flex;gap:12px">
+                        <div
+                            style="background:var(--accent-secondary);color:#0f172a;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0">
+                            2</div>
+                        <p style="margin:0;font-size:.92rem;color:#e2e8f0"><strong style="color:#fff">Limpieza:</strong>
+                            Eliminar HTML residual, emojis irrelevantes, URLs, duplicados.</p>
+                    </div>
+                    <div class="cb"
+                        style="padding:.9rem 1.2rem;border-left:4px solid var(--c-cyan);background:rgba(34,211,238,.04);display:flex;gap:12px">
+                        <div
+                            style="background:var(--c-cyan);color:#0f172a;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0">
+                            3</div>
+                        <p style="margin:0;font-size:.92rem;color:#e2e8f0"><strong style="color:#fff">Preprocesamiento
+                                NLP:</strong> Tokenizar, eliminar <span class="g">stopwords<span class="t">Palabras
+                                    vacías sin significado analítico ("el", "la", "de", "y"). Se eliminan para que los
+                                    algoritmos se enfoquen en palabras con contenido semántico.</span></span>,
+                            lematizar.</p>
+                    </div>
+                    <div class="cb"
+                        style="padding:.9rem 1.2rem;border-left:4px solid var(--c-green);background:rgba(74,222,128,.04);display:flex;gap:12px">
+                        <div
+                            style="background:var(--c-green);color:#0f172a;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0">
+                            4</div>
+                        <p style="margin:0;font-size:.92rem;color:#e2e8f0"><strong style="color:#fff">Análisis:</strong>
+                            Sentimiento (VADER), frecuencia (<span class="g">TF-IDF<span class="t">Term
+                                    Frequency–Inverse Document Frequency — pondera la importancia de una palabra: si
+                                    aparece mucho en un doc pero poco en los demás, es muy relevante.</span></span>),
+                            clustering de temas.</p>
+                    </div>
+                    <div class="cb"
+                        style="padding:.9rem 1.2rem;border-left:4px solid #fbbf24;background:rgba(251,191,36,.04);display:flex;gap:12px">
+                        <div
+                            style="background:#fbbf24;color:#0f172a;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0">
+                            5</div>
+                        <p style="margin:0;font-size:.92rem;color:#e2e8f0"><strong style="color:#fff">Acción:</strong>
+                            Dashboard, alertas de sentimiento negativo, recomendaciones al equipo de marketing.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- S14: TITULO CASOS -->
+        <div class="slide">
+            <div class="card" style="text-align:center;justify-content:center;height:50vh">
+                <p
+                    style="color:var(--accent-secondary);letter-spacing:3px;text-transform:uppercase;font-size:.85rem;font-weight:700">
+                    Segunda parte</p>
+                <h1 style="font-size:4rem">Casos de Uso<br />Específicos</h1>
+                <p style="font-size:1rem;color:var(--text-muted);max-width:600px;margin:8px auto 0">Cómo se aplica la
+                    minería de datos no estructurados en industrias reales.</p>
+            </div>
+        </div>
+
+        <!-- S15: E-COMMERCE -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">Caso 1: E-Commerce</h2>
+                <p
+                    style="color:var(--c-green);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">
+                    Minería de reseñas y comportamiento de compra</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--accent-primary)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i
+                                class="fa-solid fa-comment-dots" style="color:var(--accent-primary)"></i><strong
+                                style="color:#fff;font-size:.92rem">Análisis de reseñas</strong></div>
+                        <p style="margin:0;font-size:.85rem">Sentimiento a miles de reseñas para detectar
+                            automáticamente problemas de calidad o alta satisfacción.</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--accent-secondary)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i
+                                class="fa-solid fa-tags" style="color:var(--accent-secondary)"></i><strong
+                                style="color:#fff;font-size:.92rem">Sistemas de recomendación</strong></div>
+                        <p style="margin:0;font-size:.85rem"><span class="g gl">Reglas de asociación<span
+                                    class="t">Técnica que descubre relaciones "si A, entonces B" en transacciones. El
+                                    algoritmo Apriori es el más conocido. Ej: {pan, mantequilla} →
+                                    {leche}.</span></span> (Apriori): "Quienes compraron cámara también compraron
+                            trípode y tarjeta SD".</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-cyan)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i
+                                class="fa-solid fa-users" style="color:var(--c-cyan)"></i><strong
+                                style="color:#fff;font-size:.92rem">Segmentación de clientes</strong></div>
+                        <p style="margin:0;font-size:.85rem"><span class="g gl">Clustering<span class="t">Agrupamiento
+                                    no supervisado que agrupa datos similares sin etiquetas previas. K-Means es el
+                                    algoritmo más popular: defines cuántos grupos (K) quieres.</span></span> sobre
+                            clickstream + historial para perfiles: "impulsivo", "investigador", "cazador de ofertas".
+                        </p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-orange)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i
+                                class="fa-solid fa-chart-line" style="color:var(--c-orange)"></i><strong
+                                style="color:#fff;font-size:.92rem">Predicción de <span class="g gr">churn<span
+                                        class="t">Tasa de abandono de clientes — porcentaje que deja de comprar en un
+                                        período. Predecirlo permite actuar antes de perder al
+                                        cliente.</span></span></strong></div>
+                        <p style="margin:0;font-size:.85rem">Modelos de clasificación que predicen qué clientes dejarán
+                            de comprar basándose en patrones de navegación.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- S16: SALUD Y FINANZAS -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:12px">Caso 2 y 3: Salud y Finanzas</h2>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                    <div style="display:flex;flex-direction:column;gap:10px">
+                        <div
+                            style="display:flex;align-items:center;gap:10px;padding-bottom:8px;border-bottom:2px solid var(--c-pink)">
+                            <i class="fa-solid fa-heart-pulse" style="color:var(--c-pink);font-size:1.2rem"></i>
+                            <h3 style="margin:0;font-size:1.15rem;color:var(--c-pink)">Sector Salud</h3>
+                        </div>
+                        <div class="cb" style="padding:.9rem 1.1rem">
+                            <p style="margin:0;font-size:.85rem"><strong style="color:#fff">Minería de historiales
+                                    clínicos</strong><br />Analizar notas médicas en texto libre para detectar patrones
+                                de diagnóstico y efectos adversos.</p>
+                        </div>
+                        <div class="cb" style="padding:.9rem 1.1rem">
+                            <p style="margin:0;font-size:.85rem"><strong style="color:#fff">Vigilancia
+                                    epidemiológica</strong><br />Minar redes sociales para detectar brotes antes que los
+                                reportes oficiales (búsquedas de síntomas por zona).</p>
+                        </div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:10px">
+                        <div
+                            style="display:flex;align-items:center;gap:10px;padding-bottom:8px;border-bottom:2px solid var(--c-green)">
+                            <i class="fa-solid fa-coins" style="color:var(--c-green);font-size:1.2rem"></i>
+                            <h3 style="margin:0;font-size:1.15rem;color:var(--c-green)">Sector Financiero</h3>
+                        </div>
+                        <div class="cb" style="padding:.9rem 1.1rem">
+                            <p style="margin:0;font-size:.85rem"><strong style="color:#fff"><span
+                                        class="g gl">Sentiment-driven trading<span class="t">Estrategia de inversión que
+                                            usa sentimiento de noticias y redes sociales para anticipar movimientos
+                                            bursátiles.</span></span></strong><br />Fondos analizan sentimiento en X y
+                                noticias para anticipar movimientos del mercado.</p>
+                        </div>
+                        <div class="cb" style="padding:.9rem 1.1rem">
+                            <p style="margin:0;font-size:.85rem"><strong style="color:#fff">Detección de
+                                    fraude</strong><br />Patrones atípicos en transacciones (<span class="g gl">anomaly
+                                    detection<span class="t">Técnica que identifica datos muy desviados del patrón
+                                        normal. Ej: compra de $5,000 a las 3am desde otro país.</span></span>) y textos
+                                de reclamaciones de seguros.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- S17: MARKETING -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">Caso 4: Marketing Digital</h2>
+                <p
+                    style="color:var(--c-cyan);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">
+                    <span class="g gl">Social Listening<span class="t">Monitoreo automatizado de menciones de marca en
+                            redes sociales y foros. Detecta crisis de reputación, tendencias y oportunidades en tiempo
+                            real.</span></span> & Brand Intelligence
+                </p>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+                    <div class="cb" style="padding:1rem;text-align:center"><i class="fa-solid fa-ear-listen"
+                            style="color:var(--accent-primary);font-size:1.5rem;margin-bottom:8px"></i>
+                        <p style="margin:0 0 4px;font-size:.9rem"><strong style="color:#fff">Social Listening</strong>
+                        </p>
+                        <p style="margin:0;font-size:.82rem">Monitorear menciones en tiempo real. Detectar crisis antes
+                            de que escalen.</p>
+                    </div>
+                    <div class="cb" style="padding:1rem;text-align:center"><i class="fa-solid fa-magnifying-glass-chart"
+                            style="color:var(--accent-secondary);font-size:1.5rem;margin-bottom:8px"></i>
+                        <p style="margin:0 0 4px;font-size:.9rem"><strong style="color:#fff">Análisis de
+                                competencia</strong></p>
+                        <p style="margin:0;font-size:.82rem">Comparar sentimiento y volumen de menciones entre tu marca
+                            y la competencia.</p>
+                    </div>
+                    <div class="cb" style="padding:1rem;text-align:center"><i class="fa-solid fa-bullhorn"
+                            style="color:var(--c-green);font-size:1.5rem;margin-bottom:8px"></i>
+                        <p style="margin:0 0 4px;font-size:.9rem"><strong style="color:#fff"><span
+                                    class="g">Micro-influencers<span class="t">Usuarios con audiencias pequeñas pero
+                                        comprometidas (1K–50K seguidores). Tasas de engagement más altas que
+                                        celebridades y más accesibles para campañas.</span></span></strong></p>
+                        <p style="margin:0;font-size:.82rem">Usar grafos (centralidad) para encontrar influencers
+                            relevantes por nicho.</p>
+                    </div>
+                </div>
+                <div class="co" style="border-color:var(--accent-primary)"><i class="fa-solid fa-lightbulb"
+                        style="color:var(--accent-primary);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.88rem;color:#e2e8f0;line-height:1.5"><strong
+                            style="color:var(--accent-primary)">Ejemplo:</strong> Una cadena de restaurantes mina
+                        reseñas de Google Maps + Instagram para descubrir que aman el postre pero critican el tiempo de
+                        espera — sin encuestas.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- S18: TEXTBLOB vs VADER -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">Comparativa: <span class="g">TextBlob<span
+                            class="t">Librería de Python para procesamiento de texto. Usa un lexicón basado en Pattern.
+                            Entrenada en inglés, ofrece traducciones, corrección y análisis de
+                            sentimiento.</span></span> vs <span class="g">VADER<span class="t">Valence Aware Dictionary
+                            and sEntiment Reasoner — analizador diseñado para redes sociales. Entiende mayúsculas,
+                            exclamaciones, emojis y jerga informal.</span></span></h2>
+                <p
+                    style="color:var(--accent-primary);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">
+                    ¿Cuándo usar cada uno?</p>
+                <div style="border:1px solid var(--glass-border);border-radius:14px;overflow:hidden;margin-bottom:14px">
+                    <div
+                        style="display:grid;grid-template-columns:1fr 1fr 1fr;background:rgba(255,255,255,.06);padding:10px 16px;border-bottom:1px solid var(--glass-border);font-size:.85rem;font-weight:700">
+                        <span style="color:var(--text-muted)">Criterio</span><span
+                            style="color:var(--accent-secondary);text-align:center">TextBlob</span><span
+                            style="color:var(--accent-primary);text-align:center">VADER (NLTK)</span>
+                    </div>
+                    <div
+                        style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:8px 16px;border-bottom:1px solid rgba(255,255,255,.04);font-size:.83rem">
+                        <span style="color:#e2e8f0;font-weight:500">Ideal para</span><span
+                            style="color:var(--text-muted);text-align:center">Textos formales, reseñas
+                            largas</span><span style="color:var(--text-muted);text-align:center">Redes sociales, textos
+                            cortos</span>
+                    </div>
+                    <div
+                        style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:8px 16px;border-bottom:1px solid rgba(255,255,255,.04);font-size:.83rem;background:rgba(255,255,255,.02)">
+                        <span style="color:#e2e8f0;font-weight:500">Entiende MAYÚSCULAS/emojis</span><span
+                            style="color:var(--c-red);text-align:center">✗ No</span><span
+                            style="color:var(--c-green);text-align:center">✓ Sí</span>
+                    </div>
+                    <div
+                        style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:8px 16px;border-bottom:1px solid rgba(255,255,255,.04);font-size:.83rem">
+                        <span style="color:#e2e8f0;font-weight:500">Idioma nativo</span><span
+                            style="color:var(--text-muted);text-align:center">Inglés (español limitado)</span><span
+                            style="color:var(--text-muted);text-align:center">Inglés</span>
+                    </div>
+                    <div
+                        style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:8px 16px;border-bottom:1px solid rgba(255,255,255,.04);font-size:.83rem;background:rgba(255,255,255,.02)">
+                        <span style="color:#e2e8f0;font-weight:500">Métricas</span><span
+                            style="color:var(--text-muted);text-align:center">Polaridad + Subjetividad</span><span
+                            style="color:var(--text-muted);text-align:center">Compound + pos/neg/neu</span>
+                    </div>
+                    <div
+                        style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:8px 16px;border-bottom:1px solid rgba(255,255,255,.04);font-size:.83rem">
+                        <span style="color:#e2e8f0;font-weight:500">Velocidad</span><span
+                            style="color:var(--text-muted);text-align:center">Rápida</span><span
+                            style="color:var(--c-green);text-align:center">Muy rápida</span>
+                    </div>
+                    <div
+                        style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:8px 16px;font-size:.83rem;background:rgba(255,255,255,.02)">
+                        <span style="color:#e2e8f0;font-weight:500">Instalación</span><span
+                            style="color:var(--text-muted);text-align:center"><span class="tag"
+                                style="font-size:.75rem;color:var(--accent-secondary)">pip install
+                                textblob</span></span><span style="color:var(--text-muted);text-align:center"><span
+                                class="tag" style="font-size:.75rem;color:var(--accent-primary)">pip install
+                                nltk</span></span>
+                    </div>
+                </div>
+                <div class="co" style="border-color:var(--c-green)"><i class="fa-solid fa-check-circle"
+                        style="color:var(--c-green);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.88rem;color:#e2e8f0"><strong style="color:var(--c-green)">Para el
+                            proyecto:</strong> Si analizan reseñas de e-commerce (texto informal, emojis), VADER es
+                        mejor. Para textos formales o académicos, TextBlob es suficiente.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- S19: DEMO VADER -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1250px">
+                <h2 style="font-size:2rem;margin-bottom:4px">[Demo] Análisis de Sentimiento con VADER</h2>
+                <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:12px">VADER entiende mayúsculas, emojis
+                    y jerga — optimizado para redes sociales.</p>
+                <div style="display:grid;grid-template-columns:1.15fr .85fr;gap:14px;align-items:start">
+                    <div class="code-wrap">
+                        <div class="mch">
+                            <div class="dots">
+                                <div class="dot dot-r"></div>
+                                <div class="dot dot-y"></div>
+                                <div class="dot dot-g"></div>
+                            </div><span class="mt">python — vader_social.py</span>
+                        </div>
+                        <pre><span style="color:#c084fc">from</span> <span style="color:#38bdf8">nltk.sentiment</span> <span style="color:#c084fc">import</span> <span style="color:#fff">SentimentIntensityAnalyzer</span>
+<span style="color:#c084fc">import</span> <span style="color:#38bdf8">nltk</span>
+<span style="color:#38bdf8">nltk</span>.<span style="color:#38bdf8">download</span>(<span style="color:#4ade80">'vader_lexicon'</span>)
+
+<span style="color:#94a3b8">sia</span> <span style="color:#c084fc">=</span> <span style="color:#38bdf8">SentimentIntensityAnalyzer</span>()
+
+<span style="color:#94a3b8">df</span> <span style="color:#c084fc">=</span> <span style="color:#38bdf8">pd</span>.<span style="color:#38bdf8">DataFrame</span>({<span style="color:#4ade80">'reseñas'</span>: [
+    <span style="color:#4ade80">"This product is AMAZING!!! Best purchase ever 😍"</span>,
+    <span style="color:#4ade80">"Terrible experience. Never buying again."</span>,
+    <span style="color:#4ade80">"It's okay, nothing special but does the job."</span>,
+    <span style="color:#4ade80">"WORST customer service I've EVER dealt with 😡"</span>
+]})
+
+<span style="color:#94a3b8">df</span>[<span style="color:#4ade80">'sentiment_score'</span>] <span style="color:#c084fc">=</span> <span style="color:#94a3b8">df</span>[<span style="color:#4ade80">'reseñas'</span>].<span style="color:#38bdf8">apply</span>(<span style="color:#c084fc">lambda</span> <span style="color:#94a3b8">x</span>: <span style="color:#94a3b8">sia</span>.<span style="color:#38bdf8">polarity_scores</span>(<span style="color:#94a3b8">x</span>)[<span style="color:#4ade80">'compound'</span>])
+<span style="color:#38bdf8">print</span>(<span style="color:#94a3b8">df</span>[[<span style="color:#4ade80">'reseñas'</span>, <span style="color:#4ade80">'sentiment_score'</span>]])</pre>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:10px">
+                        <div
+                            style="background:#0d1117;border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden">
+                            <div
+                                style="padding:6px 12px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:8px">
+                                <i class="fa-solid fa-terminal" style="color:var(--c-green);font-size:.7rem"></i><span
+                                    style="font-family:'Fira Code',monospace;font-size:.7rem;color:#64748b">Output</span>
+                            </div>
+                            <pre
+                                style="padding:.7rem 1rem;font-size:.78rem;line-height:1.8;color:#94a3b8;border:none;box-shadow:none">                                         reseñas   sentiment_score
+0  This product is AMAZING!!! Best purchase ever 😍    <span style="color:#f59e0b">0.92</span>
+1         Terrible experience. Never buying again.   <span style="color:#f59e0b">-0.54</span>
+2     It's okay, nothing special but does the job.    <span style="color:#f59e0b">0.07</span>
+3    WORST customer service I've EVER dealt with 😡   <span style="color:#f59e0b">-0.87</span></pre>
+                        </div>
+                        <div class="cb"
+                            style="padding:.9rem 1.1rem;border-left:3px solid var(--accent-secondary);background:rgba(192,132,252,.04)">
+                            <p style="margin:0;font-size:.85rem;color:#e2e8f0;line-height:1.5"><strong
+                                    style="color:#fff">¿Por qué 0.92 y no 0.50?</strong> VADER detecta que "AMAZING!!!"
+                                con mayúsculas y "!!!" es <em>más</em> positivo que "amazing". El emoji 😍 suma aún más.
+                                Integrarlo a Pandas nos prepara para el modelo predictivo final.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- S20: EJERCICIO LAB -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">Ejercicio Práctico — Laboratorio</h2>
+                <p
+                    style="color:var(--c-green);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">
+                    Aplicar lo aprendido hoy</p>
+                <div class="co" style="border-color:var(--c-cyan);margin-bottom:12px"><i class="fa-solid fa-flask"
+                        style="color:var(--c-cyan);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.92rem;color:#e2e8f0"><strong
+                            style="color:var(--c-cyan)">Reto:</strong> Scrapear 50+ libros de <span class="tag"
+                            style="color:var(--c-cyan)">books.toscrape.com</span>, analizarlos y presentar 3 insights.
+                    </p>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                    <div class="cb"
+                        style="padding:.9rem 1.2rem;border-left:4px solid var(--accent-primary);background:rgba(56,189,248,.04);display:flex;gap:12px">
+                        <div
+                            style="background:var(--accent-primary);color:#0f172a;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;flex-shrink:0">
+                            1</div>
+                        <p style="margin:0;font-size:.9rem;color:#e2e8f0"><strong style="color:#fff">Scrapear</strong>
+                            las primeras 3 páginas (60 libros). Extraer: título, precio, rating y categoría.</p>
+                    </div>
+                    <div class="cb"
+                        style="padding:.9rem 1.2rem;border-left:4px solid var(--accent-secondary);background:rgba(192,132,252,.04);display:flex;gap:12px">
+                        <div
+                            style="background:var(--accent-secondary);color:#0f172a;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;flex-shrink:0">
+                            2</div>
+                        <p style="margin:0;font-size:.9rem;color:#e2e8f0"><strong style="color:#fff">Construir un
+                                DataFrame</strong> y limpiar los datos (precio a float, rating a numérico).</p>
+                    </div>
+                    <div class="cb"
+                        style="padding:.9rem 1.2rem;border-left:4px solid var(--c-green);background:rgba(74,222,128,.04);display:flex;gap:12px">
+                        <div
+                            style="background:var(--c-green);color:#0f172a;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;flex-shrink:0">
+                            3</div>
+                        <p style="margin:0;font-size:.9rem;color:#e2e8f0"><strong style="color:#fff">Análisis
+                                exploratorio:</strong> precio promedio por rating, correlación precio-calificación.</p>
+                    </div>
+                    <div class="cb"
+                        style="padding:.9rem 1.2rem;border-left:4px solid #fbbf24;background:rgba(251,191,36,.04);display:flex;gap:12px">
+                        <div
+                            style="background:#fbbf24;color:#0f172a;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;flex-shrink:0">
+                            4</div>
+                        <p style="margin:0;font-size:.9rem;color:#e2e8f0"><strong style="color:#fff">Presentar 3
+                                insights</strong> con gráficos: ej. "¿Los libros más caros tienen mejor rating?"</p>
+                    </div>
+                </div>
+                <div class="co" style="border-color:var(--c-orange);margin-top:10px"><i class="fa-solid fa-clock"
+                        style="color:var(--c-orange);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.85rem;color:var(--text-muted)"><strong
+                            style="color:var(--c-orange)">Pista:</strong> Para múltiples páginas, la URL sigue el patrón
+                        <span class="tag" style="color:var(--c-orange);font-size:.78rem">catalogue/page-2.html</span>.
+                        Usen un loop con <span class="tag" style="color:var(--c-orange);font-size:.78rem">range(1,
+                            4)</span>.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- S21: RECURSOS -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">Recursos y Datasets</h2>
+                <p
+                    style="color:var(--accent-secondary);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">
+                    Para su proyecto y exploración</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--accent-primary)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i
+                                class="fa-solid fa-database" style="color:var(--accent-primary)"></i><strong
+                                style="color:#fff;font-size:.92rem">Datasets en Kaggle</strong></div>
+                        <p style="margin:0;font-size:.83rem;line-height:1.6"><span style="color:#e2e8f0">→ Amazon
+                                Product Reviews</span> (568K reseñas)<br /><span style="color:#e2e8f0">→ Twitter
+                                Sentiment Analysis</span> (1.6M tweets)<br /><span style="color:#e2e8f0">→ E-Commerce
+                                Clickstream Data</span><br /><span style="color:#e2e8f0">→ Yelp Reviews Dataset</span>
+                        </p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--accent-secondary)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i
+                                class="fa-solid fa-spider" style="color:var(--accent-secondary)"></i><strong
+                                style="color:#fff;font-size:.92rem">Sitios para practicar scraping</strong></div>
+                        <p style="margin:0;font-size:.83rem;line-height:1.6"><span style="color:#e2e8f0">→
+                                books.toscrape.com</span> (librería ficticia)<br /><span style="color:#e2e8f0">→
+                                quotes.toscrape.com</span> (citas con tags)<br /><span style="color:#e2e8f0">→
+                                webscraper.io/test-sites</span><br /><span style="color:#e2e8f0">→ httpbin.org</span>
+                            (pruebas de requests)</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-green)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i
+                                class="fa-solid fa-book" style="color:var(--c-green)"></i><strong
+                                style="color:#fff;font-size:.92rem">Documentación clave</strong></div>
+                        <p style="margin:0;font-size:.83rem;line-height:1.6"><span style="color:#e2e8f0">→
+                                BeautifulSoup</span> (crummy.com/software/BeautifulSoup)<br /><span
+                                style="color:#e2e8f0">→ NLTK VADER</span> (nltk.org)<br /><span style="color:#e2e8f0">→
+                                NetworkX</span> (networkx.org/documentation)</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-orange)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i
+                                class="fa-solid fa-plug" style="color:var(--c-orange)"></i><strong
+                                style="color:#fff;font-size:.92rem">APIs gratuitas</strong></div>
+                        <p style="margin:0;font-size:.83rem;line-height:1.6"><span style="color:#e2e8f0">→ Reddit API
+                                (PRAW)</span> — posts y comentarios<br /><span style="color:#e2e8f0">→ YouTube Data API
+                                v3</span> — videos y comments<br /><span style="color:#e2e8f0">→ NewsAPI.org</span> —
+                            titulares en tiempo real</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- S22: CONEXION PROYECTO -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:10px">Conexión con su Proyecto</h2>
+                <div class="co" style="border-color:var(--c-pink);margin-bottom:14px"><i class="fa-solid fa-laptop-code"
+                        style="color:var(--c-pink);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.92rem;color:#e2e8f0;line-height:1.5">Esta semana continúan con el
+                        <strong style="color:var(--c-pink)">segundo avance</strong> de la solución computacional para
+                        e-commerce. Lo visto hoy aplica directamente.
+                    </p>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--accent-primary)">
+                        <p style="margin:0 0 4px"><strong style="color:var(--accent-primary);font-size:.92rem">Scraping
+                                de reseñas</strong></p>
+                        <p style="margin:0;font-size:.85rem">Recopilar reseñas de sitios públicos o usar datasets de
+                            Kaggle como fuente de datos no estructurados.</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--accent-secondary)">
+                        <p style="margin:0 0 4px"><strong
+                                style="color:var(--accent-secondary);font-size:.92rem">Análisis de sentimiento</strong>
+                        </p>
+                        <p style="margin:0;font-size:.85rem">Aplicar VADER sobre reseñas para generar columna de
+                            sentimiento y correlacionar con ventas o rating.</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-cyan)">
+                        <p style="margin:0 0 4px"><strong style="color:var(--c-cyan);font-size:.92rem">Análisis de
+                                clickstream</strong></p>
+                        <p style="margin:0;font-size:.85rem">Si su dataset tiene logs de navegación, construyan el
+                            embudo y detecten dónde se pierden clientes.</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-green)">
+                        <p style="margin:0 0 4px"><strong style="color:var(--c-green);font-size:.92rem">Patrones
+                                ocultos</strong></p>
+                        <p style="margin:0;font-size:.85rem">Combinar datos estructurados (ventas, precios) con no
+                            estructurados (sentimiento) para correlaciones no evidentes.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- S23: RESUMEN -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:14px">Resumen y Conclusiones</h2>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                    <div class="cb"
+                        style="padding:.9rem 1.2rem;border-left:4px solid var(--accent-primary);background:rgba(56,189,248,.04);display:flex;gap:10px">
+                        <i class="fa-solid fa-share-nodes"
+                            style="color:var(--accent-primary);margin-top:3px;flex-shrink:0"></i>
+                        <p style="margin:0;font-size:.92rem;color:#e2e8f0">Las <strong style="color:#fff">redes sociales
+                                y la web</strong> generan datos masivos (texto, grafos, clickstream) — fuente invaluable
+                            para decisiones.</p>
+                    </div>
+                    <div class="cb"
+                        style="padding:.9rem 1.2rem;border-left:4px solid var(--accent-secondary);background:rgba(192,132,252,.04);display:flex;gap:10px">
+                        <i class="fa-brands fa-python"
+                            style="color:var(--accent-secondary);margin-top:3px;flex-shrink:0"></i>
+                        <p style="margin:0;font-size:.92rem;color:#e2e8f0">Con <strong
+                                style="color:#fff">Python</strong> y BeautifulSoup, NetworkX y VADER, cubrimos el
+                            pipeline completo de recolección a análisis.</p>
+                    </div>
+                    <div class="cb"
+                        style="padding:.9rem 1.2rem;border-left:4px solid var(--c-red);background:rgba(248,113,113,.04);display:flex;gap:10px">
+                        <i class="fa-solid fa-scale-balanced"
+                            style="color:var(--c-red);margin-top:3px;flex-shrink:0"></i>
+                        <p style="margin:0;font-size:.92rem;color:#e2e8f0">La <strong style="color:#fff">ética</strong>
+                            es innegociable: robots.txt, ToS, rate limits y privacidad de datos personales.</p>
+                    </div>
+                    <div class="cb"
+                        style="padding:.9rem 1.2rem;border-left:4px solid var(--c-green);background:rgba(74,222,128,.04);display:flex;gap:10px">
+                        <i class="fa-solid fa-briefcase" style="color:var(--c-green);margin-top:3px;flex-shrink:0"></i>
+                        <p style="margin:0;font-size:.92rem;color:#e2e8f0">Los <strong style="color:#fff">casos de
+                                uso</strong> abarcan e-commerce, salud, finanzas y marketing — transversal a toda
+                            industria.</p>
+                    </div>
+                    <div class="cb"
+                        style="padding:.9rem 1.2rem;border-left:4px solid #fbbf24;background:rgba(251,191,36,.04);display:flex;gap:10px">
+                        <i class="fa-solid fa-arrow-right-long" style="color:#fbbf24;margin-top:3px;flex-shrink:0"></i>
+                        <p style="margin:0;font-size:.92rem;color:#e2e8f0"><strong style="color:#fbbf24">Próxima
+                                clase:</strong> Arrancamos el <strong style="color:#fff">Módulo 5 — Minería en grandes
+                                volúmenes</strong>: desafíos de escala, procesamiento distribuido y Spark.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="fn"><span class="sc" id="sc">01 / 01</span></div>
+    <script>
+        const s = document.querySelectorAll('.slide'); let c = 0, tx = 0, te = 0;
+        function u() { s.forEach((x, i) => x.classList.toggle('active', i === c)); document.getElementById('sc').textContent = `${String(c + 1).padStart(2, '0')} / ${String(s.length).padStart(2, '0')}`; document.getElementById('pb').style.width = ((c + 1) / s.length * 100) + '%' }
+        function n() { if (c < s.length - 1) { c++; u() } }
+        function p() { if (c > 0) { c--; u() } }
+
+        /* Keyboard: skip Space/PageDown if user is inside a scrollable code block */
+        document.addEventListener('keydown', e => {
+            const inCode = e.target.closest && e.target.closest('.code-wrap');
+            if (['ArrowRight'].includes(e.code)) n();
+            if (['Space', 'PageDown'].includes(e.code) && !inCode) n();
+            if (['ArrowLeft'].includes(e.code)) p();
+            if (['PageUp'].includes(e.code) && !inCode) p();
+        });
+
+        /* Touch: ignore swipes that start inside a code block */
+        document.addEventListener('touchstart', e => {
+            tx = e.changedTouches[0].screenX;
+            te = 0;
+        }, { passive: true });
+        document.addEventListener('touchend', e => {
+            if (e.target.closest && e.target.closest('.code-wrap')) return;
+            te = e.changedTouches[0].screenX;
+            if (te < tx - 50) n();
+            if (te > tx + 50) p();
+        }, { passive: true });
+
+        /* Mouse wheel: prevent slide change when scrolling inside code */
+        document.querySelectorAll('.code-wrap pre').forEach(el => {
+            el.addEventListener('wheel', e => { e.stopPropagation() }, { passive: true });
+        });
+
+        u();
+    </script>
+</body>
+
+</html>
