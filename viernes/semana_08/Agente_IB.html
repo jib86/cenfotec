@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>QE Agent — Arquitectura</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #191c27;
+    --surface:  #1f2235;
+    --surface2: #262a3f;
+    --border:   rgba(255,245,235,0.08);
+    --teal:     #5a9e96;
+    --teal-dim: rgba(90,158,150,0.12);
+    --lavender: #a78bd2;
+    --lav-dim:  rgba(167,139,210,0.12);
+    --amber:    #d4a74a;
+    --amb-dim:  rgba(212,167,74,0.12);
+    --green:    #52d68a;
+    --grn-dim:  rgba(82,214,138,0.1);
+    --red:      #e07070;
+    --text:     #dde1f0;
+    --text2:    #8892aa;
+    --text3:    #4a5270;
+    --mono:     'JetBrains Mono', monospace;
+    --ui:       'DM Sans', sans-serif;
+  }
+
+  html, body {
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--ui);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background-image:
+      radial-gradient(ellipse 70% 40% at 10% 0%, rgba(90,158,150,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 35% at 90% 100%, rgba(167,139,210,0.06) 0%, transparent 60%);
+    padding: 48px 32px 64px;
+  }
+
+  /* ── Animaciones de entrada ── */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  .anim { opacity: 0; animation: fadeInUp 0.5s ease forwards; }
+  .anim-1  { animation-delay: 0.05s; }
+  .anim-2  { animation-delay: 0.15s; }
+  .anim-3  { animation-delay: 0.25s; }
+  .anim-4  { animation-delay: 0.35s; }
+  .anim-5  { animation-delay: 0.45s; }
+  .anim-6  { animation-delay: 0.55s; }
+  .anim-7  { animation-delay: 0.65s; }
+  .anim-8  { animation-delay: 0.75s; }
+  .anim-9  { animation-delay: 0.85s; }
+  .anim-10 { animation-delay: 0.95s; }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    margin-bottom: 56px;
+    opacity: 0;
+    animation: fadeInUp 0.6s ease 0.05s forwards;
+  }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    color: #f0eef8;
+    margin-bottom: 8px;
+  }
+  .header h1 span { color: var(--teal); }
+  .header p {
+    font-size: 14px;
+    color: var(--text2);
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* ── Version badges ── */
+  .version-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+  .vbadge {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid;
+    opacity: 0.7;
+  }
+  .vbadge-teal   { color: var(--teal);    border-color: rgba(90,158,150,0.3);  background: rgba(90,158,150,0.06); }
+  .vbadge-lav    { color: var(--lavender);border-color: rgba(167,139,210,0.3); background: rgba(167,139,210,0.06); }
+  .vbadge-amber  { color: var(--amber);   border-color: rgba(212,167,74,0.3);  background: rgba(212,167,74,0.06); }
+  .vbadge-green  { color: var(--green);   border-color: rgba(82,214,138,0.25); background: rgba(82,214,138,0.05); }
+
+  /* ── Main diagram ── */
+  .diagram {
+    max-width: 980px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+  }
+
+  /* ── Row ── */
+  .row {
+    display: flex;
+    align-items: stretch;
+    gap: 16px;
+    position: relative;
+  }
+
+  /* ── Arrow between rows ── */
+  .arrow-down {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 40px;
+    position: relative;
+  }
+  .arrow-down::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(to bottom, var(--border), rgba(90,158,150,0.4));
+  }
+  .arrow-down::after {
+    content: '▼';
+    font-size: 10px;
+    color: var(--teal);
+    position: absolute;
+    bottom: 0;
+  }
+
+  /* ── Arrow up (return flow) ── */
+  .return-flow {
+    max-width: 980px;
+    margin: 0 auto;
+    position: relative;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 8px;
+  }
+  .return-flow-line {
+    position: absolute;
+    left: 4%;
+    top: 50%;
+    width: 92%;
+    height: 2px;
+    background: linear-gradient(to right,
+      rgba(90,158,150,0.0) 0%,
+      rgba(90,158,150,0.4) 10%,
+      rgba(90,158,150,0.4) 90%,
+      rgba(90,158,150,0.0) 100%
+    );
+    transform: translateY(-50%);
+  }
+  .return-flow-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--teal);
+    background: var(--bg);
+    padding: 3px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(90,158,150,0.25);
+    position: relative;
+    z-index: 1;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .return-arrow-left {
+    position: absolute;
+    left: 4%;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--teal);
+    font-size: 12px;
+  }
+  .return-arrow-right {
+    position: absolute;
+    right: 4%;
+    top: 50%;
+    transform: translateY(-50%) rotate(180deg);
+    color: var(--teal);
+    font-size: 12px;
+  }
+
+  /* ── Block ── */
+  .block {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: default;
+  }
+  .block:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+
+  .block-tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin-bottom: 8px;
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .block-title {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+  .block-desc {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+
+  /* Color themes */
+  .theme-user   { border-color: rgba(90,158,150,0.3); }
+  .theme-user .block-tag { background: var(--teal-dim); color: var(--teal); }
+  .theme-user .block-title { color: var(--teal); }
+
+  .theme-claude { border-color: rgba(167,139,210,0.3); }
+  .theme-claude .block-tag { background: var(--lav-dim); color: var(--lavender); }
+  .theme-claude .block-title { color: var(--lavender); }
+
+  .theme-prolog { border-color: rgba(212,167,74,0.35); background: #222017; }
+  .theme-prolog .block-tag { background: var(--amb-dim); color: var(--amber); }
+  .theme-prolog .block-title { color: var(--amber); }
+
+  .theme-rag    { border-color: rgba(82,214,138,0.25); }
+  .theme-rag .block-tag { background: var(--grn-dim); color: var(--green); }
+  .theme-rag .block-title { color: var(--green); }
+
+  .theme-output { border-color: rgba(90,158,150,0.25); background: #1a2220; }
+  .theme-output .block-tag { background: var(--teal-dim); color: var(--teal); }
+  .theme-output .block-title { color: var(--teal); }
+
+  .theme-env { border-color: rgba(224,112,112,0.3); background: #221a1a; }
+  .theme-env .block-tag { background: rgba(224,112,112,0.1); color: var(--red); }
+  .theme-env .block-title { color: var(--red); }
+
+  /* ── Connector between side blocks ── */
+  .connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .connector::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(to right, rgba(212,167,74,0.2), rgba(212,167,74,0.5), rgba(212,167,74,0.2));
+  }
+  .connector-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--amber);
+    background: var(--bg);
+    padding: 3px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(212,167,74,0.2);
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    white-space: nowrap;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    letter-spacing: 0.08em;
+  }
+
+  /* ── Prolog detail pills ── */
+  .pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .pill {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid;
+    line-height: 1.4;
+  }
+  .pill-amber  { color: var(--amber);    border-color: rgba(212,167,74,0.3);   background: rgba(212,167,74,0.06); }
+  .pill-teal   { color: var(--teal);     border-color: rgba(90,158,150,0.3);   background: rgba(90,158,150,0.06); }
+  .pill-green  { color: var(--green);    border-color: rgba(82,214,138,0.25);  background: rgba(82,214,138,0.05); }
+  .pill-lav    { color: var(--lavender); border-color: rgba(167,139,210,0.3);  background: rgba(167,139,210,0.06); }
+  .pill-red    { color: var(--red);      border-color: rgba(224,112,112,0.3);  background: rgba(224,112,112,0.06); }
+
+  /* ── Steps list ── */
+  .steps {
+    list-style: none;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .steps li {
+    font-size: 12.5px;
+    color: var(--text2);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.5;
+  }
+  .step-num {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--lavender);
+    background: var(--lav-dim);
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* ── Code snippet ── */
+  .code-box {
+    font-family: var(--mono);
+    font-size: 11px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-top: 12px;
+    line-height: 1.8;
+    color: #c8d0e8;
+  }
+  .code-box .kw  { color: var(--lavender); }
+  .code-box .fn  { color: var(--teal); }
+  .code-box .str { color: var(--amber); }
+  .code-box .cm  { color: var(--text3); font-style: italic; }
+
+  /* ── Loop indicator ── */
+  .loop-box {
+    border: 1px dashed rgba(167,139,210,0.25);
+    border-radius: 16px;
+    padding: 16px;
+    position: relative;
+    margin: 8px 0;
+  }
+  .loop-label {
+    position: absolute;
+    top: -10px;
+    left: 20px;
+    font-family: var(--mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--lavender);
+    background: var(--bg);
+    padding: 0 8px;
+  }
+
+  /* ── Endpoints grid ── */
+  .endpoints-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .endpoint {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 7px 10px;
+  }
+  .endpoint-method {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    margin-bottom: 2px;
+  }
+  .endpoint-path {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text);
+  }
+  .endpoint-desc {
+    font-size: 10.5px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+  .method-post { color: var(--green); }
+  .method-get  { color: var(--teal); }
+
+  /* ── Legend ── */
+  .legend {
+    max-width: 980px;
+    margin: 48px auto 0;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+    opacity: 0;
+    animation: fadeIn 0.5s ease 1.1s forwards;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text2);
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── Tooltip on hover ── */
+  .block[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--text2);
+    white-space: nowrap;
+    z-index: 10;
+    pointer-events: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+
+  /* ── Section divider ── */
+  .section-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text3);
+    text-align: center;
+    padding: 6px 0 2px;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 700px) {
+    body { padding: 24px 16px 48px; }
+
+    .row { flex-direction: column; }
+
+    .connector {
+      width: 100%;
+      height: 36px;
+      writing-mode: horizontal-tb;
+    }
+    .connector::before {
+      top: 50%; left: 50%;
+      width: 2px; height: 100%;
+      transform: translate(-50%, -50%);
+    }
+    .connector-label {
+      writing-mode: horizontal-tb;
+      transform: none;
+      font-size: 9px;
+    }
+
+    .endpoints-grid { grid-template-columns: 1fr 1fr; }
+
+    .loop-box > div[style*="grid-template-columns"] {
+      grid-template-columns: 1fr !important;
+    }
+
+    .version-row { gap: 6px; }
+
+    .return-flow { display: none; }
+
+    .header h1 { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>QE <span>Agent</span> — Arquitectura del Sistema</h1>
+  <p>Diagrama de flujo completo: desde la pregunta del usuario hasta el input file de Quantum ESPRESSO</p>
+  <div class="version-row">
+    <span class="vbadge vbadge-lav">Claude Sonnet 4.5</span>
+    <span class="vbadge vbadge-green">ChromaDB 0.6</span>
+    <span class="vbadge vbadge-amber">SWI-Prolog 9.x</span>
+    <span class="vbadge vbadge-teal">FastAPI 0.115</span>
+    <span class="vbadge vbadge-teal">React + Vite 6</span>
+    <span class="vbadge vbadge-teal">QE ≥ 7.3.1</span>
+  </div>
+</div>
+
+<div class="diagram">
+
+  <!-- STEP 1: Usuario -->
+  <div class="row anim anim-1">
+    <div class="block theme-user" data-tooltip="Interfaz React en localhost:5173">
+      <span class="block-tag">Entrada</span>
+      <div class="block-title">👤 Usuario</div>
+      <div class="block-desc">
+        El estudiante describe su sistema en lenguaje natural desde la interfaz React.
+      </div>
+      <div class="code-box" style="margin-top:10px;">
+        <span class="str">"Quiero calcular la estructura de bandas del Fe BCC, sistema magnético"</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-down anim anim-1"></div>
+
+  <!-- STEP 2: FastAPI + .env -->
+  <div class="row anim anim-2">
+    <div class="block theme-env" style="flex: 0.3;" data-tooltip="Variables de entorno — nunca en el repositorio">
+      <span class="block-tag">Config</span>
+      <div class="block-title">🔑 .env</div>
+      <div class="block-desc">API keys y configuración sensible.</div>
+      <div class="code-box" style="margin-top:10px; font-size:10px; line-height:1.9;">
+        <span class="str">ANTHROPIC_API_KEY</span>=sk-ant-...<br/>
+        <span class="cm"># nunca en git</span>
+      </div>
+      <div class="pill-row">
+        <span class="pill pill-red">.gitignore ✓</span>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;padding:0 4px;">
+      <div style="font-size:18px;color:var(--text3);">→</div>
+    </div>
+
+    <div class="block theme-rag" style="flex: 0.7;" data-tooltip="backend/main.py — corre en localhost:8000">
+      <span class="block-tag">Backend</span>
+      <div class="block-title">⚡ FastAPI</div>
+      <div class="block-desc">
+        Recibe mensajes HTTP, agrega contexto de calculadora y llama al orquestador. Expone 6 endpoints.
+      </div>
+      <div class="endpoints-grid">
+        <div class="endpoint">
+          <div class="endpoint-method method-post">POST</div>
+          <div class="endpoint-path">/chat</div>
+          <div class="endpoint-desc">mensaje → respuesta</div>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint-method method-post">POST</div>
+          <div class="endpoint-path">/reset</div>
+          <div class="endpoint-desc">nueva sesión</div>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint-method method-get">GET</div>
+          <div class="endpoint-path">/files</div>
+          <div class="endpoint-desc">archivos generados</div>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint-method method-get">GET</div>
+          <div class="endpoint-path">/history</div>
+          <div class="endpoint-desc">historial chat</div>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint-method method-post">POST</div>
+          <div class="endpoint-path">/upload-manual</div>
+          <div class="endpoint-desc">sube PDF al RAG</div>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint-method method-get">GET</div>
+          <div class="endpoint-path">/health</div>
+          <div class="endpoint-desc">status del servidor</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;padding:0 4px;">
+      <div style="font-size:18px;color:var(--text3);">→</div>
+    </div>
+
+    <div class="block theme-claude" style="flex: 0.5;" data-tooltip="backend/agent/orchestrator.py">
+      <span class="block-tag">Orquestador</span>
+      <div class="block-title">🔄 QEOrchestrator</div>
+      <div class="block-desc">
+        Mantiene historial y ejecuta el loop agéntico.
+      </div>
+      <ul class="steps">
+        <li><span class="step-num">1</span>Agrega mensaje al historial</li>
+        <li><span class="step-num">2</span>Ejecuta <code style="font-size:11px;color:var(--lavender)">_run_loop()</code></li>
+        <li><span class="step-num">3</span>Retorna respuesta + archivos</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="arrow-down anim anim-3"></div>
+
+  <!-- STEP 3: Claude loop -->
+  <div class="row anim anim-4">
+    <div class="block theme-claude" data-tooltip="Puede iterar múltiples veces hasta end_turn">
+      <span class="block-tag">Núcleo del Agente</span>
+      <div class="block-title">🧠 Claude Sonnet 4.5 — Loop Agéntico</div>
+      <div class="block-desc">
+        Recibe historial completo + system prompt y decide autónomamente qué herramientas usar y cuándo. Itera hasta <code style="font-size:11px;color:var(--lavender)">stop_reason = "end_turn"</code>.
+      </div>
+
+      <div class="loop-box" style="margin-top: 14px;">
+        <span class="loop-label">loop hasta end_turn · puede iterar N veces</span>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:8px;">
+
+          <div style="background:var(--lav-dim);border:1px solid rgba(167,139,210,0.2);border-radius:8px;padding:12px;">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--lavender);margin-bottom:5px;">HERRAMIENTA 1</div>
+            <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">query_manual</div>
+            <div style="font-size:11.5px;color:var(--text2);line-height:1.5;">Busca en la documentación oficial de QE vía RAG vectorial</div>
+          </div>
+
+          <div style="background:rgba(212,167,74,0.08);border:1px solid rgba(212,167,74,0.2);border-radius:8px;padding:12px;">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--amber);margin-bottom:5px;">HERRAMIENTA 2</div>
+            <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">get_system_params</div>
+            <div style="font-size:11.5px;color:var(--text2);line-height:1.5;">Consulta Prolog con los elementos químicos y tipo de cálculo</div>
+          </div>
+
+          <div style="background:var(--teal-dim);border:1px solid rgba(90,158,150,0.2);border-radius:8px;padding:12px;">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--teal);margin-bottom:5px;">HERRAMIENTA 3</div>
+            <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">submit_input_file</div>
+            <div style="font-size:11.5px;color:var(--text2);line-height:1.5;">Envía el input file generado al panel derecho de la UI</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-down anim anim-5"></div>
+
+  <!-- STEP 4: RAG y Prolog en paralelo -->
+  <div class="row anim anim-6">
+    <!-- RAG -->
+    <div class="block theme-rag" data-tooltip="backend/agent/rag/retriever.py — vectorstore/chroma.sqlite3">
+      <span class="block-tag">Recuperación de Contexto</span>
+      <div class="block-title">📚 RAG — ChromaDB 0.6</div>
+      <div class="block-desc">
+        Base de conocimiento vectorial con la documentación oficial de QE. Claude busca aquí para responder sobre parámetros y sintaxis.
+      </div>
+      <div class="pill-row">
+        <span class="pill pill-green">pw.x manual</span>
+        <span class="pill pill-green">ph.x manual</span>
+        <span class="pill pill-green">INPUT_PW.html</span>
+        <span class="pill pill-green">PDFs subidos</span>
+      </div>
+      <div class="code-box">
+        <span class="fn">retrieve_context</span>(<span class="str">"Hubbard U ortho-atomic"</span>)<br/>
+        <span class="cm">→ top-5 fragmentos relevantes</span>
+      </div>
+    </div>
+
+    <div class="connector">
+      <span class="connector-label">paralelo</span>
+    </div>
+
+    <!-- Prolog -->
+    <div class="block theme-prolog" data-tooltip="backend/agent/prolog/qe_rules.pl — SWI-Prolog 9.x">
+      <span class="block-tag">Motor de Reglas</span>
+      <div class="block-title">⚙️ SWI-Prolog 9 — qe_rules.pl</div>
+      <div class="block-desc">
+        Base de conocimiento lógica. Calcula parámetros físicos con reglas deterministas — nunca falla, nunca alucina.
+      </div>
+
+      <div style="margin-top:12px;display:flex;flex-direction:column;gap:7px;">
+
+        <div style="background:rgba(212,167,74,0.06);border:1px solid rgba(212,167,74,0.15);border-radius:7px;padding:10px 12px;">
+          <div style="font-family:var(--mono);font-size:9.5px;color:var(--amber);margin-bottom:4px;">PSEUDOPOTENCIALES</div>
+          <div style="font-size:12px;color:var(--text2);">Asigna el archivo <code style="color:var(--amber);font-size:11px;">.UPF</code> correcto por elemento</div>
+          <div class="code-box" style="margin-top:6px;padding:6px 10px;font-size:10px;">
+            <span class="fn">pseudopotential</span>(<span class="str">'Fe'</span>, <span class="str">'Fe.pbe-spn-kjpaw...'</span>)
+          </div>
+        </div>
+
+        <div style="background:rgba(212,167,74,0.06);border:1px solid rgba(212,167,74,0.15);border-radius:7px;padding:10px 12px;">
+          <div style="font-family:var(--mono);font-size:9.5px;color:var(--amber);margin-bottom:4px;">CUTOFFS DE ENERGÍA</div>
+          <div style="font-size:12px;color:var(--text2);">Determina <code style="color:var(--amber);font-size:11px;">ecutwfc</code> y <code style="color:var(--amber);font-size:11px;">ecutrho</code> óptimos</div>
+          <div class="code-box" style="margin-top:6px;padding:6px 10px;font-size:10px;">
+            <span class="fn">max_ecutwfc</span>([<span class="str">'Fe'</span>,<span class="str">'O'</span>], E) <span class="cm">→ E = 70 Ry</span>
+          </div>
+        </div>
+
+        <div style="background:rgba(212,167,74,0.06);border:1px solid rgba(212,167,74,0.15);border-radius:7px;padding:10px 12px;">
+          <div style="font-family:var(--mono);font-size:9.5px;color:var(--amber);margin-bottom:4px;">MAGNETISMO Y HUBBARD U</div>
+          <div style="font-size:12px;color:var(--text2);">Detecta magnetismo y asigna valores U para DFT+U</div>
+          <div class="code-box" style="margin-top:6px;padding:6px 10px;font-size:10px;">
+            <span class="fn">magnetic_element</span>(<span class="str">'Fe'</span>) <span class="cm">→ nspin=2</span><br/>
+            <span class="fn">hubbard_u_value</span>(<span class="str">'Fe'</span>, U) <span class="cm">→ U=4.0 eV</span>
+          </div>
+        </div>
+
+        <div style="background:rgba(212,167,74,0.06);border:1px solid rgba(212,167,74,0.15);border-radius:7px;padding:10px 12px;">
+          <div style="font-family:var(--mono);font-size:9.5px;color:var(--amber);margin-bottom:4px;">K-POINTS Y CONVERGENCIA</div>
+          <div style="font-size:12px;color:var(--text2);">Grilla de k-points y umbrales según tipo de cálculo</div>
+          <div class="code-box" style="margin-top:6px;padding:6px 10px;font-size:10px;">
+            <span class="fn">kpoints_grid</span>(<span class="str">scf</span>, 6, 6, 6)<br/>
+            <span class="fn">conv_threshold</span>(<span class="str">relax</span>, <span class="str">'1.0e-6'</span>)
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-down anim anim-7"></div>
+
+  <!-- STEP 5: Output -->
+  <div class="row anim anim-8">
+    <div class="block theme-output" data-tooltip="Aparece en el panel derecho de la UI — descargable como .in">
+      <span class="block-tag">Salida</span>
+      <div class="block-title">📄 Input File — Quantum ESPRESSO ≥ 7.3.1</div>
+      <div class="block-desc">
+        Claude ensambla el archivo final con todos los parámetros de Prolog + contexto del manual. Aparece en el panel derecho, listo para descargar y correr.
+      </div>
+      <div class="code-box" style="margin-top:12px;line-height:2;">
+        <span class="kw">&amp;CONTROL</span><br/>
+        &nbsp;&nbsp;calculation = <span class="str">'scf'</span>, prefix = <span class="str">'Fe'</span><br/>
+        <span class="kw">/</span><br/>
+        <span class="kw">&amp;SYSTEM</span><br/>
+        &nbsp;&nbsp;ecutwfc = <span class="str">70.0</span>, nspin = <span class="str">2</span><br/>
+        <span class="kw">/</span><br/>
+        <span class="cm">HUBBARD (ortho-atomic)</span><br/>
+        &nbsp;&nbsp;<span class="fn">U  Fe-3d  4.0</span>
+      </div>
+      <div class="pill-row" style="margin-top:14px;">
+        <span class="pill pill-teal">✓ Sintaxis QE ≥ 7.3.1</span>
+        <span class="pill pill-teal">✓ Pseudopotenciales correctos</span>
+        <span class="pill pill-teal">✓ Hubbard moderno</span>
+        <span class="pill pill-teal">✓ Descargable</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RETURN FLOW -->
+  <div class="return-flow anim anim-9">
+    <div class="return-flow-line"></div>
+    <span class="return-arrow-left">◀</span>
+    <span class="return-flow-label">respuesta + archivos → UI → usuario</span>
+    <span class="return-arrow-right">◀</span>
+  </div>
+
+</div>
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--teal)"></div>Interfaz / FastAPI</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--lavender)"></div>Claude Sonnet 4.5 (LLM)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div>Prolog (reglas deterministas)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>RAG — documentación QE</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Config / .env</div>
+</div>
+
+</body>
+</html>
