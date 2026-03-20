@@ -1,0 +1,1969 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programación Lógica para IA · Clase 09</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lato:wght@300;400;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* =========================================
+           CORE VARIABLES & THEME
+           ========================================= */
+        :root {
+            --bg-deep: #020617;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --c-cyan: #22d3ee;
+            --c-purple: #d8b4fe;
+            --c-pink: #f472b6;
+            --c-green: #4ade80;
+            --c-gold: #facc15;
+            --glass-bg: rgba(15, 23, 42, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.03);
+            --glass-blur: blur(20px);
+            --radius-lg: 24px;
+            --radius-md: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg-deep);
+            background-image: radial-gradient(circle at 50% 120%, #1e1b4b, #020617);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.1), transparent 60%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            bottom: -20%;
+            right: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(192, 132, 252, 0.1), transparent 60%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+            animation: float 25s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(20px, 40px); }
+        }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--c-cyan), var(--c-purple));
+            width: 0%;
+            transition: width 0.3s;
+            z-index: 200;
+            box-shadow: 0 0 15px var(--c-cyan);
+        }
+
+        .slide-counter {
+            position: fixed;
+            bottom: 25px;
+            right: 35px;
+            background: rgba(15, 23, 42, 0.8);
+            padding: 8px 16px;
+            border-radius: 99px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .slides-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.96) translateY(15px);
+            transition: opacity 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            padding: 40px;
+            pointer-events: none;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateY(0);
+            pointer-events: all;
+            z-index: 10;
+        }
+
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-top: 1px solid var(--glass-highlight);
+            border-radius: var(--radius-lg);
+            padding: 2.2rem 2.8rem;
+            width: 100%;
+            max-width: 1300px;
+            max-height: 93vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            position: relative;
+        }
+
+        h1 {
+            font-family: 'Lato', sans-serif;
+            font-weight: 900;
+            font-size: clamp(2.5rem, 4.5vw, 4.5rem);
+            line-height: 1.1;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #fff 20%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.03em;
+        }
+
+        h2 {
+            font-family: 'Lato', sans-serif;
+            font-weight: 800;
+            font-size: clamp(1.8rem, 3vw, 2.8rem);
+            margin-bottom: 1.5rem;
+            background: linear-gradient(90deg, #fff, var(--c-cyan));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            color: #fff;
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        p, li {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: var(--text-muted);
+            margin-bottom: 0.8rem;
+        }
+
+        strong { color: var(--text-main); font-weight: 600; }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: 1.5rem;
+            align-items: stretch;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            align-items: stretch;
+        }
+
+        .concept-box {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        /* Cuando un concept-box es hijo directo de un grid, se estira */
+        .grid-2 > .concept-box,
+        .grid-3 > .concept-box {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Columnas <div> directas del grid se comportan como columnas flex */
+        .grid-2 > div,
+        .grid-3 > div {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .concept-box:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+        }
+
+        .example-box {
+            border-left: 4px solid var(--c-cyan);
+            background: rgba(34, 211, 238, 0.05);
+            padding: 1.2rem 1.5rem;
+            border-radius: 0 16px 16px 0;
+            margin: 1rem 0;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding: 6px 16px;
+            border-radius: 30px;
+            margin-bottom: 1.5rem;
+            align-self: flex-start;
+            border: 1px solid;
+        }
+
+        .pill-gold  { background: rgba(250,204,21,0.1); border-color: var(--c-gold); color: var(--c-gold); }
+        .pill-cyan  { background: rgba(34,211,238,0.1); border-color: var(--c-cyan); color: var(--c-cyan); }
+        .pill-pink  { background: rgba(244,114,182,0.1); border-color: var(--c-pink); color: var(--c-pink); }
+        .pill-purple{ background: rgba(216,180,254,0.1); border-color: var(--c-purple); color: var(--c-purple); }
+        .pill-green { background: rgba(74,222,128,0.1); border-color: var(--c-green); color: var(--c-green); }
+
+        .step-tag {
+            background: var(--c-cyan);
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-weight: 900;
+            margin-right: 12px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--c-gold);
+            background: rgba(0, 0, 0, 0.4);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            border: 1px solid rgba(250, 204, 21, 0.2);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--c-cyan);
+            padding: 16px 20px;
+            text-align: left;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        td {
+            padding: 14px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.98rem;
+            color: var(--text-muted);
+        }
+
+        td strong { color: var(--text-main); }
+
+        /* Bloque de código multi-línea */
+        .code-block {
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(250, 204, 21, 0.12);
+            border-radius: 14px;
+            padding: 1.1rem 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.9;
+            overflow-x: auto;
+            margin: 0.8rem 0;
+            position: relative;
+        }
+
+        .code-block .kw   { color: #facc15; font-weight: 700; }   /* operadores clave: :-, is, ! */
+        .code-block .fact { color: #22d3ee; }                       /* hechos / predicados */
+        .code-block .var  { color: #4ade80; }                       /* variables (mayúscula) */
+        .code-block .num  { color: #f472b6; }                       /* números */
+        .code-block .cmt  { color: #475569; font-style: italic; }  /* comentarios */
+        .code-block .qry  { color: #d8b4fe; }                       /* consultas ?- */
+        .code-block .str  { color: #fb923c; }                       /* strings */
+
+        ::-webkit-scrollbar { display: none; }
+
+        /* Badge de resultado */
+        .result-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-weight: 700;
+        }
+        .result-ok   { background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.4); color: var(--c-green); }
+        .result-fail { background: rgba(244,114,182,0.12); border: 1px solid rgba(244,114,182,0.4); color: var(--c-pink); }
+
+        /* =========================================
+           SISTEMA DE TOOLTIPS EDUCATIVOS
+           ========================================= */
+        .tt {
+            border-bottom: 1.5px dashed var(--c-cyan);
+            color: var(--c-cyan);
+            cursor: help;
+            font-weight: 600;
+            -webkit-text-fill-color: var(--c-cyan);
+            transition: border-color 0.2s;
+        }
+        .tt:hover { border-bottom-color: var(--c-gold); }
+
+        /* Contenido oculto que el JS lee */
+        .tt-box { display: none; }
+
+        /* Explicación en lenguaje humano encima de cada bloque de código */
+        .code-explain {
+            background: rgba(34, 211, 238, 0.05);
+            border-left: 3px solid var(--c-cyan);
+            border-radius: 0 10px 10px 0;
+            padding: 0.45rem 1rem;
+            margin-bottom: 0;        /* el espacio lo maneja code-block superior */
+            margin-top: 0.7rem;      /* respira respecto al elemento anterior */
+            font-size: 0.88rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            line-height: 1.5;
+        }
+        .code-explain i { color: var(--c-cyan); flex-shrink: 0; margin-top: 3px; font-size: 0.8rem; }
+        .code-explain.green  { background: rgba(74,222,128,0.05);  border-color: var(--c-green); }
+        .code-explain.green i { color: var(--c-green); }
+        .code-explain.purple { background: rgba(216,180,254,0.05); border-color: var(--c-purple); }
+        .code-explain.purple i { color: var(--c-purple); }
+        .code-explain.gold   { background: rgba(250,204,21,0.05);  border-color: var(--c-gold); }
+        .code-explain.gold i { color: var(--c-gold); }
+        .code-explain.pink   { background: rgba(244,114,182,0.05); border-color: var(--c-pink); }
+        .code-explain.pink i { color: var(--c-pink); }
+
+        /* Eliminar el margen superior del code-block cuando va inmediatamente después de un banner */
+        .code-explain + .code-block { margin-top: 0 !important; }
+
+        /* h3 antes de un banner code-explain no necesita margen inferior doble */
+        h3 + .code-explain { margin-top: 0.3rem; }
+
+        /* p antes de code-explain tampoco necesita tanto espacio */
+        p + .code-explain { margin-top: 0.4rem; }
+
+        /* Tooltip flotante global */
+        #global-tooltip {
+            display: none;
+            position: fixed;
+            z-index: 99999;
+            max-width: 320px;
+            background: rgba(8, 15, 35, 0.97);
+            border: 1px solid rgba(34, 211, 238, 0.4);
+            border-radius: 14px;
+            padding: 13px 17px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 400;
+            line-height: 1.65;
+            color: #e2e8f0;
+            -webkit-text-fill-color: #e2e8f0;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(34,211,238,0.1);
+            backdrop-filter: blur(24px);
+            pointer-events: none;
+            transition: opacity 0.18s ease;
+        }
+        #global-tooltip .tt-label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--c-cyan);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        #global-tooltip strong { color: #fff; font-weight: 700; }
+    </style>
+</head>
+
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+
+    <div class="slides-container">
+
+        <!-- ============================================================
+             DIAPOSITIVA 0: PORTADA
+             ============================================================ -->
+        <div class="slide active">
+            <div class="card"
+                style="align-items:center; justify-content:center; text-align:center; overflow:hidden; padding:2rem 3rem; position:relative;">
+
+                <!-- Fondo decorativo: cadena de nodos Prolog -->
+                <svg style="position:absolute;inset:0;width:100%;height:100%;opacity:0.06;pointer-events:none;"
+                    viewBox="0 0 1200 700" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="80"  cy="100" r="6" fill="#22d3ee"/>
+                    <circle cx="300" cy="60"  r="5" fill="#a855f7"/>
+                    <circle cx="550" cy="170" r="7" fill="#22d3ee"/>
+                    <circle cx="800" cy="50"  r="5" fill="#f472b6"/>
+                    <circle cx="1050" cy="130" r="6" fill="#a855f7"/>
+                    <circle cx="160" cy="310" r="5" fill="#f472b6"/>
+                    <circle cx="430" cy="340" r="8" fill="#22d3ee"/>
+                    <circle cx="680" cy="290" r="5" fill="#a855f7"/>
+                    <circle cx="930" cy="270" r="6" fill="#22d3ee"/>
+                    <circle cx="120" cy="530" r="5" fill="#22d3ee"/>
+                    <circle cx="380" cy="550" r="6" fill="#a855f7"/>
+                    <circle cx="640" cy="490" r="5" fill="#f472b6"/>
+                    <circle cx="880" cy="570" r="7" fill="#22d3ee"/>
+                    <circle cx="1060" cy="470" r="5" fill="#a855f7"/>
+                    <line x1="80"  y1="100" x2="300" y2="60"  stroke="#22d3ee" stroke-width="1"/>
+                    <line x1="300" y1="60"  x2="550" y2="170" stroke="#a855f7" stroke-width="1"/>
+                    <line x1="550" y1="170" x2="800" y2="50"  stroke="#22d3ee" stroke-width="1"/>
+                    <line x1="800" y1="50"  x2="1050" y2="130" stroke="#f472b6" stroke-width="1"/>
+                    <line x1="80"  y1="100" x2="160" y2="310" stroke="#a855f7" stroke-width="1"/>
+                    <line x1="300" y1="60"  x2="430" y2="340" stroke="#22d3ee" stroke-width="1"/>
+                    <line x1="550" y1="170" x2="430" y2="340" stroke="#f472b6" stroke-width="1"/>
+                    <line x1="550" y1="170" x2="680" y2="290" stroke="#a855f7" stroke-width="1"/>
+                    <line x1="800" y1="50"  x2="930" y2="270" stroke="#22d3ee" stroke-width="1"/>
+                    <line x1="1050" y1="130" x2="930" y2="270" stroke="#a855f7" stroke-width="1"/>
+                    <line x1="160" y1="310" x2="430" y2="340" stroke="#22d3ee" stroke-width="1"/>
+                    <line x1="430" y1="340" x2="680" y2="290" stroke="#f472b6" stroke-width="1"/>
+                    <line x1="680" y1="290" x2="930" y2="270" stroke="#22d3ee" stroke-width="1"/>
+                    <line x1="930" y1="270" x2="1060" y2="470" stroke="#a855f7" stroke-width="1"/>
+                    <line x1="160" y1="310" x2="120" y2="530" stroke="#f472b6" stroke-width="1"/>
+                    <line x1="430" y1="340" x2="380" y2="550" stroke="#22d3ee" stroke-width="1"/>
+                    <line x1="680" y1="290" x2="640" y2="490" stroke="#a855f7" stroke-width="1"/>
+                    <line x1="930" y1="270" x2="880" y2="570" stroke="#22d3ee" stroke-width="1"/>
+                    <line x1="1060" y1="470" x2="880" y2="570" stroke="#f472b6" stroke-width="1"/>
+                    <line x1="120" y1="530" x2="380" y2="550" stroke="#22d3ee" stroke-width="1"/>
+                    <line x1="380" y1="550" x2="640" y2="490" stroke="#a855f7" stroke-width="1"/>
+                    <line x1="640" y1="490" x2="880" y2="570" stroke="#22d3ee" stroke-width="1"/>
+                </svg>
+
+                <div style="display:flex;gap:1rem;justify-content:center;margin-bottom:1.5rem;flex-wrap:wrap;z-index:1;">
+                    <div class="pill pill-gold"><i class="fa-solid fa-gem"></i> Maestría Profesional</div>
+                    <div class="pill pill-cyan" style="letter-spacing:2px;font-size:0.78rem;">PSWE-18 &nbsp;·&nbsp; Aplicaciones de la I.A.</div>
+                </div>
+
+                <p style="font-size:0.78rem;letter-spacing:4px;text-transform:uppercase;color:var(--c-purple);font-weight:700;margin-bottom:0.6rem;z-index:1;">
+                    Clase 09 · Semana 9</p>
+
+                <h1 style="font-size:clamp(3rem,5.5vw,6rem);text-align:center;line-height:1.05;margin-bottom:0.8rem;z-index:1;
+                    background:linear-gradient(135deg,#fff 25%,var(--c-cyan) 60%,var(--c-purple) 100%);
+                    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-2px;">
+                    Programación<br>Lógica para IA</h1>
+
+                <h2 style="font-size:clamp(1rem,2vw,1.4rem);margin-bottom:1.2rem;text-align:center;justify-content:center;
+                    background:linear-gradient(90deg,var(--c-purple),var(--c-pink));
+                    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;z-index:1;">
+                    Recursividad · Control · Aritmética · Metalógicos · Entrada/Salida</h2>
+
+                <p style="font-size:1rem;font-style:italic;color:var(--text-muted);max-width:680px;line-height:1.7;margin-bottom:1.8rem;z-index:1;">
+                    "En Prolog no le dices al computador <strong style="color:var(--text-main);">cómo</strong> resolver el problema —
+                    le dices <strong style="color:var(--text-main);">qué es verdadero</strong> y él encuentra las respuestas solo."
+                </p>
+
+                <div style="width:60%;max-width:400px;height:1px;
+                    background:linear-gradient(90deg,transparent,rgba(34,211,238,0.4),transparent);
+                    margin-bottom:1.8rem;z-index:1;"></div>
+
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2rem;width:100%;max-width:900px;z-index:1;">
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+                        <span style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--c-cyan);font-weight:700;">
+                            <i class="fa-solid fa-chalkboard-user"></i>&nbsp; Docente</span>
+                        <span style="font-size:1.05rem;color:var(--text-main);font-weight:600;">Dr. J. Ignacio Borge</span>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;
+                        border-left:1px solid rgba(255,255,255,0.08);border-right:1px solid rgba(255,255,255,0.08);">
+                        <span style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--c-pink);font-weight:700;">
+                            <i class="fa-solid fa-calendar"></i>&nbsp; Fecha</span>
+                        <span style="font-size:1.05rem;color:var(--text-main);font-weight:600;">20 de Marzo, 2026</span>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+                        <span style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--c-green);font-weight:700;">
+                            <i class="fa-solid fa-building-columns"></i>&nbsp; Institución</span>
+                        <span style="font-size:1.05rem;color:var(--text-main);font-weight:600;">Universidad Cenfotec</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             DIAPOSITIVA 1: PREGUNTA GANCHO
+             ============================================================ -->
+        <div class="slide">
+            <div class="card" style="align-items:center;justify-content:center;">
+                <div class="pill pill-gold"><i class="fa-solid fa-lightbulb"></i> Pregunta Gancho · 5 min</div>
+                <h1 style="font-size:clamp(2rem,3.5vw,3.5rem);text-align:center;">¿Cómo piensa diferente Prolog?</h1>
+
+                <div class="grid-2" style="width:100%;max-width:1100px;margin:1.5rem auto 0;">
+                    <div style="padding-right:2rem;border-right:2px solid rgba(255,255,255,0.08);">
+                        <h3 style="color:var(--c-pink);margin-bottom:1rem;"><i class="fa-brands fa-python"></i> Python / Java (<span class="tt">imperativo<span class="tt-box">Paradigma imperativo|||Estilo de programación donde <strong>describes CÓMO</strong> resolver el problema paso a paso. El programador le da instrucciones exactas al computador: haz esto, luego esto, luego aquello. Python, Java y C son lenguajes imperativos.</span></span>)</h3>
+                        <p style="font-size:1rem;margin-bottom:1rem;">Le dices al computador <strong>paso a paso</strong> cómo encontrar la respuesta:</p>
+                        <div class="code-explain pink"><i class="fa-solid fa-person-walking"></i><span><strong>Python (imperativo):</strong> toma la lista de la BD y ejecuta un bucle manual — tú le dices exactamente <em>cómo</em> recorrerla y qué guardar en cada paso.</span></div>
+                        <div class="code-block" style="font-size:0.82rem;">
+<span class="cmt"># Encontrar parientes de Juan</span>
+<span class="fact">parientes</span> = []
+<span class="kw">for</span> <span class="var">p</span> in base_de_datos:
+    <span class="kw">if</span> es_pariente(<span class="var">p</span>, <span class="str">"Juan"</span>):
+        parientes.append(<span class="var">p</span>)
+<span class="kw">return</span> parientes</div>
+                        <p style="font-size:0.95rem;margin-top:0.5rem;">Tú controlas el loop, la condición, el almacenamiento...</p>
+                    </div>
+                    <div style="padding-left:2rem;">
+                        <h3 style="color:var(--c-cyan);margin-bottom:1rem;"><i class="fa-solid fa-brain"></i> Prolog (<span class="tt">declarativo<span class="tt-box">Paradigma declarativo|||Estilo de programación donde <strong>describes QUÉ</strong> debe ser verdad, sin especificar CÓMO lograrlo. Tú defines las reglas del mundo y el motor del lenguaje encuentra las soluciones por sí solo. Prolog y SQL son lenguajes declarativos.</span></span>)</h3>
+                        <p style="font-size:1rem;margin-bottom:1rem;">Le dices qué es <strong>verdadero</strong> y él hace el trabajo:</p>
+                        <div class="code-explain"><i class="fa-solid fa-brain"></i><span><strong>Prolog (declarativo):</strong> toma 3 reglas que dicen qué <em>es</em> un pariente, y encuentra todas las relaciones posibles por sí solo — sin que tú escribas el bucle.</span></div>
+                        <div class="code-block" style="font-size:0.82rem;">
+<span class="cmt">% Describes las reglas del mundo</span>
+<span class="fact">pariente</span>(<span class="var">X</span>, <span class="var">Y</span>) <span class="kw">:-</span> padre(<span class="var">X</span>, <span class="var">Y</span>).
+<span class="fact">pariente</span>(<span class="var">X</span>, <span class="var">Y</span>) <span class="kw">:-</span> madre(<span class="var">X</span>, <span class="var">Y</span>).
+<span class="fact">pariente</span>(<span class="var">X</span>, <span class="var">Y</span>) <span class="kw">:-</span> pariente(<span class="var">X</span>, <span class="var">Z</span>), pariente(<span class="var">Z</span>, <span class="var">Y</span>).
+
+<span class="cmt">% Prolog encuentra todo solo</span>
+<span class="qry">?- pariente(X, juan).</span></div>
+                        <div style="margin-top:0.8rem;display:flex;align-items:center;gap:10px;">
+                            <i class="fa-solid fa-circle-check" style="color:var(--c-green);font-size:1.2rem;"></i>
+                            <p style="margin:0;color:var(--c-green);font-weight:700;font-size:1rem;">Prolog encuentra todas las respuestas automáticamente — incluyendo <span class="tt">relaciones transitivas<span class="tt-box">Relaciones transitivas|||Si A se relaciona con B, y B se relaciona con C, entonces A también se relaciona con C de forma indirecta. <strong>Ejemplo:</strong> si María es madre de Pedro, y Pedro es padre de Ana, entonces María es abuela de Ana. Prolog puede encontrar estas cadenas automáticamente sin que tú lo programes explícitamente.</span></span>.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             DIAPOSITIVA 2: AGENDA / MAPA DE SESIÓN
+             ============================================================ -->
+        <div class="slide">
+            <div class="card" style="align-items:center;justify-content:center;">
+                <div class="pill pill-cyan"><i class="fa-solid fa-map"></i> Mapa de la Sesión de Hoy</div>
+                <h2 style="text-align:center;margin-bottom:2.5rem;">¿Hacia dónde vamos? · 3 horas</h2>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem;width:100%;max-width:1200px;">
+
+                    <div style="background:rgba(250,204,21,0.07);border:2px solid rgba(250,204,21,0.4);border-radius:18px;padding:1.8rem 1.5rem;text-align:center;position:relative;">
+                        <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--c-gold);color:#000;font-weight:900;font-size:0.8rem;padding:3px 12px;border-radius:20px;">BLOQUE A</div>
+                        <i class="fa-solid fa-spell-check" style="font-size:2rem;color:var(--c-gold);margin-bottom:0.8rem;"></i>
+                        <p style="font-weight:800;color:var(--c-gold);font-size:1.05rem;margin-bottom:0.5rem;">Comprobación de Lectura</p>
+                        <p style="font-size:0.88rem;color:var(--text-muted);margin:0;">Quiz sobre el capítulo de Bratko asignado + repaso semana 8.</p>
+                        <p style="margin-top:0.8rem;font-size:0.8rem;color:var(--c-gold);font-weight:700;">~20 min · 1% nota</p>
+                    </div>
+
+                    <div style="background:rgba(34,211,238,0.07);border:2px solid rgba(34,211,238,0.4);border-radius:18px;padding:1.8rem 1.5rem;text-align:center;position:relative;">
+                        <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--c-cyan);color:#000;font-weight:900;font-size:0.8rem;padding:3px 12px;border-radius:20px;">BLOQUE B</div>
+                        <i class="fa-solid fa-rotate" style="font-size:2rem;color:var(--c-cyan);margin-bottom:0.8rem;"></i>
+                        <p style="font-weight:800;color:var(--c-cyan);font-size:1.05rem;margin-bottom:0.5rem;">Recursividad y Control</p>
+                        <p style="font-size:0.88rem;color:var(--text-muted);margin:0;">Cómo Prolog "hace loops". El operador cut y la negación.</p>
+                        <p style="margin-top:0.8rem;font-size:0.8rem;color:var(--c-cyan);font-weight:700;">~55 min</p>
+                    </div>
+
+                    <div style="background:rgba(216,180,254,0.07);border:2px solid rgba(216,180,254,0.4);border-radius:18px;padding:1.8rem 1.5rem;text-align:center;position:relative;">
+                        <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--c-purple);color:#000;font-weight:900;font-size:0.8rem;padding:3px 12px;border-radius:20px;">BLOQUE C</div>
+                        <i class="fa-solid fa-calculator" style="font-size:2rem;color:var(--c-purple);margin-bottom:0.8rem;"></i>
+                        <p style="font-weight:800;color:var(--c-purple);font-size:1.05rem;margin-bottom:0.5rem;">Aritmética · Metalógicos · E/S</p>
+                        <p style="font-size:0.88rem;color:var(--text-muted);margin:0;">Cálculos, inspección de términos y comunicación con el usuario.</p>
+                        <p style="margin-top:0.8rem;font-size:0.8rem;color:var(--c-purple);font-weight:700;">~55 min</p>
+                    </div>
+
+                    <div style="background:rgba(244,114,182,0.07);border:2px solid rgba(244,114,182,0.4);border-radius:18px;padding:1.8rem 1.5rem;text-align:center;position:relative;">
+                        <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--c-pink);color:#000;font-weight:900;font-size:0.8rem;padding:3px 12px;border-radius:20px;">BLOQUE D</div>
+                        <i class="fa-solid fa-code" style="font-size:2rem;color:var(--c-pink);margin-bottom:0.8rem;"></i>
+                        <p style="font-weight:800;color:var(--c-pink);font-size:1.05rem;margin-bottom:0.5rem;">Ejercicios Prácticos</p>
+                        <p style="font-size:0.88rem;color:var(--text-muted);margin:0;">Completar ejercicios de Prolog + entrega de avance del proyecto.</p>
+                        <p style="margin-top:0.8rem;font-size:0.8rem;color:var(--c-pink);font-weight:700;">~45 min · avance proyecto</p>
+                    </div>
+                </div>
+                <p style="margin-top:1.2rem;color:var(--text-muted);font-size:0.95rem;text-align:center;">
+                    <i class="fa-solid fa-circle-info" style="color:var(--c-cyan);"></i>
+                    Referencia bibliográfica: <strong style="color:var(--text-main);">Bratko, I. (2012). Prolog Programming for Artificial Intelligence.</strong>
+                </p>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             DIAPOSITIVA 3: COMPROBACIÓN DE LECTURA / REPASO
+             ============================================================ -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-gold"><i class="fa-solid fa-spell-check"></i> Bloque A · Comprobación de Lectura</div>
+                <h2>Repaso: ¿Qué aprendimos la semana pasada?</h2>
+                <p style="margin-bottom:1.5rem;">Responde mentalmente cada pregunta. Si algo no está claro, ¡este es el momento para preguntar!</p>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;align-items:stretch;">
+                    <div class="concept-box" style="border-left:4px solid var(--c-gold);">
+                        <h3 style="color:var(--c-gold);font-size:1.1rem;"><span class="step-tag" style="background:var(--c-gold);">Q1</span> Estructura básica</h3>
+                        <p style="font-size:1rem;">¿Cuál es la diferencia entre un <span class="tt">hecho<span class="tt-box">Hecho (Fact) en Prolog|||Una afirmación que Prolog acepta como <strong>verdadera sin condición</strong>. Ejemplo: <code>gato(tom).</code> significa "tom es un gato". No requiere justificación — simplemente existe en tu base de datos como una verdad absoluta.</span></span> y una <span class="tt">regla<span class="tt-box">Regla (Rule) en Prolog|||Una afirmación <strong>condicional</strong>: "X es verdad SI se cumplen ciertas condiciones". El símbolo <code>:-</code> se lee como "si". Ejemplo: <code>animal(X) :- gato(X).</code> significa "X es animal <em>si</em> X es gato".</span></span> en Prolog?</p>
+                        <div class="code-explain gold"><i class="fa-solid fa-eye"></i><span>Un <strong>hecho</strong> no lleva condición: siempre es verdad. Una <strong>regla</strong> toma una condición (lo que sigue al <code>:-</code>) y produce una conclusión: "X es animal <em>si</em> X es un gato".</span></div>
+                        <div class="code-block" style="margin-top:0.5rem;font-size:0.8rem;">
+<span class="cmt">% Hecho: una verdad incondicional</span>
+<span class="fact">gato</span>(tom).
+
+<span class="cmt">% Regla: verdad condicional</span>
+<span class="fact">animal</span>(<span class="var">X</span>) <span class="kw">:-</span> <span class="fact">gato</span>(<span class="var">X</span>).</div>
+                    </div>
+
+                    <div class="concept-box" style="border-left:4px solid var(--c-cyan);">
+                        <h3 style="color:var(--c-cyan);font-size:1.1rem;"><span class="step-tag">Q2</span> <span class="tt">Unificación<span class="tt-box">Unificación|||Operación fundamental de Prolog que intenta hacer que dos términos sean <strong>idénticos</strong> asignando valores a las variables. Si <code>X = hola</code>, Prolog asigna "hola" a X. Es más poderosa que la asignación porque funciona en ambas direcciones y puede unificar estructuras complejas.</span></span></h3>
+                        <p style="font-size:1rem;">¿Qué resultado produce esta consulta? ¿Por qué?</p>
+                        <div class="code-explain"><i class="fa-solid fa-eye"></i><span>Toma tres variables sin valor (X, Y, Z) y las enlaza en cadena: X recibe <code>hola</code>, Y recibe lo que vale X, y Z recibe la estructura <code>f(Y,5)</code>. Al final: X=hola, Y=hola, Z=f(hola,5).</span></div>
+                        <div class="code-block" style="margin-top:0.5rem;font-size:0.8rem;">
+<span class="qry">?- X = hola, Y = X, Z = f(Y, 5).</span>
+<span class="cmt">% Paso 1: X = hola          → X vale "hola"</span>
+<span class="cmt">% Paso 2: Y = X = hola      → Y vale "hola"</span>
+<span class="cmt">% Paso 3: Z = f(hola, 5)    → Z es la estructura f(hola,5)</span>
+<span class="cmt">% Resultado: X=hola, Y=hola, Z=f(hola,5)</span></div>
+                    </div>
+
+                    <div class="concept-box" style="border-left:4px solid var(--c-purple);">
+                        <h3 style="color:var(--c-purple);font-size:1.1rem;"><span class="step-tag" style="background:var(--c-purple);">Q3</span> <span class="tt">Backtracking<span class="tt-box">Backtracking (Retroceso)|||Mecanismo automático de Prolog: cuando una ruta de solución <strong>falla</strong>, Prolog regresa al último punto de decisión y prueba la siguiente alternativa. Es como explorar un laberinto: si un camino no lleva a la salida, retrocedes y pruebas otro. Ocurre sin que tú lo programes.</span></span></h3>
+                        <p style="font-size:1rem;">¿Qué es el <strong>backtracking</strong>? Mira cómo Prolog lo hace solo:</p>
+                        <div class="code-explain purple" style="margin-top:0.3rem;"><i class="fa-solid fa-eye"></i><span>Toma los hechos <code>color/1</code> y la regla <code>diferentes/2</code>, y busca automáticamente dos colores que cumplan <em>ambas</em> condiciones — sin que tú escribas el bucle de búsqueda.</span></div>
+                        <div class="code-block" style="font-size:0.78rem;line-height:1.8;">
+<span class="fact">color</span>(rojo). <span class="fact">color</span>(azul). <span class="fact">color</span>(verde).
+
+<span class="qry">?- color(X), X = azul.</span>
+<span class="cmt">% Intenta X=rojo → ¿rojo=azul? NO → retrocede</span>
+<span class="cmt">% Intenta X=azul  → ¿azul=azul? SÍ ✓ → X = azul</span></div>
+                    </div>
+
+                    <div class="concept-box" style="border-left:4px solid var(--c-green);">
+                        <h3 style="color:var(--c-green);font-size:1.1rem;"><span class="step-tag" style="background:var(--c-green);color:#000;">Q4</span> Listas</h3>
+                        <p style="font-size:1rem;">¿Qué significa la notación <code>[H|T]</code> en Prolog?</p>
+                        <div class="code-explain green"><i class="fa-solid fa-eye"></i><span>Toma la lista <code>[a,b,c,d]</code> y la divide: <code>H</code> recibe el <strong>primer elemento</strong> (a), <code>T</code> recibe <strong>el resto</strong> ([b,c,d]).</span></div>
+                        <div class="code-block" style="margin-top:0.5rem;font-size:0.8rem;">
+<span class="qry">?- [H|T] = [a, b, c, d].</span>
+<span class="cmt">% ¿Qué vale H? ¿Qué vale T?</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             DIAPOSITIVA 4: INTRO BLOQUE B + RECURSIVIDAD CONCEPTO
+             ============================================================ -->
+        <div class="slide">
+            <div class="card" style="align-items:center;justify-content:center;text-align:center;">
+                <div class="pill pill-cyan"><i class="fa-solid fa-rotate"></i> Bloque B · Recursividad</div>
+                <h1 style="font-size:clamp(2.2rem,4vw,4rem);">Prolog no tiene bucles</h1>
+                <h2 style="justify-content:center;text-align:center;
+                    background:linear-gradient(90deg,var(--c-cyan),var(--c-green));
+                    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">
+                    La <span class="tt" style="-webkit-text-fill-color:var(--c-cyan);">recursividad<span class="tt-box">Recursividad|||Técnica donde un predicado <strong>se llama a sí mismo</strong> para resolver una versión más pequeña del mismo problema. Se repite hasta llegar al caso base. En Prolog es la <em>única</em> forma de hacer repetición (no hay for/while).</span></span> ES la iteración</h2>
+
+                <p style="font-size:1.2rem;max-width:850px;margin:0 auto 2rem;">
+                    En Python o Java tienes <code>for</code>, <code>while</code>, <code>do-while</code>...
+                    En Prolog <strong>no existe nada de eso</strong>. La única manera de repetir algo es usando <strong>recursividad</strong>.
+                </p>
+
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;width:100%;max-width:1000px;">
+                    <div style="background:rgba(244,114,182,0.07);border:1px solid rgba(244,114,182,0.3);border-radius:16px;padding:1.5rem;text-align:center;">
+                        <i class="fa-solid fa-ban" style="font-size:2rem;color:var(--c-pink);margin-bottom:0.8rem;"></i>
+                        <p style="font-weight:800;color:var(--c-pink);margin:0 0 0.5rem;">No hay <code>for</code></p>
+                        <p style="font-size:0.9rem;margin:0;">No puedes hacer <code>for i in range(10)</code></p>
+                    </div>
+                    <div style="background:rgba(244,114,182,0.07);border:1px solid rgba(244,114,182,0.3);border-radius:16px;padding:1.5rem;text-align:center;">
+                        <i class="fa-solid fa-ban" style="font-size:2rem;color:var(--c-pink);margin-bottom:0.8rem;"></i>
+                        <p style="font-weight:800;color:var(--c-pink);margin:0 0 0.5rem;">No hay <code>while</code></p>
+                        <p style="font-size:0.9rem;margin:0;">No puedes hacer <code>while condicion</code></p>
+                    </div>
+                    <div style="background:rgba(74,222,128,0.07);border:2px solid rgba(74,222,128,0.4);border-radius:16px;padding:1.5rem;text-align:center;">
+                        <i class="fa-solid fa-circle-check" style="font-size:2rem;color:var(--c-green);margin-bottom:0.8rem;"></i>
+                        <p style="font-weight:800;color:var(--c-green);margin:0 0 0.5rem;">SÍ hay recursividad</p>
+                        <p style="font-size:0.9rem;margin:0;">Una regla que <strong>se llama a sí misma</strong></p>
+                    </div>
+                </div>
+
+                <div style="margin-top:1.5rem;background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.25);border-radius:14px;padding:1rem 2rem;max-width:700px;">
+                    <p style="margin:0;font-size:1.05rem;"><i class="fa-solid fa-triangle-exclamation" style="color:var(--c-gold);"></i>
+                        Una regla recursiva <strong>siempre necesita</strong> un <span class="tt">caso base<span class="tt-box">Caso Base|||La cláusula de una regla recursiva que <strong>NO se llama a sí misma</strong> y devuelve una respuesta directa. Es la condición de parada. Sin él, la recursión sería infinita y el programa nunca terminaría. Ejemplo: <code>factorial(0, 1).</code> — cuando N llega a 0, ya tenemos la respuesta.</span></span>
+                        (para detenerse) y un <span class="tt">caso recursivo<span class="tt-box">Caso Recursivo|||La cláusula que sí se llama a sí misma, pero con un argumento <strong>más pequeño o simplificado</strong>. Cada llamada se acerca al caso base. Ejemplo: <code>factorial(N, F) :- N1 is N-1, factorial(N1, F1)...</code> — cada vez N decrece hasta llegar a 0.</span></span> (para repetir).</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             DIAPOSITIVA 5: RECURSIVIDAD — EJEMPLOS BÁSICOS
+             ============================================================ -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-cyan"><i class="fa-solid fa-rotate"></i> Bloque B · Recursividad en Práctica</div>
+                <h2>Ejemplo clásico: Factorial</h2>
+
+                <!-- FILA 1: Qué es + Cómo piensa Prolog -->
+                <div class="grid-2" style="margin-bottom:1.2rem;">
+
+                    <!-- COLUMNA IZQUIERDA: Qué es factorial en palabras simples -->
+                    <div>
+                        <h3 style="color:var(--c-gold);margin-bottom:0.6rem;"><i class="fa-solid fa-circle-question"></i> Primero: ¿Qué es el factorial?</h3>
+                        <div style="background:rgba(250,204,21,0.06);border:1px solid rgba(250,204,21,0.2);border-radius:12px;padding:0.9rem 1.2rem;margin-bottom:1rem;">
+                            <p style="margin:0 0 0.5rem;font-size:1rem;">El factorial de un número N es <strong>multiplicar todos los números enteros desde N hasta 1</strong>.</p>
+                            <div style="display:flex;flex-direction:column;gap:4px;font-family:'JetBrains Mono';font-size:0.88rem;">
+                                <span><span style="color:var(--c-gold);font-weight:700;">3!</span> = 3 × 2 × 1 = <span style="color:var(--c-green);font-weight:700;">6</span></span>
+                                <span><span style="color:var(--c-gold);font-weight:700;">4!</span> = 4 × 3 × 2 × 1 = <span style="color:var(--c-green);font-weight:700;">24</span></span>
+                                <span><span style="color:var(--c-gold);font-weight:700;">0!</span> = <span style="color:var(--c-green);font-weight:700;">1</span> &nbsp;← por definición matemática</span>
+                            </div>
+                        </div>
+
+                        <h3 style="color:var(--c-cyan);margin-bottom:0.6rem;"><i class="fa-solid fa-lightbulb"></i> ¿Cómo lo piensa Prolog en español?</h3>
+                        <div style="display:flex;flex-direction:column;gap:5px;font-size:0.93rem;">
+                            <div style="background:rgba(34,211,238,0.06);border-left:3px solid var(--c-cyan);padding:0.5rem 1rem;border-radius:0 8px 8px 0;">
+                                "Para saber <strong>3!</strong>, necesito saber <strong>2!</strong> primero, y luego multiplicar por 3."
+                            </div>
+                            <div style="background:rgba(34,211,238,0.06);border-left:3px solid var(--c-cyan);padding:0.5rem 1rem;border-radius:0 8px 8px 0;margin-left:1rem;">
+                                "Para saber <strong>2!</strong>, necesito saber <strong>1!</strong> primero, y luego multiplicar por 2."
+                            </div>
+                            <div style="background:rgba(34,211,238,0.06);border-left:3px solid var(--c-cyan);padding:0.5rem 1rem;border-radius:0 8px 8px 0;margin-left:2rem;">
+                                "Para saber <strong>1!</strong>, necesito saber <strong>0!</strong> primero, y luego multiplicar por 1."
+                            </div>
+                            <div style="background:rgba(74,222,128,0.08);border-left:3px solid var(--c-green);padding:0.5rem 1rem;border-radius:0 8px 8px 0;margin-left:3rem;">
+                                "<strong>0!</strong> = 1. <span style="color:var(--c-green);font-weight:700;">¡Ya lo sé! No necesito más ayuda.</span>" ← <span class="tt">caso base<span class="tt-box">Caso Base|||La condición de parada de la recursión. Aquí, cuando llegamos a 0, Prolog ya tiene la respuesta (1) sin necesitar llamarse de nuevo. Sin este caso base, la recursión seguiría para siempre: factorial(-1), factorial(-2), ...</span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- COLUMNA DERECHA: El código como traducción directa del razonamiento -->
+                    <div>
+                        <h3 style="color:var(--c-purple);margin-bottom:0.6rem;"><i class="fa-solid fa-code"></i> El código: la traducción exacta de ese razonamiento</h3>
+                        <div class="code-explain purple">
+                          <i class="fa-solid fa-comment"></i>
+                          <span><strong>factorial(N, F):</strong> toma un número N y produce en F el resultado de N × (N-1) × … × 1. Si N es 0 → F = 1 (caso base). Si N &gt; 0 → calcula el factorial de N-1 primero, luego multiplica por N.</span>
+                        </div>
+                        <div class="code-block" style="font-size:0.83rem;">
+<span class="cmt">% "0! = 1. Ya lo sé, no necesito más."</span>
+<span class="fact">factorial</span>(<span class="num">0</span>, <span class="num">1</span>).
+
+<span class="cmt">% "Para cualquier N > 0:"</span>
+<span class="fact">factorial</span>(<span class="var">N</span>, <span class="var">F</span>) <span class="kw">:-</span>
+    <span class="var">N</span> <span class="kw">></span> <span class="num">0</span>,           <span class="cmt">% solo si N es positivo</span>
+    <span class="var">N1</span> <span class="kw">is</span> <span class="var">N</span> <span class="kw">-</span> <span class="num">1</span>,    <span class="cmt">% calcula N-1</span>
+    <span class="fact">factorial</span>(<span class="var">N1</span>, <span class="var">F1</span>), <span class="cmt">% pide ayuda para (N-1)!</span>
+    <span class="var">F</span> <span class="kw">is</span> <span class="var">N</span> <span class="kw">*</span> <span class="var">F1</span>.     <span class="cmt">% multiplica: N × (N-1)!</span></div>
+
+                        <!-- FASE BAJADA / SUBIDA con valores concretos -->
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-top:0.8rem;">
+                            <div style="background:rgba(244,114,182,0.06);border:1px solid rgba(244,114,182,0.25);border-radius:12px;padding:0.7rem 0.9rem;">
+                                <p style="font-size:0.72rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--c-pink);margin-bottom:0.5rem;">
+                                    <i class="fa-solid fa-arrow-down"></i> Bajada: "pide ayuda"
+                                </p>
+                                <div style="font-family:'JetBrains Mono';font-size:0.8rem;display:flex;flex-direction:column;gap:3px;">
+                                    <span style="color:var(--c-pink);">3! → necesita 2!</span>
+                                    <span style="color:var(--c-pink);margin-left:0.8rem;">2! → necesita 1!</span>
+                                    <span style="color:var(--c-pink);margin-left:1.6rem;">1! → necesita 0!</span>
+                                    <span style="color:var(--c-green);margin-left:2.4rem;">0! = <strong style="color:var(--c-green);">1 ✓</strong></span>
+                                </div>
+                            </div>
+                            <div style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.25);border-radius:12px;padding:0.7rem 0.9rem;">
+                                <p style="font-size:0.72rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--c-green);margin-bottom:0.5rem;">
+                                    <i class="fa-solid fa-arrow-up"></i> Subida: "calcula y entrega"
+                                </p>
+                                <div style="font-family:'JetBrains Mono';font-size:0.8rem;display:flex;flex-direction:column;gap:3px;">
+                                    <span style="color:var(--c-green);margin-left:2.4rem;">0! = 1</span>
+                                    <span style="color:var(--c-green);margin-left:1.6rem;">1! = 1×1 = <strong>1</strong></span>
+                                    <span style="color:var(--c-green);margin-left:0.8rem;">2! = 2×1 = <strong>2</strong></span>
+                                    <span style="color:var(--c-gold);font-weight:700;">3! = 3×2 = <strong style="color:var(--c-gold);">6 🎯</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             DIAPOSITIVA 6a: LISTAS — [H|T] y miembro/2
+             ============================================================ -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-cyan"><i class="fa-solid fa-list"></i> Bloque B · Listas en Prolog (1/2)</div>
+                <h2>Procesando listas: la notación <code>[H|T]</code></h2>
+
+                <!-- Visual H|T box -->
+                <div style="background:rgba(34,211,238,0.05);border:1px solid rgba(34,211,238,0.2);border-radius:16px;padding:1.2rem 2rem;margin-bottom:1.8rem;display:flex;align-items:center;gap:3rem;flex-wrap:wrap;">
+                    <div>
+                        <p style="margin:0 0 0.5rem;font-size:0.75rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--c-cyan);">Cómo Prolog divide cualquier lista</p>
+                        <div style="display:flex;align-items:center;gap:0.6rem;font-family:'JetBrains Mono';font-size:1rem;">
+                            <span style="color:#94a3b8;">[</span>
+                            <span style="background:rgba(34,211,238,0.2);border:1px solid var(--c-cyan);border-radius:8px;padding:4px 14px;color:var(--c-cyan);font-weight:700;">a</span>
+                            <span style="color:#475569;font-size:1.2rem;">|</span>
+                            <span style="background:rgba(74,222,128,0.15);border:1px solid var(--c-green);border-radius:8px;padding:4px 14px;color:var(--c-green);">b, c, d</span>
+                            <span style="color:#94a3b8;">]</span>
+                        </div>
+                        <div style="display:flex;gap:1.5rem;font-size:0.85rem;margin-top:8px;">
+                            <span style="color:var(--c-cyan);font-weight:700;">H = a &nbsp;(cabeza — el primero)</span>
+                            <span style="color:var(--c-green);font-weight:700;">T = [b, c, d] &nbsp;(cola — el resto)</span>
+                        </div>
+                    </div>
+                    <div style="flex:1;min-width:260px;">
+                        <p style="margin:0;font-size:0.95rem;line-height:1.7;">
+                            En IA trabajamos con listas todo el tiempo: lista de síntomas, de diagnósticos, de pacientes. Para recorrerlas o buscar en ellas, Prolog las divide siempre en <strong style="color:var(--c-cyan);">un primer elemento</strong> y <strong style="color:var(--c-green);">el resto</strong>. Eso es <code>[H|T]</code>.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div>
+                        <h3 style="color:var(--c-pink);"><i class="fa-solid fa-magnifying-glass"></i> ¿Cómo buscar si algo está en la lista? → <code>miembro/2</code></h3>
+                        <p style="font-size:0.95rem;margin-bottom:0.8rem;">El guion bajo <span class="tt"><code>_</code><span class="tt-box">Variable Anónima ( _ )|||En Prolog, el guion bajo (<code>_</code>) es una <strong>variable especial que se ignora</strong>. Significa "aquí hay un valor pero no me importa cuál es". Puede aparecer múltiples veces en una cláusula y cada vez es una variable diferente. Útil para describir patrones sin capturar todos los datos.</span></span> significa <strong>"hay un valor ahí, pero no me importa cuál"</strong>.</p>
+                        <div class="code-explain pink"><i class="fa-solid fa-comment"></i><span><strong>miembro(X, Lista):</strong> toma un elemento X y una Lista, y responde true si X aparece en ella. Si X es igual al primer elemento → encontrado. Si no → repite la búsqueda en el resto de la lista.</span></div>
+                        <div class="code-block" style="font-size:0.92rem;line-height:2.1;">
+<span class="cmt">% CASO BASE: X es el primer elemento</span>
+<span class="fact">miembro</span>(<span class="var">X</span>, [<span class="var">X</span>|<span class="var">_</span>]).
+
+<span class="cmt">% CASO RECURSIVO: busca en el resto</span>
+<span class="fact">miembro</span>(<span class="var">X</span>, [<span class="var">_</span>|<span class="var">Cola</span>]) <span class="kw">:-</span>
+    <span class="fact">miembro</span>(<span class="var">X</span>, <span class="var">Cola</span>).</div>
+                    </div>
+
+                    <div>
+                        <h3 style="color:var(--c-purple);"><i class="fa-solid fa-play"></i> ¿Qué resultados produce?</h3>
+                        <div class="code-explain purple"><i class="fa-solid fa-comment"></i><span>Uso 1 — verificar: <code>miembro(b, [a,b,c])</code> toma b y la lista, y produce <code>true</code> (b está). Uso 2 — listar: <code>miembro(X, [1,2,3])</code> toma la lista y produce cada elemento uno a uno: 1, luego 2, luego 3.</span></div>
+                        <div class="code-block" style="font-size:0.95rem;line-height:2.3;">
+<span class="cmt">% ¿Está b en la lista?</span>
+<span class="qry">?- miembro(b, [a, b, c]).</span>
+<span class="cmt">% true  ← sí está</span>
+
+<span class="cmt">% ¿Cuáles son todos los elementos?</span>
+<span class="qry">?- miembro(X, [1, 2, 3]).</span>
+<span class="cmt">% X = 1 ; X = 2 ; X = 3  ← los lista uno a uno</span></div>
+
+                        <div style="margin-top:1.2rem;background:rgba(216,180,254,0.06);border:1px solid rgba(216,180,254,0.25);border-radius:12px;padding:1rem 1.3rem;">
+                            <p style="margin:0;font-size:0.95rem;line-height:1.7;"><i class="fa-solid fa-lightbulb" style="color:var(--c-gold);"></i> &nbsp;<strong>Nota:</strong> el mismo predicado funciona para buscar <em>y</em> para listar — depende de si le pasas un valor fijo o una variable libre <code>X</code>.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             DIAPOSITIVA 6b: LISTAS — longitud/2
+             ============================================================ -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-cyan"><i class="fa-solid fa-ruler"></i> Bloque B · Listas en Prolog (2/2)</div>
+                <h2>Predicado <code>longitud/2</code> — contar elementos</h2>
+
+                <div class="grid-2" style="gap:2rem;">
+                    <div>
+                        <h3 style="color:var(--c-purple);"><i class="fa-solid fa-code"></i> La implementación</h3>
+                        <div class="code-explain purple"><i class="fa-solid fa-comment"></i><span><strong>longitud(Lista, N):</strong> toma una Lista y produce en N su número de elementos. Si la lista está vacía → N = 0. Si no → cuenta el resto y le suma 1.</span></div>
+                        <div class="code-block" style="font-size:0.95rem;line-height:2.2;">
+<span class="cmt">% CASO BASE: lista vacía tiene longitud 0</span>
+<span class="fact">longitud</span>([], <span class="num">0</span>).
+
+<span class="cmt">% CASO RECURSIVO: 1 más que el resto</span>
+<span class="fact">longitud</span>([<span class="var">_</span>|<span class="var">Cola</span>], <span class="var">N</span>) <span class="kw">:-</span>
+    <span class="fact">longitud</span>(<span class="var">Cola</span>, <span class="var">N1</span>),
+    <span class="var">N</span> <span class="kw">is</span> <span class="var">N1</span> <span class="kw">+</span> <span class="num">1</span>.
+
+<span class="qry">?- longitud([a, b, c], N).</span>
+<span class="cmt">% N = 3</span></div>
+                    </div>
+
+                    <div style="display:flex;flex-direction:column;gap:1.2rem;">
+                        <div style="background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.3);border-radius:14px;padding:1.2rem 1.5rem;">
+                            <p style="margin:0 0 0.4rem;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--c-cyan);"><i class="fa-solid fa-circle-info"></i> &nbsp;¿<code>longitud</code> o <code>length</code>?</p>
+                            <p style="margin:0;font-size:0.95rem;line-height:1.7;"><code>longitud/2</code> es el predicado que definimos nosotros.<br><code>length/2</code> es el <strong>predicado incorporado de Prolog</strong> — hace lo mismo sin necesidad de definirlo.<br>En el ejercicio puedes usar cualquiera de los dos.</p>
+                        </div>
+
+                        <div style="background:rgba(250,204,21,0.06);border:1px solid rgba(250,204,21,0.25);border-radius:14px;padding:1.2rem 1.5rem;">
+                            <p style="margin:0 0 0.4rem;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--c-gold);"><i class="fa-solid fa-lightbulb"></i> &nbsp;Resumen del patrón de listas</p>
+                            <p style="margin:0;font-size:0.95rem;line-height:1.7;">Toda operación sobre listas tiene:<br>
+                            • <strong>Caso base</strong> con lista vacía <code>[]</code><br>
+                            • <strong>Caso recursivo</strong> con <code>[_|Cola]</code><br>
+                            Se aplica a miembro, longitud, suma, máximo, filtros...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             DIAPOSITIVA 7: CONTROL — EL CUT (!)
+             ============================================================ -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-pink"><i class="fa-solid fa-scissors"></i> Bloque B · Control: El <span class="tt" style="-webkit-text-fill-color:var(--c-pink);border-bottom-color:var(--c-pink);">Cut ( ! )<span class="tt-box">El operador Cut ( ! )|||Símbolo especial que le dice a Prolog: <strong>"ya tomé esta decisión, no busques más alternativas"</strong>. Cuando Prolog llega a <code>!</code>, elimina todos los puntos de decisión pendientes y no puede hacer backtracking para esa cláusula. Es como cerrar puertas que ya no necesitas explorar.</span></span></div>
+                <h2>El operador Cut (<code>!</code>): tomar una decisión y no mirar atrás</h2>
+
+                <div class="grid-2">
+                    <div>
+                        <h3 style="color:var(--c-pink);"><i class="fa-solid fa-hand"></i> ¿Cuál es el problema que resuelve?</h3>
+                        <p>Prolog, por defecto, <strong>sigue buscando más respuestas</strong> aunque ya encontró la correcta. El operador <code>!</code> le dice: <em>"ya decidiste, no sigas buscando"</em>. Sin él, a veces obtienes respuestas de más o directamente incorrectas.</p>
+
+                        <div class="example-box" style="border-color:var(--c-pink);background:rgba(244,114,182,0.05);">
+                            <p style="margin:0;"><strong>Analogía:</strong> Es como firmar un contrato. Una vez que pasas el <code>!</code>, ya te comprometiste con esa decisión y no hay vuelta atrás.</p>
+                        </div>
+
+                        <h3 style="color:var(--c-cyan);margin-top:1.2rem;"><i class="fa-solid fa-code"></i> Ejemplo: Calcular el máximo de dos números</h3>
+                        <div class="code-explain"><i class="fa-solid fa-comment"></i><span><strong>maximo(X, Y, M):</strong> toma dos números X e Y y produce el mayor en M. Si X ≥ Y → M = X, y el <code>!</code> impide que Prolog pruebe la segunda cláusula. Si X &lt; Y → M = Y.</span></div>
+                        <div class="code-block">
+<span class="cmt">% Si X >= Y, X es el máximo. ¡Y ya!</span>
+<span class="fact">maximo</span>(<span class="var">X</span>, <span class="var">Y</span>, <span class="var">X</span>) <span class="kw">:-</span>
+    <span class="var">X</span> <span class="kw">>=</span> <span class="var">Y</span>,
+    <span class="kw">!</span>.             <span class="cmt">% no intentes más cláusulas</span>
+
+<span class="cmt">% Si llega aquí, es porque X < Y</span>
+<span class="fact">maximo</span>(<span class="var">_</span>, <span class="var">Y</span>, <span class="var">Y</span>).
+
+<span class="qry">?- maximo(5, 3, M).</span>
+<span class="cmt">% M = 5</span></div>
+                    </div>
+
+                    <div>
+                        <h3 style="color:var(--c-gold);"><i class="fa-solid fa-scale-balanced"></i> Dos situaciones donde aparece el Cut</h3>
+
+                        <!-- Cut Verde -->
+                        <div style="background:rgba(74,222,128,0.05);border:1px solid rgba(74,222,128,0.3);border-radius:10px;padding:0.65rem 0.9rem;margin-bottom:0.6rem;">
+                            <p style="margin:0 0 0.2rem;font-size:0.78rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--c-green);"><i class="fa-solid fa-circle-check"></i> Cuando el <code>!</code> <strong>solo mejora rendimiento</strong> (sin él, el resultado sería el mismo)</p>
+                            <p style="margin:0 0 0.3rem;font-size:0.82rem;color:var(--text-muted);">El ejemplo <code>maximo</code> de la izquierda: sin el <code>!</code>, Prolog daría la misma respuesta correcta, pero perdería tiempo probando la segunda cláusula innecesariamente.</p>
+                            <div class="code-block" style="font-size:0.76rem;line-height:1.7;margin:0;">
+<span class="qry">?- maximo(5, 3, M).</span>
+<span class="cmt">% Con !  → M=5  (no prueba la 2ª cláusula)</span>
+<span class="cmt">% Sin !  → M=5  (igual, pero Prolog pierde tiempo)</span></div>
+                        </div>
+
+                        <!-- Cut Rojo -->
+                        <div style="background:rgba(244,114,182,0.05);border:1px solid rgba(244,114,182,0.3);border-radius:10px;padding:0.65rem 0.9rem;margin-bottom:0.6rem;">
+                            <p style="margin:0 0 0.2rem;font-size:0.78rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--c-pink);"><i class="fa-solid fa-triangle-exclamation"></i> Cuando el <code>!</code> <strong>es indispensable</strong> — sin él, el resultado sería <em>incorrecto</em></p>
+                            <p style="margin:0 0 0.3rem;font-size:0.82rem;color:var(--text-muted);">Sin <code>!</code>, el número 5 produciría <strong>dos respuestas</strong> porque <code>signo(_,negativo)</code> usa <code>_</code> (cualquier valor), ¡y 5 también lo cumple!</p>
+                            <div class="code-block" style="font-size:0.76rem;line-height:1.7;margin:0;">
+<span class="fact">signo</span>(<span class="var">X</span>, positivo) <span class="kw">:-</span> <span class="var">X</span> <span class="kw">></span> <span class="num">0</span>, <span class="kw">!</span>. <span class="cmt">% ← cut rojo: sin él hay error</span>
+<span class="fact">signo</span>(<span class="num">0</span>, cero)     <span class="kw">:-</span> <span class="kw">!</span>.
+<span class="fact">signo</span>(<span class="var">_</span>, negativo).
+<span class="cmt">% CON !  →  ?- signo(5, S).  →  S = positivo.  ✓ (una sola respuesta)</span>
+<span class="cmt">% SIN !  →  ?- signo(5, S).  →  S = positivo  (1ª cláusula: 5>0 ✓)</span>
+<span class="cmt">%                              ;  S = negativo  (3ª cláusula: _=5 ✓) ← ¡ERROR!</span></div>
+                            <p style="margin:0.4rem 0 0;font-size:0.8rem;color:var(--text-muted);">El problema: <code>signo(_,negativo)</code> acepta <em>cualquier</em> valor (incluso 5). Sin <code>!</code>, Prolog llega a esa cláusula por backtracking y da una segunda respuesta <strong>incorrecta</strong>. El cut elimina esa posibilidad.</p>
+                        </div>
+
+                        <div style="background:rgba(250,204,21,0.06);border:1px solid rgba(250,204,21,0.2);border-radius:10px;padding:0.55rem 1rem;">
+                            <p style="margin:0;font-size:0.85rem;"><i class="fa-solid fa-lightbulb" style="color:var(--c-gold);"></i>
+                                <strong>Regla de oro:</strong> Si al quitar el <code>!</code> tu programa da los mismos resultados → cut verde ✅. Si cambia → cut rojo, úsalo con cuidado ⚠️</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             DIAPOSITIVA 8a: CONTROL — fail
+             ============================================================ -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-pink"><i class="fa-solid fa-xmark"></i> Bloque B · Control: <code>fail</code> (1/2)</div>
+                <h2>¿Cómo obtener <em>todas</em> las respuestas posibles?</h2>
+
+                <div class="grid-2" style="gap:2rem;">
+                    <div>
+                        <h3 style="color:var(--c-pink);"><i class="fa-solid fa-xmark-circle"></i> El truco: usar <code>fail</code> para seguir buscando</h3>
+                        <p style="font-size:1rem;line-height:1.7;"><code>fail</code> <strong>siempre falla</strong> al instante. ¿Para qué sirve algo que siempre falla? Para obligar a Prolog a <strong>buscar la siguiente respuesta</strong> — así recorremos todos los resultados uno por uno.</p>
+
+                        <div class="code-explain pink"><i class="fa-solid fa-comment"></i><span><strong>listar_animales:</strong> toma todos los hechos <code>animal/1</code> de la BD y los imprime uno a uno. Después de cada impresión, <code>fail</code> obliga a Prolog a buscar el siguiente. Cuando no queda ninguno, termina.</span></div>
+                        <div class="code-block" style="font-size:0.95rem;line-height:2.1;">
+<span class="cmt">% Listar todos los hechos animal/1</span>
+<span class="fact">listar_animales</span> <span class="kw">:-</span>
+    <span class="fact">animal</span>(<span class="var">X</span>),       <span class="cmt">% encuentra un animal</span>
+    <span class="fact">write</span>(<span class="var">X</span>), <span class="fact">nl</span>, <span class="cmt">% lo imprime</span>
+    <span class="kw">fail</span>.          <span class="cmt">% fuerza buscar el siguiente</span>
+<span class="fact">listar_animales</span>.  <span class="cmt">% caso base: termina bien</span></div>
+                    </div>
+
+                    <div>
+                        <h3 style="color:var(--c-gold);"><i class="fa-solid fa-globe"></i> Regla importante: Prolog solo sabe lo que tú le enseñaste</h3>
+
+                        <div style="background:rgba(250,204,21,0.05);border:2px solid rgba(250,204,21,0.3);border-radius:14px;padding:1.2rem 1.5rem;margin-bottom:1.2rem;">
+                            <p style="margin:0 0 0.8rem;font-size:1rem;"><strong>Si algo no está en la base de datos → Prolog lo trata como falso.</strong></p>
+                            <p style="margin:0;font-size:0.95rem;color:var(--text-muted);line-height:1.7;">Si la BD solo tiene <code>casado(pedro)</code>, Prolog asume que <em>juan</em>, <em>ana</em> y <em>maria</em> <strong>no están casados</strong> — aunque en la vida real quizá sí lo estén. Prolog no puede saber lo que no le dijiste.</p>
+                        </div>
+
+                        <div style="background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.25);border-radius:12px;padding:1rem 1.3rem;">
+                            <p style="margin:0;font-size:0.95rem;line-height:1.7;"><i class="fa-solid fa-arrow-right" style="color:var(--c-cyan);"></i> &nbsp;Esto es exactamente lo que permite que <code>\+</code> funcione: si Prolog <em>no puede probar</em> algo, lo trata como falso. Ver siguiente diapositiva.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             DIAPOSITIVA 8b: NEGACIÓN \+ y \=
+             ============================================================ -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-pink"><i class="fa-solid fa-not-equal"></i> Bloque B · Negación: <code>\+</code> y <code>\=</code> (2/2)</div>
+                <h2>¿Cómo decir "que NO sea el caso de que…"? → <code>\+</code></h2>
+
+                <div class="grid-2" style="gap:2rem;">
+                    <div>
+                        <h3 style="color:var(--c-purple);"><i class="fa-solid fa-not-equal"></i> Verificar que algo NO existe: <code>\+</code></h3>
+                        <div class="code-explain purple"><i class="fa-solid fa-comment"></i><span><strong>soltero(X):</strong> toma una persona X y produce <code>true</code> si X existe en la BD <strong>y</strong> no hay ningún hecho <code>casado(X)</code>. El operador <code>\+</code> toma una consulta y devuelve true si Prolog <em>no puede probarla</em>.</span></div>
+                        <div class="code-block" style="font-size:0.92rem;line-height:2.1;">
+<span class="cmt">% \+(X) es verdadero si X NO puede probarse</span>
+<span class="fact">soltero</span>(<span class="var">X</span>) <span class="kw">:-</span>
+    <span class="fact">persona</span>(<span class="var">X</span>),
+    <span class="kw">\+</span> <span class="fact">casado</span>(<span class="var">X</span>).
+
+<span class="fact">persona</span>(juan). <span class="fact">persona</span>(ana). <span class="fact">persona</span>(pedro).
+<span class="fact">casado</span>(pedro).
+
+<span class="qry">?- soltero(X).</span>
+<span class="cmt">% X = juan ; X = ana</span></div>
+
+                        <div style="background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.3);border-radius:12px;padding:0.9rem 1.2rem;margin-top:1rem;">
+                            <p style="margin:0;font-size:0.95rem;"><strong style="color:var(--c-green);">¿Cuándo usar \+?</strong> Cuando quieras expresar "siempre que NO sea el caso de que..."</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 style="color:var(--c-cyan);"><i class="fa-solid fa-play"></i> Resultados: ¿qué devuelve?</h3>
+                        <div class="code-explain"><i class="fa-solid fa-comment"></i><span><code>\+ casado(juan)</code>: toma la consulta <code>casado(juan)</code>, no la encuentra → produce <code>true</code>. <code>\+ casado(pedro)</code>: toma <code>casado(pedro)</code>, sí la encuentra → produce <code>false</code> (pedro no se filtra).</span></div>
+                        <div class="code-block" style="font-size:0.92rem;line-height:2.1;">
+<span class="qry">?- \+ casado(juan).</span>   <span class="cmt">% true  (no aparece)</span>
+<span class="qry">?- \+ casado(pedro).</span>  <span class="cmt">% false (sí aparece)</span>
+<span class="qry">?- \+ casado(maria).</span>  <span class="cmt">% true  (no existe)</span></div>
+
+                        <h3 style="color:var(--c-pink);margin-top:1.5rem;"><i class="fa-solid fa-not-equal"></i> Bonus: comparar si dos valores son distintos → <code>\=</code></h3>
+                        <p style="font-size:0.95rem;margin-bottom:0.5rem;"><code>X \= Y</code> es verdadero cuando <strong>X e Y son valores diferentes</strong> que no pueden igualarse. Es el opuesto directo de <code>=</code>.</p>
+                        <div class="code-block" style="font-size:0.92rem;line-height:2.1;">
+<span class="qry">?- rojo \= azul.</span>  <span class="cmt">% true  — átomos distintos</span>
+<span class="qry">?- X \= 5.</span>      <span class="cmt">% false — X puede unificarse con 5</span>
+<span class="qry">?- 3+1 \= 4.</span>    <span class="cmt">% true  — NO evalúa aritmética</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             DIAPOSITIVA 9: ARITMÉTICA — is vs =
+             ============================================================ -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-purple"><i class="fa-solid fa-calculator"></i> Bloque C · Aritmética en Prolog</div>
+                <h2>El error más común: confundir <code>=</code> con <code>is</code></h2>
+
+                <div class="grid-2" style="margin-bottom:1.5rem;">
+                    <div style="background:rgba(244,114,182,0.06);border:2px solid rgba(244,114,182,0.3);border-radius:16px;padding:1.5rem;">
+                        <h3 style="color:var(--c-pink);"><i class="fa-solid fa-equals"></i> El operador <code>=</code> (<span class="tt">unificación<span class="tt-box">Unificación ( = )|||El operador <code>=</code> en Prolog <strong>NO calcula nada</strong>. Solo intenta hacer que ambos lados sean idénticos en estructura. <code>X = 3+4</code> hace que X sea la estructura "suma de 3 y 4", no el número 7. Piénsalo como encajar piezas de rompecabezas por forma, no por valor.</span></span>)</h3>
+                        <p>Solo <strong>empareja estructuras</strong>. <strong>NO evalúa</strong> nada matemáticamente.</p>
+                        <div class="code-explain pink">
+                          <i class="fa-solid fa-comment"></i>
+                          <span><strong>X = 3+4:</strong> toma el símbolo <code>3+4</code> y lo guarda en X tal como está — X vale la estructura "+(3,4)", <strong>no el número 7</strong>. El operador <code>=</code> iguala formas, no calcula.</span>
+                        </div>
+                        <div class="code-block">
+<span class="qry">?- X = 3 + 4.</span>
+<span class="cmt">% X = 3+4    ← ¡literalmente la estructura 3+4!</span>
+<span class="cmt">% NO es 7. Prolog ve "+(3,4)", no calcula nada.</span>
+
+<span class="qry">?- X = 10 - 3.</span>
+<span class="cmt">% X = 10-3   ← no es 7 tampoco</span></div>
+                        <div class="result-badge result-fail" style="margin-top:0.8rem;">
+                            <i class="fa-solid fa-xmark"></i> No evalúa expresiones matemáticas
+                        </div>
+                    </div>
+
+                    <div style="background:rgba(74,222,128,0.06);border:2px solid rgba(74,222,128,0.4);border-radius:16px;padding:1.5rem;">
+                        <h3 style="color:var(--c-green);"><i class="fa-solid fa-wand-magic-sparkles"></i> El operador <span class="tt"><code>is</code><span class="tt-box">Operador is (Evaluación)|||El operador <code>is</code> le dice a Prolog: <strong>"evalúa la expresión aritmética del lado derecho"</strong> y asigna el número resultante a la variable del lado izquierdo. <code>X is 3+4</code> → X vale 7. La variable izquierda debe estar <em>sin valor</em> antes de usar is.</span></span> (evaluación)</h3>
+                        <p><strong>Evalúa</strong> la expresión del lado derecho y unifica el resultado con la variable izquierda.</p>
+                        <div class="code-explain green">
+                          <i class="fa-solid fa-comment"></i>
+                          <span><strong>X is 3+4:</strong> toma la expresión aritmética <code>3+4</code>, la <em>evalúa</em> y guarda el resultado (7) en X. Siempre usa <code>is</code> cuando quieras calcular — nunca <code>=</code>.</span>
+                        </div>
+                        <div class="code-block">
+<span class="qry">?- X is 3 + 4.</span>
+<span class="cmt">% X = 7      ← ¡esto sí calcula!</span>
+
+<span class="qry">?- X is 10 - 3.</span>
+<span class="cmt">% X = 7      ← calcula y unifica</span>
+
+<span class="qry">?- X is 2 ** 8.</span>
+<span class="cmt">% X = 256    ← potencias también</span></div>
+                        <div class="result-badge result-ok" style="margin-top:0.8rem;">
+                            <i class="fa-solid fa-check"></i> Evalúa y devuelve el resultado numérico
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background:rgba(250,204,21,0.06);border:1px solid rgba(250,204,21,0.25);border-radius:14px;padding:1rem 1.5rem;">
+                    <p style="margin:0;font-size:1rem;"><i class="fa-solid fa-triangle-exclamation" style="color:var(--c-gold);"></i>
+                        <strong>Regla de oro:</strong> La variable del lado izquierdo de <code>is</code> debe estar <strong>libre (sin valor todavía)</strong> al momento de evaluar — es donde Prolog <em>guarda</em> el resultado.
+                        El lado derecho debe ser una expresión con todos los valores ya conocidos.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             DIAPOSITIVA 10: ARITMÉTICA — OPERADORES Y EJEMPLOS
+             ============================================================ -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-purple"><i class="fa-solid fa-calculator"></i> Bloque C · Operadores Aritméticos</div>
+                <h2>Operadores y comparadores numéricos</h2>
+
+                <!-- Regla de uso rápido -->
+                <div style="background:rgba(216,180,254,0.06);border:1px solid rgba(216,180,254,0.25);border-radius:12px;padding:0.55rem 1.2rem;margin-bottom:0.9rem;display:flex;gap:2rem;flex-wrap:wrap;align-items:center;">
+                    <span style="font-size:0.85rem;font-weight:700;color:var(--c-purple);">¿Cuándo usar cada uno?</span>
+                    <span style="font-size:0.85rem;color:var(--text-muted);"><code>X is expr</code> → <strong>calcular</strong> un valor y guardarlo en X</span>
+                    <span style="font-size:0.85rem;color:var(--text-muted);"><code>expr1 &gt; expr2</code> → <strong>comparar</strong> dos valores (no guarda nada)</span>
+                    <span style="font-size:0.85rem;color:var(--text-muted);"><code>expr1 =:= expr2</code> → <strong>verificar igualdad</strong> aritmética</span>
+                </div>
+
+                <div class="grid-2">
+                    <div>
+                        <h3 style="color:var(--c-purple);"><i class="fa-solid fa-table"></i> Referencia rápida</h3>
+                        <table>
+                            <tr><th>Operador</th><th>Significado</th><th>Ejemplo</th></tr>
+                            <tr><td><code>+</code>, <code>-</code>, <code>*</code>, <code>/</code></td><td>Operaciones básicas</td><td><code>X is 3 * 4</code> → 12</td></tr>
+                            <tr><td><code>mod</code></td><td>Módulo (residuo)</td><td><code>X is 10 mod 3</code> → 1</td></tr>
+                            <tr><td><code>//</code></td><td>División entera</td><td><code>X is 7 // 2</code> → 3</td></tr>
+                            <tr><td><code>abs</code></td><td>Valor absoluto</td><td><code>X is abs(-5)</code> → 5</td></tr>
+                            <tr><td><span class="tt"><code>=:=</code><span class="tt-box">Igualdad aritmética ( =:= )|||Compara dos expresiones <strong>evaluando ambas</strong> primero. <code>2+2 =:= 4</code> es true porque ambos lados evalúan a 4. Es diferente de <code>=</code>: con <code>=</code> la comparación sería estructural y fallaría porque "2+2" no es idéntico a "4".</span></span></td><td>Igual aritmético</td><td><code>2+2 =:= 4</code> → true</td></tr>
+                            <tr><td><code>=\=</code></td><td>Diferente aritmético</td><td><code>3 =\= 4</code> → true</td></tr>
+                            <tr><td><span class="tt"><code>>  &lt;  >=  =&lt;</code><span class="tt-box">Comparadores numéricos|||Comparan valores numéricos evaluando ambas expresiones. <strong>¡Ojo!</strong> "menor o igual" en Prolog se escribe <code>=&lt;</code> (no <code>&lt;=</code> como en otros lenguajes). Ejemplo: <code>3 =&lt; 5</code> es true.</span></span></td><td>Comparaciones</td><td><code>5 > 3</code> → true</td></tr>
+                        </table>
+                        <p style="font-size:0.85rem;margin-top:0.5rem;">⚠️ Nota: "menor o igual" es <code>=&lt;</code>, no <code>&lt;=</code> como en otros lenguajes.</p>
+                    </div>
+
+                    <div>
+                        <h3 style="color:var(--c-cyan);"><i class="fa-solid fa-code"></i> Suma de todos los elementos de una lista</h3>
+                        <div class="code-explain"><i class="fa-solid fa-comment"></i><span><strong>suma_lista(Lista, S):</strong> toma una lista de números y produce en S su suma total. Lista vacía → S=0. Si no → suma el resto primero y luego suma la cabeza. Ejemplo: <code>[1,2,3,4]</code> → S=10.</span></div>
+                        <div class="code-block">
+<span class="cmt">% Suma de una lista</span>
+<span class="fact">suma_lista</span>([], <span class="num">0</span>).               <span class="cmt">% lista vacía: 0</span>
+<span class="fact">suma_lista</span>([<span class="var">H</span>|<span class="var">T</span>], <span class="var">S</span>) <span class="kw">:-</span>
+    <span class="fact">suma_lista</span>(<span class="var">T</span>, <span class="var">S1</span>),        <span class="cmt">% suma del resto</span>
+    <span class="var">S</span> <span class="kw">is</span> <span class="var">S1</span> <span class="kw">+</span> <span class="var">H</span>.           <span class="cmt">% agrega la cabeza</span>
+
+<span class="qry">?- suma_lista([1, 2, 3, 4], S).</span>
+<span class="cmt">% S = 10</span></div>
+
+                        <h3 style="color:var(--c-green);margin-top:1.2rem;"><i class="fa-solid fa-thermometer"></i> Conversión de temperatura</h3>
+                        <div class="code-explain green"><i class="fa-solid fa-comment"></i><span><strong>celsius_a_fahrenheit(C, F):</strong> toma una temperatura C (en Celsius) y produce F (en Fahrenheit) aplicando F = C × 9/5 + 32. Ejemplo: toma 100 → produce 212.</span></div>
+                        <div class="code-block">
+<span class="fact">celsius_a_fahrenheit</span>(<span class="var">C</span>, <span class="var">F</span>) <span class="kw">:-</span>
+    <span class="var">F</span> <span class="kw">is</span> <span class="var">C</span> <span class="kw">*</span> <span class="num">9</span> <span class="kw">/</span> <span class="num">5</span> <span class="kw">+</span> <span class="num">32</span>.
+
+<span class="qry">?- celsius_a_fahrenheit(100, F).</span>
+<span class="cmt">% F = 212</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             DIAPOSITIVA 11a: PREDICADOS METALÓGICOS — TIPOS (1/2)
+             ============================================================ -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-gold"><i class="fa-solid fa-magnifying-glass-chart"></i> Bloque C · Herramientas de inspección (1/2)</div>
+                <h2>¿Qué tipo de dato es este? ¿Ya tiene valor?</h2>
+                <p style="margin-bottom:1.2rem;">A veces necesitas preguntarle a Prolog: <em>"¿esta variable ya tiene valor?"</em> o <em>"¿es este dato un número o un texto?"</em> Para eso existen estos predicados especiales. Son muy útiles al construir reglas genéricas que deben comportarse diferente según el tipo de dato.</p>
+
+                <div class="grid-2" style="gap:2rem;">
+                    <div>
+                        <h3 style="color:var(--c-cyan);"><i class="fa-solid fa-question"></i> ¿Tiene valor la variable?</h3>
+                        <table>
+                            <tr><th>Predicado</th><th>¿Cuándo es verdadero?</th></tr>
+                            <tr><td><code>var(X)</code></td><td>X <strong>aún no tiene valor</strong> (está "vacía")</td></tr>
+                            <tr><td><code>nonvar(X)</code></td><td>X <strong>ya tiene un valor</strong> asignado</td></tr>
+                        </table>
+                        <div class="code-explain"><i class="fa-solid fa-comment"></i><span><strong>var(X):</strong> toma una variable X y produce <code>true</code> si X <em>todavía no tiene valor</em>. <strong>nonvar(X):</strong> lo contrario — produce <code>true</code> si X <em>ya tiene un valor</em> asignado.</span></div>
+                        <div class="code-block" style="font-size:0.95rem;line-height:2.1;margin-top:0;">
+<span class="qry">?- var(X).</span>            <span class="cmt">% true  (X no tiene valor)</span>
+<span class="qry">?- X = 5, var(X).</span>    <span class="cmt">% false (X ya vale 5)</span>
+<span class="qry">?- X = 5, nonvar(X).</span> <span class="cmt">% true</span></div>
+                    </div>
+
+                    <div>
+                        <h3 style="color:var(--c-purple);"><i class="fa-solid fa-tags"></i> ¿Qué tipo de término es?</h3>
+                        <table>
+                            <tr><th>Predicado</th><th>¿Cuándo es verdadero?</th></tr>
+                            <tr><td><code>atom(X)</code></td><td>X es un <span class="tt">átomo<span class="tt-box">Átomo en Prolog|||El tipo de dato más básico: un <strong>símbolo sin estructura interna</strong>. Ejemplos: <code>juan</code>, <code>gato</code>, <code>true</code>.</span></span>: <code>hola</code>, <code>juan</code></td></tr>
+                            <tr><td><code>number(X)</code></td><td>X es cualquier número: <code>3</code>, <code>3.14</code></td></tr>
+                            <tr><td><code>integer(X)</code></td><td>X es entero: <code>5</code>, <code>-2</code></td></tr>
+                            <tr><td><code>float(X)</code></td><td>X es decimal: <code>3.14</code></td></tr>
+                            <tr><td><code>compound(X)</code></td><td>X tiene estructura: <code>f(a,b)</code></td></tr>
+                            <tr><td><code>is_list(X)</code></td><td>X es una lista válida</td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             DIAPOSITIVA 11b: PREDICADOS METALÓGICOS — PRACTICA (2/2)
+             ============================================================ -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-gold"><i class="fa-solid fa-magnifying-glass-chart"></i> Bloque C · Herramientas de inspección (2/2)</div>
+                <h2>En la práctica: un predicado que reacciona según el tipo de dato</h2>
+
+                <div class="grid-2" style="gap:2rem;">
+                    <div>
+                        <h3 style="color:var(--c-green);"><i class="fa-solid fa-code"></i> Cómo se ve en código</h3>
+                        <div class="code-explain green"><i class="fa-solid fa-comment"></i><span><strong>describir(X):</strong> toma cualquier término X y produce un mensaje según su tipo. Si X es entero → imprime "… es un número entero". Si es átomo → "… es un átomo". Si es compuesto → "… es un término compuesto".</span></div>
+                        <div class="code-block" style="font-size:0.92rem;line-height:2.1;">
+<span class="fact">describir</span>(<span class="var">X</span>) <span class="kw">:-</span>
+    <span class="fact">integer</span>(<span class="var">X</span>), <span class="kw">!</span>,
+    <span class="fact">format</span>(<span class="str">"~w es un número entero~n"</span>, [<span class="var">X</span>]).
+<span class="fact">describir</span>(<span class="var">X</span>) <span class="kw">:-</span>
+    <span class="fact">atom</span>(<span class="var">X</span>), <span class="kw">!</span>,
+    <span class="fact">format</span>(<span class="str">"~w es un átomo~n"</span>, [<span class="var">X</span>]).
+<span class="fact">describir</span>(<span class="var">X</span>) <span class="kw">:-</span>
+    <span class="fact">compound</span>(<span class="var">X</span>), <span class="kw">!</span>,
+    <span class="fact">format</span>(<span class="str">"~w es un término compuesto~n"</span>, [<span class="var">X</span>]).
+<span class="fact">describir</span>(<span class="var">_</span>) <span class="kw">:-</span>
+    <span class="fact">write</span>(<span class="str">'Tipo desconocido'</span>), <span class="fact">nl</span>.</div>
+                    </div>
+
+                    <div>
+                        <h3 style="color:var(--c-cyan);"><i class="fa-solid fa-play"></i> En acción</h3>
+                        <div class="code-explain"><i class="fa-solid fa-comment"></i><span>Toma 42 → produce "42 es un número entero". Toma <code>juan</code> → produce "juan es un átomo". Toma <code>f(a,b)</code> → produce "f(a,b) es un término compuesto".</span></div>
+                        <div class="code-block" style="font-size:0.95rem;line-height:2.3;">
+<span class="qry">?- describir(42).</span>
+<span class="cmt">% 42 es un número entero</span>
+
+<span class="qry">?- describir(juan).</span>
+<span class="cmt">% juan es un átomo</span>
+
+<span class="qry">?- describir(f(a,b)).</span>
+<span class="cmt">% f(a,b) es un término compuesto</span></div>
+
+                        <div style="margin-top:1.2rem;background:rgba(250,204,21,0.06);border:1px solid rgba(250,204,21,0.25);border-radius:12px;padding:1rem 1.3rem;">
+                            <p style="margin:0;font-size:0.95rem;line-height:1.7;"><i class="fa-solid fa-lightbulb" style="color:var(--c-gold);"></i> &nbsp;Este patrón — detectar tipo con <code>integer/atom/compound</code> y cortar con <code>!</code> — es la forma estándar en Prolog de escribir un predicado que hace cosas distintas según el dato que recibe.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             DIAPOSITIVA 12: PREDICADOS METALÓGICOS — ESTRUCTURA
+             ============================================================ -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-gold"><i class="fa-solid fa-sitemap"></i> Bloque C · Explorar la estructura de un término</div>
+                <h2>Analizar cualquier término sin conocerlo de antemano</h2>
+
+                <div class="grid-2">
+                    <div>
+                        <h3 style="color:var(--c-cyan);"><i class="fa-solid fa-cube"></i> ¿Cómo se llama y cuántos argumentos tiene? → <code>functor/3</code></h3>
+                        <p style="font-size:0.95rem;">Sirve para preguntarle a Prolog: <em>"dame el nombre de este término y cuántos argumentos lleva"</em>. Útil cuando recibes un término sin saber qué forma tiene.</p>
+                        <div class="code-explain purple">
+                          <i class="fa-solid fa-comment"></i>
+                          <span><strong>functor(T, Nombre, N):</strong> toma un término T y produce su nombre (Nombre) y su cantidad de argumentos (N). También funciona al revés: dados Nombre y N, produce un término vacío con esa forma. Ejemplo: <code>f(a,b,c)</code> → Nombre=f, N=3.</span>
+                        </div>
+                        <div class="code-block">
+<span class="qry">?- functor(f(a, b, c), Nombre, Aridad).</span>
+<span class="cmt">% Nombre = f,  Aridad = 3</span>
+
+<span class="qry">?- functor(gato, Nombre, Aridad).</span>
+<span class="cmt">% Nombre = gato, Aridad = 0  (átomo = aridad 0)</span>
+
+<span class="qry">?- functor(T, persona, 2).</span>
+<span class="cmt">% T = persona(_,_)  ← construye la estructura</span></div>
+
+                        <h3 style="color:var(--c-pink);margin-top:1.2rem;"><i class="fa-solid fa-arrow-down-1-9"></i> ¿Cómo extraer un argumento por posición? → <code>arg/3</code></h3>
+                        <div class="code-explain pink">
+                          <i class="fa-solid fa-comment"></i>
+                          <span><strong>arg(Pos, T, Valor):</strong> toma un término T y un número de posición Pos (empieza en 1), y produce el argumento en esa posición. Ejemplo: <code>arg(2, fecha(20,marzo,2026), V)</code> → V = marzo.</span>
+                        </div>
+                        <div class="code-block">
+<span class="qry">?- arg(1, fecha(20, marzo, 2026), Valor).</span>
+<span class="cmt">% Valor = 20   (primer argumento)</span>
+
+<span class="qry">?- arg(2, fecha(20, marzo, 2026), Valor).</span>
+<span class="cmt">% Valor = marzo  (segundo argumento)</span></div>
+                        <p style="font-size:0.85rem;margin-top:0.3rem;">Los índices comienzan en <strong>1</strong>, no en 0.</p>
+                    </div>
+
+                    <div>
+                        <h3 style="color:var(--c-green);"><i class="fa-solid fa-wand-sparkles"></i> ¿Cómo convertir un término en lista (y viceversa)? → <code>=..</code></h3>
+                        <p style="font-size:0.95rem;">Convierte un término en lista y viceversa. Permite <strong>armar o desarmar</strong> cualquier estructura de datos en tiempo de ejecución — muy útil para sistemas que no saben de antemano qué predicado van a llamar.</p>
+                        <div class="code-explain green">
+                          <i class="fa-solid fa-comment"></i>
+                          <span><strong>T =.. Lista:</strong> toma un término T y produce la lista <code>[nombre | argumentos]</code>, o al revés: toma una lista y produce el término correspondiente. Ejemplo: <code>fecha(20,marzo,2026) =.. L</code> → L = [fecha, 20, marzo, 2026].</span>
+                        </div>
+                        <div class="code-block">
+<span class="cmt">% Descomponer término → lista</span>
+<span class="qry">?- fecha(20, marzo, 2026) =.. L.</span>
+<span class="cmt">% L = [fecha, 20, marzo, 2026]</span>
+
+<span class="cmt">% Construir término ← lista</span>
+<span class="qry">?- T =.. [sumar, 3, 4].</span>
+<span class="cmt">% T = sumar(3, 4)</span>
+
+<span class="cmt">% Caso práctico: llamar predicado por nombre</span>
+<span class="fact">ejecutar</span>(<span class="var">Nombre</span>, <span class="var">Arg1</span>, <span class="var">Arg2</span>) <span class="kw">:-</span>
+    <span class="var">Goal</span> <span class="kw">=..</span> [<span class="var">Nombre</span>, <span class="var">Arg1</span>, <span class="var">Arg2</span>],
+    <span class="kw">call</span>(<span class="var">Goal</span>).         <span class="cmt">% ejecuta dinámicamente</span></div>
+
+                        <div style="margin-top:0.6rem;background:rgba(250,204,21,0.06);border:1px solid rgba(250,204,21,0.2);border-radius:10px;padding:0.7rem 1rem;">
+                            <p style="margin:0;font-size:0.88rem;"><i class="fa-solid fa-lightbulb" style="color:var(--c-gold);"></i>
+                                <strong><span class="tt">call(Goal)<span class="tt-box">Predicado call|||Ejecuta dinámicamente cualquier predicado Prolog almacenado en una variable. Ejemplo: si <code>Meta = escribir(hola)</code>, entonces <code>call(Meta)</code> ejecuta <code>escribir(hola)</code>. Es la base de la meta-programación: permites que el programa decida <em>qué ejecutar</em> en tiempo de ejecución.</span></span></strong> ejecuta un predicado guardado en una variable — el programa decide en tiempo real qué ejecutar.</p>
+                        </div>
+
+                        <!-- findall — crítico para el ejercicio -->
+                        <div style="margin-top:0.8rem;background:rgba(244,114,182,0.05);border:1px solid rgba(244,114,182,0.3);border-radius:10px;padding:0.7rem 1rem;">
+                            <p style="margin:0 0 0.3rem;font-size:0.78rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--c-pink);"><i class="fa-solid fa-filter"></i> Recolectar todos los resultados en una lista → findall/3</p>
+                            <p style="margin:0 0 0.3rem;font-size:0.83rem;color:var(--text-muted);"><strong style="color:var(--text-main);">Sintaxis:</strong> <code>findall(Qué, Condición, Lista)</code><br>Ejecuta <em>Condición</em> todas las veces posibles y guarda cada <em>Qué</em> en <em>Lista</em>. Si no hay soluciones, Lista = <code>[]</code>.</p>
+                            <div class="code-explain pink"><i class="fa-solid fa-comment"></i><span><strong>findall(X, Condición, Lista):</strong> toma una condición, la ejecuta todas las veces posibles, recoge cada valor de X que produzca, y los mete todos en Lista. Si no hay soluciones → Lista = [].</span></div>
+                            <div class="code-block" style="font-size:0.78rem;line-height:1.75;">
+<span class="fact">animal</span>(gato). <span class="fact">animal</span>(perro). <span class="fact">animal</span>(pez).
+
+<span class="qry">?- findall(X, animal(X), Lista).</span>
+<span class="cmt">% Lista = [gato, perro, pez]  ← todos los animales</span>
+
+<span class="cmt">% Aplicado al sistema experto del ejercicio:</span>
+<span class="qry">?- findall(S, sintoma(app1, S), Sintomas).</span>
+<span class="cmt">% Sintomas = [lento, alto_uso_cpu]</span>
+<span class="qry">?- length(Sintomas, N).</span>
+<span class="cmt">% N = 2  ← cuántos síntomas tiene app1</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             DIAPOSITIVA 13a: SALIDA DE DATOS
+             ============================================================ -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-green"><i class="fa-solid fa-print"></i> Bloque C · Entrada/Salida (1/2)</div>
+                <h2>Mostrar resultados al usuario</h2>
+
+                <table style="margin-bottom:1.2rem;">
+                    <tr><th>Predicado</th><th>¿Qué hace?</th><th>Ejemplo</th></tr>
+                    <tr><td><code>write(X)</code></td><td>Escribe X sin comillas</td><td><code>write(hola)</code> → <em>hola</em></td></tr>
+                    <tr><td><code>writeln(X)</code></td><td>Escribe X y salta línea</td><td><code>writeln(42)</code> → <em>42↵</em></td></tr>
+                    <tr><td><code>nl</code></td><td>Solo salta de línea</td><td><code>nl</code> → <em>↵</em></td></tr>
+                    <tr><td><code>tab(N)</code></td><td>Escribe N espacios</td><td><code>tab(4)</code> → <em>&nbsp;&nbsp;&nbsp;&nbsp;</em></td></tr>
+                    <tr><td><code>format(Fmt, Args)</code></td><td>Salida con formato (como printf)</td><td>ver abajo</td></tr>
+                </table>
+
+                <div class="grid-2">
+                    <div>
+                        <div class="code-explain gold">
+                          <i class="fa-solid fa-comment"></i>
+                          <span>Marcadores que usa <strong>format/2</strong>: <code>~w</code> → cualquier valor, <code>~d</code> → entero, <code>~f</code> → decimal, <code>~a</code> → átomo, <code>~n</code> → salto de línea. Cada marcador se reemplaza con el valor correspondiente de la lista.</span>
+                        </div>
+                        <div class="code-block">
+<span class="cmt">% Marcadores de format/2</span>
+<span class="cmt">% ~w → cualquier término (word)</span>
+<span class="cmt">% ~d → entero (digit)</span>
+<span class="cmt">% ~f → flotante (float)</span>
+<span class="cmt">% ~a → átomo</span>
+<span class="cmt">% ~n → salto de línea (newline)</span></div>
+                    </div>
+                    <div>
+                        <div class="code-explain green">
+                          <i class="fa-solid fa-play"></i>
+                          <span><strong>format(Plantilla, [Valores]):</strong> toma una plantilla con marcadores y una lista de valores, y produce el texto con los marcadores reemplazados. Ejemplo: toma <code>"Hola ~w, tienes ~d años.~n"</code> y <code>[juan, 30]</code> → produce <em>Hola juan, tienes 30 años.</em></span>
+                        </div>
+                        <div class="code-block">
+<span class="fact">format</span>(<span class="str">"Hola ~w, tienes ~d años.~n"</span>, [juan, <span class="num">30</span>]).
+<span class="cmt">% → Hola juan, tienes 30 años.</span>
+
+<span class="fact">format</span>(<span class="str">"El resultado es: ~f~n"</span>, [<span class="num">3.14159</span>]).
+<span class="cmt">% → El resultado es: 3.141590</span>
+
+<span class="fact">format</span>(<span class="str">"~a tiene ~d síntomas.~n"</span>, [<span class="fact">app1</span>, <span class="num">2</span>]).
+<span class="cmt">% → app1 tiene 2 síntomas.</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             DIAPOSITIVA 13b: ENTRADA Y ARCHIVOS
+             ============================================================ -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-green"><i class="fa-solid fa-keyboard"></i> Bloque C · Entrada/Salida (2/2)</div>
+                <h2>Recibir datos del usuario y trabajar con archivos</h2>
+
+                <div class="grid-2">
+                    <div>
+                        <h3 style="color:var(--c-cyan);"><i class="fa-solid fa-keyboard"></i> Entrada de datos con <code>read/1</code></h3>
+                        <div class="code-explain">
+                          <i class="fa-solid fa-comment"></i>
+                          <span><strong>leer_nombre(Nombre):</strong> muestra el mensaje <em>"Ingrese su nombre:"</em> y espera que el usuario escriba algo seguido de un punto (<code>.</code>). Toma lo que el usuario escribió y lo guarda en la variable <code>Nombre</code>.</span>
+                        </div>
+                        <div class="code-block">
+<span class="cmt">% Leer un término Prolog del teclado</span>
+<span class="fact">leer_nombre</span>(<span class="var">Nombre</span>) <span class="kw">:-</span>
+    <span class="fact">write</span>(<span class="str">'Ingrese su nombre: '</span>),
+    <span class="fact">read</span>(<span class="var">Nombre</span>).    <span class="cmt">% ¡debe terminar con punto!</span>
+
+<span class="cmt">% Uso:</span>
+<span class="qry">?- leer_nombre(X).</span>
+<span class="cmt">% Ingrese su nombre: juan.   ← escribe el usuario</span>
+<span class="cmt">% X = juan</span></div>
+                    </div>
+
+                    <div>
+                        <h3 style="color:var(--c-purple);"><i class="fa-solid fa-file"></i> Archivos — guardar y cargar conocimiento</h3>
+                        <p style="font-size:0.88rem;margin:0 0 0.6rem;color:var(--text-muted);">Útil en IA para <strong>cargar bases de datos externas</strong> o <strong>guardar resultados de diagnósticos</strong> en disco.</p>
+                        <div class="code-explain purple">
+                          <i class="fa-solid fa-comment"></i>
+                          <span><strong>open(Archivo, Modo, Stream):</strong> toma el nombre del archivo y el modo (<code>read</code>/<code>write</code>/<code>append</code>), y produce una conexión (Stream). Luego <code>read_term</code> lee o <code>write_term</code> escribe datos. <code>close(Stream)</code> cierra la conexión.</span>
+                        </div>
+                        <div class="code-block">
+<span class="cmt">% Leer desde archivo</span>
+<span class="fact">open</span>(<span class="str">'datos.txt'</span>, <span class="fact">read</span>, <span class="var">Stream</span>),
+<span class="fact">read_term</span>(<span class="var">Stream</span>, <span class="var">Termino</span>, []),
+<span class="fact">close</span>(<span class="var">Stream</span>).
+
+<span class="cmt">% Escribir a archivo</span>
+<span class="fact">open</span>(<span class="str">'salida.txt'</span>, <span class="fact">write</span>, <span class="var">S</span>),
+<span class="fact">write_term</span>(<span class="var">S</span>, <span class="fact">resultado</span>(<span class="num">42</span>), []),
+<span class="fact">close</span>(<span class="var">S</span>).</div>
+                        <p style="font-size:0.88rem;margin-top:0.6rem;">Modos de apertura: <code>read</code> · <code>write</code> · <code>append</code></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             DIAPOSITIVA 14: INTRO BLOQUE D — EJERCICIOS
+             ============================================================ -->
+        <div class="slide">
+            <div class="card" style="align-items:center;justify-content:center;text-align:center;">
+                <div class="pill pill-pink"><i class="fa-solid fa-code"></i> Bloque D · 45 min · Práctica</div>
+                <h1 style="font-size:clamp(2rem,3.5vw,3.5rem);">¡Hora de programar!</h1>
+                <p style="font-size:1.2rem;max-width:800px;margin:1.5rem auto;color:var(--text-muted);">
+                    Aplicarán todos los conceptos vistos hoy para completar ejercicios de
+                    <strong style="color:var(--text-main);">programación lógica</strong> para un sistema de software de inteligencia artificial.
+                </p>
+
+                <div class="grid-3" style="margin-top:1rem;max-width:1050px;width:100%;">
+                    <div class="concept-box" style="border-top:4px solid var(--c-cyan);text-align:left;">
+                        <h3 style="color:var(--c-cyan);font-size:1rem;justify-content:center;"><i class="fa-solid fa-list-check"></i> Lo que necesitan usar</h3>
+                        <p style="font-size:0.92rem;margin:0;">Recursividad · Cut · Negación · Aritmética · Metalógicos · E/S</p>
+                    </div>
+                    <div class="concept-box" style="border-top:4px solid var(--c-gold);text-align:left;">
+                        <h3 style="color:var(--c-gold);font-size:1rem;justify-content:center;"><i class="fa-solid fa-clock"></i> Tiempo</h3>
+                        <p style="font-size:0.92rem;margin:0;"><strong>45 minutos</strong> de trabajo. El docente rotará para orientarlos.</p>
+                    </div>
+                    <div class="concept-box" style="border-top:4px solid var(--c-pink);text-align:left;">
+                        <h3 style="color:var(--c-pink);font-size:1rem;justify-content:center;"><i class="fa-solid fa-upload"></i> Entrega al final</h3>
+                        <p style="font-size:0.92rem;margin:0;">Avance del <strong>proyecto de agente inteligente</strong> para retroalimentación del docente.</p>
+                    </div>
+                </div>
+
+                <div style="margin-top:1.5rem;background:rgba(250,204,21,0.07);border:1px solid rgba(250,204,21,0.3);border-radius:14px;padding:1rem 2rem;max-width:750px;">
+                    <p style="font-size:1.1rem;font-style:italic;color:var(--text-main);margin:0;">
+                        El escenario: <strong>"<span class="tt">Sistema Experto<span class="tt-box">Sistema Experto|||Programa de Inteligencia Artificial que <strong>imita el razonamiento de un experto humano</strong> en un dominio específico. Usa una base de conocimiento (hechos y reglas) para diagnosticar problemas o dar recomendaciones. Ejemplos reales: diagnóstico médico, detección de fraudes, soporte técnico automatizado. Prolog es uno de los lenguajes más usados para construirlos.</span></span> de Diagnóstico con Prolog"</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             DIAPOSITIVA 15: EL EJERCICIO PRÁCTICO
+             ============================================================ -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-pink"><i class="fa-solid fa-stethoscope"></i> Bloque D · Sistema Experto de Diagnóstico</div>
+                <h2>Ejercicio: Diagnóstico Automático de Fallas de Software</h2>
+
+                <!-- CONTEXTO: qué estamos construyendo -->
+                <div style="background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.25);border-radius:14px;padding:0.75rem 1.2rem;margin-bottom:1rem;display:flex;align-items:center;gap:1rem;">
+                    <i class="fa-solid fa-circle-info" style="color:var(--c-cyan);font-size:1.2rem;flex-shrink:0;"></i>
+                    <p style="margin:0;font-size:0.95rem;"><strong>El objetivo:</strong> construir un sistema en Prolog que, dado el nombre de una aplicación con problemas, <strong>determine automáticamente qué falla tiene</strong> comparando sus síntomas contra diagnósticos conocidos. Los hechos ya están dados — ustedes escriben las reglas que razonan sobre ellos.</p>
+                </div>
+
+                <div class="grid-2" style="gap:1.2rem;">
+                    <!-- COLUMNA IZQUIERDA: los datos -->
+                    <div>
+                        <h3 style="color:var(--c-cyan);font-size:1rem;"><i class="fa-solid fa-database"></i> Lo que ya existe (no modificar)</h3>
+
+                        <!-- Grupo 1: síntomas -->
+                        <div style="background:rgba(34,211,238,0.04);border:1px solid rgba(34,211,238,0.2);border-radius:10px;padding:0.6rem 1rem;margin-bottom:0.5rem;">
+                            <p style="margin:0 0 0.3rem;font-size:0.75rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--c-cyan);">
+                                <i class="fa-solid fa-virus"></i> Síntomas observados en cada app
+                            </p>
+                            <div class="code-block" style="margin:0;font-size:0.78rem;line-height:1.7;background:rgba(0,0,0,0.3);">
+<span class="fact">sintoma</span>(app1, lento).          <span class="cmt">% app1 está lenta</span>
+<span class="fact">sintoma</span>(app1, alto_uso_cpu).   <span class="cmt">% app1 usa mucho CPU</span>
+<span class="fact">sintoma</span>(app2, error_memoria).   <span class="cmt">% app2 falla de memoria</span>
+<span class="fact">sintoma</span>(app2, crash_frecuente). <span class="cmt">% app2 se cae seguido</span>
+<span class="fact">sintoma</span>(app3, lento).          <span class="cmt">% app3 está lenta</span>
+<span class="fact">sintoma</span>(app3, error_red).       <span class="cmt">% app3 falla de red</span></div>
+                        </div>
+
+                        <!-- Grupo 2: diagnósticos -->
+                        <div style="background:rgba(216,180,254,0.04);border:1px solid rgba(216,180,254,0.2);border-radius:10px;padding:0.6rem 1rem;">
+                            <p style="margin:0 0 0.3rem;font-size:0.75rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--c-purple);">
+                                <i class="fa-solid fa-book-medical"></i> Diagnósticos y sus síntomas requeridos
+                            </p>
+                            <div class="code-block" style="margin:0;font-size:0.78rem;line-height:1.7;background:rgba(0,0,0,0.3);">
+<span class="fact">diagnostico</span>(memory_leak,    [error_memoria, crash_frecuente]).
+<span class="fact">diagnostico</span>(bottleneck_cpu,  [lento, alto_uso_cpu]).
+<span class="fact">diagnostico</span>(problema_red,    [lento, error_red]).</div>
+                            <p style="margin:0.4rem 0 0;font-size:0.8rem;color:var(--text-muted);">La lista indica los síntomas que <strong>debe tener</strong> la app para recibir ese diagnóstico.</p>
+                        </div>
+                    </div>
+
+                    <!-- COLUMNA DERECHA: tareas con hints -->
+                    <div>
+                        <h3 style="color:var(--c-gold);font-size:1rem;"><i class="fa-solid fa-hammer"></i> Lo que deben construir (en orden)</h3>
+                        <div style="display:flex;flex-direction:column;gap:0.55rem;">
+
+                            <!-- Tarea 1 -->
+                            <div style="background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.3);border-radius:10px;padding:0.65rem 0.9rem;">
+                                <div style="display:flex;align-items:baseline;gap:0.6rem;margin-bottom:0.25rem;">
+                                    <span class="step-tag" style="font-size:0.75rem;padding:2px 9px;">1</span>
+                                    <code style="font-size:0.82rem;">tiene_todos_sintomas(App, Lista)</code>
+                                </div>
+                                <p style="margin:0;font-size:0.83rem;color:var(--text-muted);">¿Tiene <em>App</em> <strong>todos</strong> los síntomas de <em>Lista</em>? Usa recursividad: lista vacía = sí tiene todos; si no, verifica el primero y repite con el resto.</p>
+                            </div>
+
+                            <!-- Tarea 2 -->
+                            <div style="background:rgba(216,180,254,0.06);border:1px solid rgba(216,180,254,0.3);border-radius:10px;padding:0.65rem 0.9rem;">
+                                <div style="display:flex;align-items:baseline;gap:0.6rem;margin-bottom:0.25rem;">
+                                    <span class="step-tag" style="background:var(--c-purple);font-size:0.75rem;padding:2px 9px;">2</span>
+                                    <code style="font-size:0.82rem;">diagnosticar(App, Diagnostico)</code>
+                                </div>
+                                <p style="margin:0;font-size:0.83rem;color:var(--text-muted);">Busca un <code>diagnostico(D, Sintomas)</code> tal que <em>App</em> tenga todos esos síntomas. <strong>Usa la tarea 1.</strong></p>
+                            </div>
+
+                            <!-- Tarea 3 -->
+                            <div style="background:rgba(250,204,21,0.06);border:1px solid rgba(250,204,21,0.3);border-radius:10px;padding:0.65rem 0.9rem;">
+                                <div style="display:flex;align-items:baseline;gap:0.6rem;margin-bottom:0.25rem;">
+                                    <span class="step-tag" style="background:var(--c-gold);color:#000;font-size:0.75rem;padding:2px 9px;">3</span>
+                                    <code style="font-size:0.82rem;">contar_sintomas(App, N)</code>
+                                </div>
+                                <p style="margin:0;font-size:0.83rem;color:var(--text-muted);">¿Cuántos síntomas tiene <em>App</em>? Usa <code>findall</code> para recolectar todos los síntomas en una lista, luego <code>longitud</code> (o <code>length</code>) para contar.</p>
+                            </div>
+
+                            <!-- Tarea 4 -->
+                            <div style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.3);border-radius:10px;padding:0.65rem 0.9rem;">
+                                <div style="display:flex;align-items:baseline;gap:0.6rem;margin-bottom:0.25rem;">
+                                    <span class="step-tag" style="background:var(--c-green);color:#000;font-size:0.75rem;padding:2px 9px;">4</span>
+                                    <code style="font-size:0.82rem;">reporte(App)</code>
+                                </div>
+                                <p style="margin:0;font-size:0.83rem;color:var(--text-muted);">Usa las tareas 2 y 3 para imprimir con <code>format</code>: el nombre de la app, su diagnóstico y cuántos síntomas tiene.</p>
+                            </div>
+
+                            <!-- resultado esperado -->
+                            <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:0.55rem 0.9rem;display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;">
+                                <span style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">Resultado esperado:</span>
+                                <code style="font-size:0.78rem;">?- reporte(app1).</code>
+                                <span style="color:var(--text-muted);font-size:0.8rem;">→</span>
+                                <code style="font-size:0.78rem;color:var(--c-green);">app1: bottleneck_cpu (2 síntomas)</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             DIAPOSITIVA 16: SOLUCIÓN — TAREAS 1 Y 2
+             ============================================================ -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-pink"><i class="fa-solid fa-key"></i> Bloque D · Solución del Ejercicio (1/2)</div>
+                <h2>Solución: Tareas 1 y 2</h2>
+
+                <!-- Hechos dados -->
+                <div style="margin-bottom:1rem;">
+                    <p style="font-size:0.82rem;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:0.4rem;"><i class="fa-solid fa-database" style="color:var(--c-cyan);"></i> Hechos dados — copiar tal cual, no modificar</p>
+                    <div class="code-block" style="font-size:0.78rem;line-height:1.75;">
+<span class="cmt">% ── Síntomas observados ────────────────────────────────────</span>
+<span class="fact">sintoma</span>(app1, lento).         <span class="fact">sintoma</span>(app1, alto_uso_cpu).
+<span class="fact">sintoma</span>(app2, error_memoria). <span class="fact">sintoma</span>(app2, crash_frecuente).
+<span class="fact">sintoma</span>(app3, lento).         <span class="fact">sintoma</span>(app3, error_red).
+
+<span class="cmt">% ── Diagnósticos y los síntomas que exigen ─────────────────</span>
+<span class="fact">diagnostico</span>(memory_leak,    [error_memoria, crash_frecuente]).
+<span class="fact">diagnostico</span>(bottleneck_cpu, [lento, alto_uso_cpu]).
+<span class="fact">diagnostico</span>(problema_red,   [lento, error_red]).</div>
+                </div>
+
+                <div class="grid-2" style="gap:1.2rem;align-items:stretch;">
+                    <!-- TAREA 1 -->
+                    <div>
+                        <p style="font-size:0.82rem;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--c-cyan);margin-bottom:0.4rem;"><span class="step-tag" style="background:var(--c-cyan);color:#000;">1</span> &nbsp;tiene_todos_sintomas/2</p>
+                        <div class="code-explain"><i class="fa-solid fa-comment"></i><span><strong>tiene_todos_sintomas(App, Lista):</strong> toma una App y una lista de síntomas requeridos, y produce <code>true</code> si la App los tiene TODOS. Lista vacía → true. Si no → verifica el primero con <code>sintoma/2</code> y repite con el resto.</span></div>
+                        <div class="code-block" style="font-size:0.8rem;line-height:1.85;">
+<span class="cmt">% Caso base: lista vacía → todos cumplidos ✓</span>
+<span class="fact">tiene_todos_sintomas</span>(<span class="var">_</span>, []).
+
+<span class="cmt">% Caso recursivo: verifica cabeza y sigue con cola</span>
+<span class="fact">tiene_todos_sintomas</span>(<span class="var">App</span>, [<span class="var">Sintoma</span> <span class="kw">|</span> <span class="var">Resto</span>]) <span class="kw">:-</span>
+    <span class="fact">sintoma</span>(<span class="var">App</span>, <span class="var">Sintoma</span>),
+    <span class="fact">tiene_todos_sintomas</span>(<span class="var">App</span>, <span class="var">Resto</span>).</div>
+
+                        <div style="background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.2);border-radius:10px;padding:0.6rem 0.9rem;margin-top:0.5rem;">
+                            <p style="margin:0;font-size:0.85rem;line-height:1.6;"><strong style="color:var(--c-cyan);">Ejemplo mental:</strong><br>
+                            <code>tiene_todos_sintomas(app1, [lento, alto_uso_cpu])</code><br>
+                            → ¿sintoma(app1, lento)? ✓ → sigue con [alto_uso_cpu]<br>
+                            → ¿sintoma(app1, alto_uso_cpu)? ✓ → sigue con []<br>
+                            → lista vacía → <strong>true ✓</strong></p>
+                        </div>
+                    </div>
+
+                    <!-- TAREA 2 -->
+                    <div>
+                        <p style="font-size:0.82rem;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--c-purple);margin-bottom:0.4rem;"><span class="step-tag" style="background:var(--c-purple);">2</span> &nbsp;diagnosticar/2</p>
+                        <div class="code-explain purple"><i class="fa-solid fa-comment"></i><span><strong>diagnosticar(App, Diagnostico):</strong> toma una App, busca un diagnóstico en la BD, toma sus síntomas requeridos y pregunta si la App los tiene todos. Produce el Diagnostico cuando lo encuentra.</span></div>
+                        <div class="code-block" style="font-size:0.8rem;line-height:1.85;">
+<span class="fact">diagnosticar</span>(<span class="var">App</span>, <span class="var">Diagnostico</span>) <span class="kw">:-</span>
+    <span class="fact">diagnostico</span>(<span class="var">Diagnostico</span>, <span class="var">Sintomas</span>),
+    <span class="fact">tiene_todos_sintomas</span>(<span class="var">App</span>, <span class="var">Sintomas</span>).
+
+<span class="cmt">% Prolog prueba cada diagnostico/2 hasta que
+% tiene_todos_sintomas devuelve true.</span></div>
+
+                        <div style="background:rgba(216,180,254,0.06);border:1px solid rgba(216,180,254,0.2);border-radius:10px;padding:0.6rem 0.9rem;margin-top:0.5rem;">
+                            <p style="margin:0;font-size:0.85rem;line-height:1.6;"><strong style="color:var(--c-purple);">Ejemplo mental:</strong><br>
+                            <code>diagnosticar(app1, D)</code><br>
+                            → prueba D=memory_leak → ¿app1 tiene [error_memoria,crash_frecuente]? ✗<br>
+                            → prueba D=bottleneck_cpu → ¿app1 tiene [lento,alto_uso_cpu]? ✓<br>
+                            → <strong>D = bottleneck_cpu ✓</strong></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             DIAPOSITIVA 17: SOLUCIÓN — TAREAS 3 Y 4
+             ============================================================ -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-pink"><i class="fa-solid fa-key"></i> Bloque D · Solución del Ejercicio (2/2)</div>
+                <h2>Solución: Tareas 3 y 4</h2>
+
+                <div class="grid-2" style="gap:1.2rem;align-items:stretch;margin-bottom:1rem;">
+                    <!-- TAREA 3 -->
+                    <div>
+                        <p style="font-size:0.82rem;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--c-gold);margin-bottom:0.4rem;"><span class="step-tag" style="background:var(--c-gold);color:#000;">3</span> &nbsp;contar_sintomas/2</p>
+                        <div class="code-explain" style="border-left-color:var(--c-gold);"><i class="fa-solid fa-comment"></i><span><strong>contar_sintomas(App, N):</strong> toma una App, usa <code>findall</code> para recolectar todos sus síntomas en una lista, luego usa <code>length</code> para contar cuántos son. Produce el total en N.</span></div>
+                        <div class="code-block" style="font-size:0.8rem;line-height:1.85;">
+<span class="fact">contar_sintomas</span>(<span class="var">App</span>, <span class="var">N</span>) <span class="kw">:-</span>
+    <span class="fact">findall</span>(<span class="var">S</span>, <span class="fact">sintoma</span>(<span class="var">App</span>, <span class="var">S</span>), <span class="var">Lista</span>),
+    <span class="fact">length</span>(<span class="var">Lista</span>, <span class="var">N</span>).
+
+<span class="cmt">% findall(S, sintoma(app1,S), Lista)
+%   → Lista = [lento, alto_uso_cpu]
+% length([lento, alto_uso_cpu], N)
+%   → N = 2</span></div>
+
+                        <div style="background:rgba(250,204,21,0.06);border:1px solid rgba(250,204,21,0.2);border-radius:10px;padding:0.6rem 0.9rem;margin-top:0.5rem;">
+                            <p style="margin:0;font-size:0.85rem;"><strong style="color:var(--c-gold);">findall(Qué, Condición, Lista)</strong> — recoge <em>todos</em> los valores de <code>Qué</code> para los que <code>Condición</code> es verdadera y los pone en <code>Lista</code>.</p>
+                        </div>
+                    </div>
+
+                    <!-- TAREA 4 -->
+                    <div>
+                        <p style="font-size:0.82rem;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--c-green);margin-bottom:0.4rem;"><span class="step-tag" style="background:var(--c-green);color:#000;">4</span> &nbsp;reporte/1</p>
+                        <div class="code-explain" style="border-left-color:var(--c-green);"><i class="fa-solid fa-comment"></i><span><strong>reporte(App):</strong> toma el nombre de una App, obtiene su diagnóstico (tarea 2) y el número de síntomas (tarea 3), y los combina con <code>format</code> para producir un mensaje impreso en pantalla.</span></div>
+                        <div class="code-block" style="font-size:0.8rem;line-height:1.85;">
+<span class="fact">reporte</span>(<span class="var">App</span>) <span class="kw">:-</span>
+    <span class="fact">diagnosticar</span>(<span class="var">App</span>, <span class="var">Diagnostico</span>),
+    <span class="fact">contar_sintomas</span>(<span class="var">App</span>, <span class="var">N</span>),
+    <span class="fact">format</span>(<span class="str">'~w: ~w (~w sintomas)~n'</span>,
+           [<span class="var">App</span>, <span class="var">Diagnostico</span>, <span class="var">N</span>]).
+
+<span class="cmt">% ~w → inserta el valor de la variable
+% ~n → salto de línea</span></div>
+
+                        <div style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);border-radius:10px;padding:0.6rem 0.9rem;margin-top:0.5rem;">
+                            <p style="margin:0;font-size:0.85rem;"><code>format('~w: ~w (~w sintomas)~n', [App, D, N])</code> es como <em>printf</em> de Prolog: cada <code>~w</code> se reemplaza por el siguiente valor de la lista.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resultado completo -->
+                <div style="background:rgba(34,211,238,0.05);border:2px solid rgba(34,211,238,0.35);border-radius:14px;padding:0.9rem 1.4rem;">
+                    <p style="margin:0 0 0.6rem;font-size:0.82rem;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--c-cyan);"><i class="fa-solid fa-circle-check"></i> Resultado al ejecutar las tres apps</p>
+                    <div class="code-block" style="font-size:0.85rem;line-height:2;margin:0;">
+<span class="qry">?- reporte(app1).</span>
+<span class="cmt">app1: bottleneck_cpu (2 sintomas)</span>
+
+<span class="qry">?- reporte(app2).</span>
+<span class="cmt">app2: memory_leak (2 sintomas)</span>
+
+<span class="qry">?- reporte(app3).</span>
+<span class="cmt">app3: problema_red (2 sintomas)</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             DIAPOSITIVA 18: AVANCE DEL PROYECTO
+             ============================================================ -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-purple"><i class="fa-solid fa-upload"></i> Entrega del Día · Avance del Proyecto</div>
+                <h2>Avance: Proyecto de Agente Inteligente</h2>
+                <p style="margin-bottom:1.5rem;">Al finalizar la clase, deben entregar el avance de su proyecto al docente para <strong>retroalimentación</strong>. Esto no es la entrega final — es un punto de revisión intermedio.</p>
+
+                <div class="grid-2">
+                    <div>
+                        <h3 style="color:var(--c-cyan);"><i class="fa-solid fa-circle-check"></i> ¿Qué debe incluir el avance?</h3>
+                        <div style="display:flex;flex-direction:column;gap:0.7rem;">
+                            <div style="display:flex;gap:12px;align-items:flex-start;">
+                                <i class="fa-solid fa-check" style="color:var(--c-green);margin-top:4px;flex-shrink:0;"></i>
+                                <p style="margin:0;font-size:1rem;"><strong>Base de conocimiento inicial:</strong> Los hechos (facts) que describen el dominio del problema.</p>
+                            </div>
+                            <div style="display:flex;gap:12px;align-items:flex-start;">
+                                <i class="fa-solid fa-check" style="color:var(--c-green);margin-top:4px;flex-shrink:0;"></i>
+                                <p style="margin:0;font-size:1rem;"><strong>Al menos 3 reglas:</strong> Que demuestren que el agente puede razonar sobre los hechos.</p>
+                            </div>
+                            <div style="display:flex;gap:12px;align-items:flex-start;">
+                                <i class="fa-solid fa-check" style="color:var(--c-green);margin-top:4px;flex-shrink:0;"></i>
+                                <p style="margin:0;font-size:1rem;"><strong>Al menos 1 regla recursiva:</strong> Procesando listas u otras estructuras.</p>
+                            </div>
+                            <div style="display:flex;gap:12px;align-items:flex-start;">
+                                <i class="fa-solid fa-check" style="color:var(--c-green);margin-top:4px;flex-shrink:0;"></i>
+                                <p style="margin:0;font-size:1rem;"><strong>Consultas de prueba:</strong> Mínimo 5 consultas con sus resultados esperados.</p>
+                            </div>
+                            <div style="display:flex;gap:12px;align-items:flex-start;">
+                                <i class="fa-solid fa-check" style="color:var(--c-green);margin-top:4px;flex-shrink:0;"></i>
+                                <p style="margin:0;font-size:1rem;"><strong>Descripción del dominio:</strong> Un párrafo explicando qué problema resuelve el agente.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 style="color:var(--c-gold);"><i class="fa-solid fa-star"></i> Criterios de retroalimentación</h3>
+                        <div class="concept-box" style="border-top:3px solid var(--c-gold);margin-bottom:1rem;">
+                            <p style="margin:0;font-size:0.95rem;">El docente revisará: claridad del código, uso correcto de la sintaxis Prolog, aplicación de los conceptos vistos en clase (recursividad, cut, aritmética), y la relevancia del dominio elegido.</p>
+                        </div>
+                        <div style="background:rgba(244,114,182,0.07);border:1px solid rgba(244,114,182,0.25);border-radius:12px;padding:0.9rem 1.2rem;">
+                            <p style="margin:0;font-size:0.95rem;"><i class="fa-solid fa-triangle-exclamation" style="color:var(--c-pink);"></i>
+                                <strong>Recuerden:</strong> Este avance forma parte del proyecto final
+                                <strong style="color:var(--c-pink);">(30% de la nota del curso)</strong>.
+                                Cada retroalimentación recibida hoy es una oportunidad de mejora antes de la entrega final.</p>
+                        </div>
+                        <div style="margin-top:1rem;background:rgba(34,211,238,0.05);border:1px solid rgba(34,211,238,0.2);border-radius:12px;padding:0.9rem 1.2rem;">
+                            <p style="margin:0;font-size:0.95rem;"><i class="fa-solid fa-arrow-right" style="color:var(--c-cyan);"></i>
+                                Próxima sesión (Semana 10): <strong>Problemas de Satisfacción de Restricciones (CSP)</strong>.
+                                Lean el capítulo asignado de Talbot et al. antes de la clase.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             DIAPOSITIVA 17: CIERRE — TAKEAWAYS
+             ============================================================ -->
+        <div class="slide">
+            <div class="card">
+                <div class="pill pill-gold"><i class="fa-solid fa-flag-checkered"></i> Cierre de Sesión</div>
+                <h2>Las 3 ideas que debes llevarte hoy</h2>
+                <div class="grid-3" style="margin-bottom:1.2rem;align-items:stretch;">
+                    <!-- IDEA 1 -->
+                    <div class="concept-box" style="border-top:4px solid var(--c-cyan);display:flex;flex-direction:column;gap:0.6rem;">
+                        <div style="display:flex;align-items:center;gap:0.6rem;">
+                            <span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:rgba(34,211,238,0.15);flex-shrink:0;">
+                                <i class="fa-solid fa-rotate" style="color:var(--c-cyan);font-size:0.85rem;"></i>
+                            </span>
+                            <h3 style="color:var(--c-cyan);margin:0;font-size:1rem;">Idea 1: Recursividad = Iteración</h3>
+                        </div>
+                        <p style="margin:0;font-size:0.93rem;line-height:1.6;">En Prolog no hay bucles. <strong>Toda repetición se expresa como recursividad</strong>. Siempre necesitas un <strong style="color:var(--c-green);">caso base</strong> (que detiene) y un <strong style="color:var(--c-cyan);">caso recursivo</strong> (que avanza).</p>
+                    </div>
+                    <!-- IDEA 2 -->
+                    <div class="concept-box" style="border-top:4px solid var(--c-pink);display:flex;flex-direction:column;gap:0.6rem;">
+                        <div style="display:flex;align-items:center;gap:0.6rem;">
+                            <span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:rgba(244,114,182,0.15);flex-shrink:0;">
+                                <i class="fa-solid fa-scissors" style="color:var(--c-pink);font-size:0.85rem;"></i>
+                            </span>
+                            <h3 style="color:var(--c-pink);margin:0;font-size:1rem;">Idea 2: El Cut controla el flujo</h3>
+                        </div>
+                        <p style="margin:0;font-size:0.93rem;line-height:1.6;">El <code>!</code> le dice a Prolog "comprométete con esta solución, no busques más alternativas". Poderoso pero peligroso si se usa mal. Úsalo solo cuando estés seguro de que es la única solución válida.</p>
+                    </div>
+                    <!-- IDEA 3 -->
+                    <div class="concept-box" style="border-top:4px solid var(--c-gold);display:flex;flex-direction:column;gap:0.6rem;">
+                        <div style="display:flex;align-items:center;gap:0.6rem;">
+                            <span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:rgba(250,204,21,0.15);flex-shrink:0;">
+                                <i class="fa-solid fa-wand-magic-sparkles" style="color:var(--c-gold);font-size:0.85rem;"></i>
+                            </span>
+                            <h3 style="color:var(--c-gold);margin:0;font-size:1rem;">Idea 3: <code style="font-size:0.9rem;">is</code> evalúa &nbsp;·&nbsp; <code style="font-size:0.9rem;">=</code> unifica</h3>
+                        </div>
+                        <p style="margin:0;font-size:0.93rem;line-height:1.6;"><strong>Jamás los confundas.</strong> <code>X = 3+4</code> guarda la estructura <em>"3+4"</em> sin calcular (<span class="tt">unificación<span class="tt-box">Unificación ( = )|||Solo empareja estructuras sin calcular nada. <code>X = 3+4</code> hace que X contenga la estructura "3+4", no el número 7. Es como ponerle una etiqueta a una expresión sin evaluarla.</span></span>). <code>X is 3+4</code> calcula y da <code>X = 7</code> (<span class="tt">evaluación<span class="tt-box">Evaluación ( is )|||Calcula el resultado numérico de la expresión del lado derecho y lo asigna a la variable. <code>X is 3+4</code> → X vale 7. Usa <code>is</code> siempre que necesites un resultado numérico.</span></span>). Es el error más frecuente en Prolog.</p>
+                    </div>
+                </div>
+
+                <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:1.2rem 1.8rem;display:grid;grid-template-columns:1.1fr 0.9fr;gap:2rem;align-items:center;">
+                    <div>
+                        <p style="color:var(--c-cyan);font-weight:800;font-size:0.85rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:1rem;">
+                            <i class="fa-solid fa-arrow-right"></i> Para la próxima semana (Semana 10)
+                        </p>
+                        <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:8px;">
+                            <li style="display:flex;gap:10px;align-items:flex-start;">
+                                <i class="fa-solid fa-book-open" style="color:var(--c-gold);margin-top:3px;flex-shrink:0;"></i>
+                                <span>Leer capítulo asignado de <strong>Talbot et al.</strong> sobre <span class="tt">Problemas de Satisfacción de Restricciones<span class="tt-box">Problemas de Satisfacción de Restricciones (CSP)|||Tipo de problema de IA donde se deben <strong>asignar valores a variables</strong> de modo que se cumplan todas las restricciones dadas. Ejemplos: resolver un Sudoku (asignar dígitos sin repetir), crear horarios de clases (sin choques), colorear un mapa (sin colores iguales adyacentes). Es el tema de la Semana 10.</span></span> (Semana 10).</span>
+                            </li>
+                            <li style="display:flex;gap:10px;align-items:flex-start;">
+                                <i class="fa-solid fa-upload" style="color:var(--c-pink);margin-top:3px;flex-shrink:0;"></i>
+                                <span>Entregar hoy el <strong>avance del proyecto</strong> de agente inteligente al docente.</span>
+                            </li>
+                            <li style="display:flex;gap:10px;align-items:flex-start;">
+                                <i class="fa-solid fa-laptop-code" style="color:var(--c-purple);margin-top:3px;flex-shrink:0;"></i>
+                                <span>Continuar practicando con los ejercicios de Prolog en SWI-Prolog.</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div style="text-align:center;border-left:1px solid rgba(255,255,255,0.1);padding-left:2rem;">
+                        <i class="fa-solid fa-quote-left" style="font-size:1.5rem;color:var(--text-muted);margin-bottom:1rem;"></i>
+                        <p style="font-size:1.15rem;font-style:italic;color:var(--text-main);line-height:1.6;margin-bottom:1rem;">
+                            "Programar en Prolog es como enseñarle al computador a <strong>razonar</strong>, no a seguir instrucciones."
+                        </p>
+                        <p style="color:var(--c-gold);font-weight:700;font-size:0.9rem;letter-spacing:1px;">— Lógica Declarativa</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /slides-container -->
+
+    <div id="slideCounter" class="slide-counter">Portada · 1 / 24</div>
+
+    <!-- Tooltip flotante global -->
+    <div id="global-tooltip">
+        <div class="tt-label"><i class="fa-solid fa-circle-info"></i> <span id="gt-title"></span></div>
+        <div id="gt-body"></div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const progressBar = document.getElementById('progressBar');
+        const slideCounter = document.getElementById('slideCounter');
+        let currentSlide = 0;
+
+        const blockMap = [
+            'Portada',                                                                           // 0
+            'Intro', 'Intro',                                                                    // 1-2
+            'Bloque A',                                                                          // 3
+            'Bloque B', 'Bloque B', 'Bloque B', 'Bloque B', 'Bloque B', 'Bloque B', 'Bloque B', // 4-10
+            'Bloque C', 'Bloque C', 'Bloque C', 'Bloque C', 'Bloque C', 'Bloque C', 'Bloque C', // 11-17
+            'Bloque D', 'Bloque D', 'Bloque D', 'Bloque D',                                     // 18-21
+            'Avance',                                                                            // 22
+            'Cierre'                                                                             // 23
+        ];
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle('active', index === currentSlide);
+            });
+            const progress = ((currentSlide + 1) / slides.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            const label = blockMap[currentSlide] || '';
+            slideCounter.textContent = `${label}  ·  ${currentSlide + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+                if (currentSlide < slides.length - 1) { currentSlide++; updateSlides(); }
+            }
+            if (e.key === 'ArrowLeft') {
+                if (currentSlide > 0) { currentSlide--; updateSlides(); }
+            }
+        });
+
+        updateSlides();
+
+        // ── Sistema de Tooltips Educativos ──────────────────────────
+        const gTip    = document.getElementById('global-tooltip');
+        const gTitle  = document.getElementById('gt-title');
+        const gBody   = document.getElementById('gt-body');
+        let tipTimeout;
+
+        document.querySelectorAll('.tt').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                clearTimeout(tipTimeout);
+                const box = el.querySelector('.tt-box');
+                if (!box) return;
+                // Leer título y cuerpo separados por "|"
+                const parts = box.innerHTML.split('|||');
+                gTitle.textContent = parts[0] ? parts[0].trim() : el.innerText.trim();
+                gBody.innerHTML    = parts[1] ? parts[1].trim() : box.innerHTML;
+                gTip.style.display = 'block';
+                positionTip(el);
+            });
+            el.addEventListener('mousemove', () => positionTip(el));
+            el.addEventListener('mouseleave', () => {
+                tipTimeout = setTimeout(() => { gTip.style.display = 'none'; }, 120);
+            });
+        });
+
+        function positionTip(el) {
+            const rect = el.getBoundingClientRect();
+            const tw   = gTip.offsetWidth;
+            const th   = gTip.offsetHeight;
+            let top  = rect.top - th - 14;
+            let left = rect.left + rect.width / 2 - tw / 2;
+            if (top < 8)                    top  = rect.bottom + 14;
+            if (left < 8)                   left = 8;
+            if (left + tw > window.innerWidth - 8) left = window.innerWidth - tw - 8;
+            gTip.style.top  = top  + 'px';
+            gTip.style.left = left + 'px';
+        }
+        // ────────────────────────────────────────────────────────────
+    </script>
+</body>
+</html>
