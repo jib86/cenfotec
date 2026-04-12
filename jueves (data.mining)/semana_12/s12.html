@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Minería de Datos - Clase 10</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lato:wght@300;400;700;900&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, .05);
+            --glass-border: rgba(255, 255, 255, .1);
+            --glass-highlight: rgba(255, 255, 255, .05);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-primary: #38bdf8;
+            --accent-secondary: #c084fc;
+            --code-bg: #1a1b26;
+            --c-cyan: #22d3ee;
+            --c-pink: #f472b6;
+            --c-green: #4ade80;
+            --c-orange: #f59e0b;
+            --c-red: #f87171
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #0f172a;
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden
+        }
+
+        .slides-container {
+            height: 100%;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            background: radial-gradient(circle at 10% 10%, rgba(56, 189, 248, .12), transparent 40%), radial-gradient(circle at 90% 90%, rgba(192, 132, 252, .12), transparent 40%)
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            opacity: 0;
+            transform: scale(.95) translateY(20px);
+            transition: opacity .5s ease, transform .5s cubic-bezier(.34, 1.56, .64, 1);
+            pointer-events: none;
+            filter: blur(8px)
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            pointer-events: all;
+            z-index: 10;
+            filter: blur(0)
+        }
+
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-top: 1px solid rgba(255, 255, 255, .15);
+            border-radius: 28px;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 1280px;
+            max-height: 95vh;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, .2), inset 0 0 0 1px var(--glass-highlight);
+            display: flex;
+            flex-direction: column;
+            position: relative
+        }
+
+        h1 {
+            font-family: 'Lato', sans-serif;
+            font-weight: 900;
+            font-size: 4.5rem;
+            line-height: 1;
+            margin-bottom: .5rem;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -2px
+        }
+
+        h2 {
+            font-family: 'Lato', sans-serif;
+            font-weight: 800;
+            font-size: 2.2rem;
+            margin-bottom: .4rem;
+            display: inline-block;
+            background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            color: var(--text-main);
+            margin-top: .8rem;
+            margin-bottom: .4rem;
+            font-weight: 600
+        }
+
+        p,
+        li {
+            font-size: .95rem;
+            line-height: 1.5;
+            color: var(--text-muted);
+            margin-bottom: .4rem
+        }
+
+        strong {
+            color: var(--text-main);
+            font-weight: 600
+        }
+
+        .cb {
+            background: rgba(255, 255, 255, .03);
+            padding: 1rem;
+            border-radius: 14px;
+            border: 1px solid var(--glass-border);
+            transition: transform .3s, border-color .3s, background .3s
+        }
+
+        .cb:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, .05);
+            border-color: var(--accent-primary)
+        }
+
+        .mch {
+            display: flex;
+            align-items: center;
+            padding: 8px 14px;
+            background: #2a2b3d;
+            border-bottom: 1px solid rgba(255, 255, 255, .07);
+            position: relative
+        }
+
+        .mch .dots {
+            display: flex;
+            gap: 6px
+        }
+
+        .mch .dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%
+        }
+
+        .dot-r {
+            background: #ff5f57
+        }
+
+        .dot-y {
+            background: #ffbd2e
+        }
+
+        .dot-g {
+            background: #28c840
+        }
+
+        .mch .mt {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Fira Code', monospace;
+            font-size: .72rem;
+            color: rgba(255, 255, 255, .35)
+        }
+
+        pre {
+            background: var(--code-bg);
+            padding: 1.2rem;
+            border-radius: 14px;
+            font-family: 'Fira Code', monospace;
+            font-size: .82rem;
+            overflow-x: auto;
+            border: 1px solid rgba(255, 255, 255, .05);
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, .3);
+            margin: 0;
+            line-height: 1.65
+        }
+
+        .code-wrap {
+            background: var(--code-bg);
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, .07);
+            overflow: hidden
+        }
+
+        .code-wrap pre {
+            padding: 1rem 1.2rem !important;
+            font-size: .8rem !important;
+            line-height: 1.6 !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            max-height: 500px !important;
+            overflow-y: auto !important;
+            overflow-x: auto !important;
+            display: block !important;
+        }
+
+        .code-wrap pre::-webkit-scrollbar {
+            width: 8px
+        }
+
+        .code-wrap pre::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, .08)
+        }
+
+        .code-wrap pre::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .2);
+            border-radius: 4px
+        }
+
+        .code-wrap pre::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, .35)
+        }
+
+        .fn {
+            position: fixed;
+            bottom: 25px;
+            right: 35px;
+            z-index: 100
+        }
+
+        .sc {
+            font-family: 'Fira Code', monospace;
+            color: rgba(255, 255, 255, .4);
+            font-size: 1rem;
+            letter-spacing: 2px
+        }
+
+        #pb {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            width: 0%;
+            transition: width .3s;
+            z-index: 200;
+            box-shadow: 0 0 10px var(--accent-primary)
+        }
+
+        .tag {
+            background: rgba(255, 255, 255, .1);
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-family: 'Fira Code', monospace;
+            font-size: .82rem
+        }
+
+        .co {
+            background: rgba(255, 255, 255, .04);
+            border-left: 3px solid;
+            padding: .8rem 1.2rem;
+            border-radius: 0 10px 10px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px
+        }
+
+        /* TOOLTIP */
+        .g {
+            position: relative;
+            color: var(--accent-primary);
+            -webkit-text-fill-color: currentColor;
+            border-bottom: 1.5px dashed rgba(56, 189, 248, .5);
+            cursor: pointer;
+            font-weight: 500;
+            transition: color .2s, border-color .2s
+        }
+
+        .g:hover,
+        .g:active {
+            color: #fff;
+            border-bottom-color: #fff
+        }
+
+        .g .t {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: calc(100% + 10px);
+            left: 50%;
+            transform: translateX(-50%) translateY(6px);
+            background: #1e293b;
+            border: 1px solid var(--accent-primary);
+            border-radius: 12px;
+            padding: 10px 14px;
+            width: max-content;
+            max-width: 320px;
+            font-size: .8rem;
+            font-weight: 400;
+            color: #e2e8f0;
+            line-height: 1.5;
+            z-index: 500;
+            pointer-events: none;
+            transition: opacity .25s, transform .25s, visibility .25s;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .4);
+            font-family: 'Inter', sans-serif
+        }
+
+        .g .t::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: var(--accent-primary)
+        }
+
+        .g:hover .t,
+        .g:active .t {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(0)
+        }
+
+        .gl .t {
+            left: 0;
+            transform: translateX(0) translateY(6px)
+        }
+
+        .gl:hover .t,
+        .gl:active .t {
+            transform: translateX(0) translateY(0)
+        }
+
+        .gl .t::after {
+            left: 20px;
+            transform: none
+        }
+
+        .gr .t {
+            left: auto;
+            right: 0;
+            transform: translateX(0) translateY(6px)
+        }
+
+        .gr:hover .t,
+        .gr:active .t {
+            transform: translateX(0) translateY(0)
+        }
+
+        .gr .t::after {
+            left: auto;
+            right: 20px;
+            transform: none
+        }
+
+        @media(max-width:768px) {
+            h1 {
+                font-size: 2.8rem
+            }
+
+            h2 {
+                font-size: 1.8rem
+            }
+
+            .card {
+                padding: 1.2rem
+            }
+        }
+
+        .en-sencillo {
+            background: linear-gradient(135deg, rgba(250,204,21,0.08), rgba(251,191,36,0.04));
+            border: 1px solid rgba(250,204,21,0.3);
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-top: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .en-sencillo .es-icon {
+            background: rgba(250,204,21,0.15);
+            border-radius: 8px;
+            padding: 4px 8px;
+            font-size: .7rem;
+            font-weight: 800;
+            color: #fbbf24;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .en-sencillo p {
+            margin: 0;
+            font-size: .88rem;
+            color: #fde68a;
+            line-height: 1.5;
+            font-style: italic;
+        }
+        .reveal-answer {
+            margin: 8px 0 0;
+            font-size: .8rem;
+            cursor: pointer;
+            user-select: none;
+        }
+        .reveal-answer summary {
+            color: var(--accent-primary);
+            font-weight: 600;
+            font-size: .78rem;
+            letter-spacing: .5px;
+        }
+        .reveal-answer summary:hover {
+            color: #fff;
+        }
+        .reveal-answer p {
+            margin: 6px 0 0;
+            font-size: .82rem;
+            color: var(--c-green);
+            font-style: italic;
+            line-height: 1.5;
+            padding-left: 12px;
+            border-left: 2px solid rgba(74,222,128,.3);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="pb"></div>
+    <div class="slides-container">
+
+        <!-- S1: PORTADA -->
+        <div class="slide active">
+            <div class="card" style="text-align:center;justify-content:center;height:60vh">
+                <p style="color:var(--accent-primary);letter-spacing:2px;text-transform:uppercase;font-size:.85rem;font-weight:700">
+                    Módulo 5 · Sesión 10</p>
+                <h1>Minería de Datos en<br />Grandes Volúmenes</h1>
+                <p style="font-size:1rem;color:var(--text-muted);margin-top:4px">Procesamiento distribuido, aprendizaje en línea y herramientas para datos masivos.</p>
+                <div style="margin-top:1.5rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;text-align:left;width:100%;border-top:1px solid rgba(255,255,255,.1);padding-top:25px">
+                    <div style="display:flex;gap:10px">
+                        <div style="background:rgba(6,182,212,.1);padding:12px;border-radius:8px;color:var(--c-cyan)"><i class="fa-solid fa-user-tie"></i></div>
+                        <div>
+                            <h4 style="font-size:.75rem;text-transform:uppercase;letter-spacing:2px;color:#64748b;margin:0 0 4px;font-weight:600">Profesor</h4>
+                            <p style="font-size:1rem;color:#fff;margin:0">Dr. J. Ignacio Borge</p>
+                            <p style="font-size:.85rem;color:var(--c-cyan);margin:2px 0 0;font-style:italic">Científico computacional</p>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:10px">
+                        <div style="background:rgba(236,72,153,.1);padding:12px;border-radius:8px;color:var(--c-pink)"><i class="fa-regular fa-calendar-check"></i></div>
+                        <div>
+                            <h4 style="font-size:.75rem;text-transform:uppercase;letter-spacing:2px;color:#64748b;margin:0 0 4px;font-weight:600">Sesión</h4>
+                            <p style="font-size:1rem;color:#fff;margin:0">Clase 10 de 14</p>
+                            <p style="font-size:.85rem;color:var(--text-muted);margin:2px 0 0">Módulo 5 — Parte 2</p>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:10px">
+                        <div style="background:rgba(74,222,128,.1);padding:12px;border-radius:8px;color:var(--c-green)"><i class="fa-solid fa-building-columns"></i></div>
+                        <div>
+                            <h4 style="font-size:.75rem;text-transform:uppercase;letter-spacing:2px;color:#64748b;margin:0 0 4px;font-weight:600">Institución</h4>
+                            <p style="font-size:1rem;color:#fff;margin:0">Universidad CENFOTEC</p>
+                            <p style="font-size:.85rem;color:var(--text-muted);margin:2px 0 0">Escuela de Sistemas Inteligentes</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- S2: CONTEXTO -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">¿Dónde estamos?</h2>
+                <p style="color:var(--accent-primary);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">Recapitulación y ruta de hoy</p>
+                <div class="co" style="border-color:var(--c-orange);margin-bottom:14px"><i class="fa-solid fa-rotate-left" style="color:var(--c-orange);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.92rem;color:#e2e8f0;line-height:1.5"><strong style="color:var(--c-orange)">Sesión anterior (9):</strong> Vimos los desafíos de la minería a gran escala y las técnicas de <span class="g gl">muestreo<span class="t">Seleccionar un subconjunto representativo de los datos originales para hacer viable el análisis cuando el volumen completo es impracticable. Métodos: aleatorio simple, estratificado, sistemático, por reservoir.</span></span> y reducción de datos masivos. Ahora damos el salto al <strong>procesamiento distribuido</strong>, el <strong>aprendizaje en línea</strong> y las <strong>herramientas</strong> que lo hacen posible.</p>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">
+                    <div class="cb" style="text-align:center;padding:.9rem .7rem;opacity:.5">
+                        <i class="fa-solid fa-mountain" style="color:var(--text-muted);font-size:1.2rem;margin-bottom:6px"></i>
+                        <p style="margin:0;font-size:.82rem"><strong style="color:var(--text-muted)">Sesión 9</strong><br/>Desafíos y muestreo</p>
+                    </div>
+                    <div class="cb" style="text-align:center;padding:.9rem .7rem;border-color:var(--accent-primary);background:rgba(56,189,248,.08)">
+                        <i class="fa-solid fa-server" style="color:var(--accent-primary);font-size:1.2rem;margin-bottom:6px"></i>
+                        <p style="margin:0;font-size:.82rem"><strong style="color:var(--accent-primary)">Hoy — Parte 1</strong><br/>Procesamiento distribuido</p>
+                    </div>
+                    <div class="cb" style="text-align:center;padding:.9rem .7rem;border-color:var(--accent-secondary);background:rgba(192,132,252,.08)">
+                        <i class="fa-solid fa-brain" style="color:var(--accent-secondary);font-size:1.2rem;margin-bottom:6px"></i>
+                        <p style="margin:0;font-size:.82rem"><strong style="color:var(--accent-secondary)">Hoy — Parte 2</strong><br/>Aprendizaje en línea</p>
+                    </div>
+                    <div class="cb" style="text-align:center;padding:.9rem .7rem;border-color:var(--c-green);background:rgba(74,222,128,.08)">
+                        <i class="fa-solid fa-toolbox" style="color:var(--c-green);font-size:1.2rem;margin-bottom:6px"></i>
+                        <p style="margin:0;font-size:.82rem"><strong style="color:var(--c-green)">Hoy — Parte 3</strong><br/>Herramientas y casos</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- S3: OBJETIVOS -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:10px">Objetivos de la Clase</h2>
+                <div class="co" style="border-color:#fbbf24;margin-bottom:14px"><i class="fa-solid fa-bullseye" style="color:#fbbf24;font-size:1rem;margin-top:2px"></i>
+                    <p style="margin:0;font-size:.95rem;color:#e2e8f0;line-height:1.4;font-style:italic"><strong style="color:#fbbf24;font-style:normal">Al finalizar esta sesión</strong> comprenderás cómo se procesa, analiza y actualiza información a escala de millones de registros usando infraestructura distribuida y modelos adaptativos.</p>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                    <div class="cb" style="padding:.9rem 1.2rem;border-left:4px solid var(--accent-primary);background:rgba(56,189,248,.05);display:flex;align-items:center;gap:14px">
+                        <div style="background:rgba(56,189,248,.15);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <i class="fa-solid fa-network-wired" style="color:var(--accent-primary);font-size:.9rem"></i>
+                        </div>
+                        <p style="margin:0;font-size:.95rem;color:#e2e8f0"><strong style="color:var(--accent-primary)">Comprender</strong> los principios del procesamiento distribuido y el paradigma <span class="g">MapReduce<span class="t">Modelo de programación creado por Google en 2004. Divide el trabajo en dos fases: Map (transforma y filtra datos en paralelo) y Reduce (agrega los resultados parciales). Es la base conceptual de Hadoop y Spark.</span></span>.</p>
+                    </div>
+                    <div class="cb" style="padding:.9rem 1.2rem;border-left:4px solid var(--accent-secondary);background:rgba(192,132,252,.05);display:flex;align-items:center;gap:14px">
+                        <div style="background:rgba(192,132,252,.15);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <i class="fa-solid fa-wave-square" style="color:var(--accent-secondary);font-size:.9rem"></i>
+                        </div>
+                        <p style="margin:0;font-size:.95rem;color:#e2e8f0"><strong style="color:var(--accent-secondary)">Diferenciar</strong> entre procesamiento <span class="g">batch<span class="t">Procesamiento por lotes: se acumula un gran conjunto de datos y se analiza todo de una vez. Es eficiente pero no inmediato — ideal para reportes diarios o semanales.</span></span> y <span class="g">streaming<span class="t">Procesamiento en tiempo real: los datos se analizan conforme llegan, uno a uno o en micro-lotes. Ideal para alertas, detección de fraude o dashboards en vivo.</span></span>, y cuándo usar cada enfoque.</p>
+                    </div>
+                    <div class="cb" style="padding:.9rem 1.2rem;border-left:4px solid var(--c-cyan);background:rgba(34,211,238,.05);display:flex;align-items:center;gap:14px">
+                        <div style="background:rgba(34,211,238,.15);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <i class="fa-solid fa-graduation-cap" style="color:var(--c-cyan);font-size:.9rem"></i>
+                        </div>
+                        <p style="margin:0;font-size:.95rem;color:#e2e8f0"><strong style="color:var(--c-cyan)">Aplicar</strong> conceptos de aprendizaje en línea (<span class="g">online learning<span class="t">Paradigma donde el modelo se actualiza con cada nuevo dato o mini-lote, sin necesidad de re-entrenar con todo el dataset. Fundamental cuando los datos llegan continuamente.</span></span>) para actualizar modelos sin re-entrenar desde cero.</p>
+                    </div>
+                    <div class="cb" style="padding:.9rem 1.2rem;border-left:4px solid var(--c-green);background:rgba(74,222,128,.05);display:flex;align-items:center;gap:14px">
+                        <div style="background:rgba(74,222,128,.15);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <i class="fa-solid fa-toolbox" style="color:var(--c-green);font-size:.9rem"></i>
+                        </div>
+                        <p style="margin:0;font-size:.95rem;color:#e2e8f0"><strong style="color:var(--c-green)">Conocer</strong> las principales herramientas y plataformas (Hadoop, Spark, Kafka, Flink) y casos de éxito en la industria.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- S4: POR QUE IMPORTA -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:10px">¿Por qué importa esto para MÍ?</h2>
+                <p style="color:var(--accent-secondary);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">La escala es tu realidad profesional</p>
+                <div class="co" style="border-color:var(--accent-secondary);margin-bottom:14px"><i class="fa-solid fa-rocket" style="color:var(--accent-secondary);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.92rem;color:#e2e8f0;line-height:1.5"><strong style="color:#fff">Estos números NO son teóricos.</strong> Son el tamaño de los datos que procesarás si trabajas en tecnología. Empresas como Amazon, Netflix y Mercado Libre viven este volumen cada segundo. Saber procesarlo es una habilidad diferenciadora en el mercado.</p>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+                    <div class="cb" style="padding:1.2rem;text-align:center;border-top:3px solid var(--c-cyan);background:rgba(34,211,238,.05)">
+                        <p style="margin:0 0 8px;font-size:.78rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:600">Amazon</p>
+                        <p style="margin:0;font-size:1.4rem;color:var(--c-cyan);font-weight:700;font-family:'Fira Code',monospace">1.6M</p>
+                        <p style="margin:4px 0 0;font-size:.8rem;color:var(--text-muted)">paquetes/día</p>
+                    </div>
+                    <div class="cb" style="padding:1.2rem;text-align:center;border-top:3px solid var(--c-pink);background:rgba(244,114,182,.05)">
+                        <p style="margin:0 0 8px;font-size:.78rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:600">Mercado Libre</p>
+                        <p style="margin:0;font-size:1.4rem;color:var(--c-pink);font-weight:700;font-family:'Fira Code',monospace">40+</p>
+                        <p style="margin:4px 0 0;font-size:.8rem;color:var(--text-muted)">compras/segundo (LATAM)</p>
+                    </div>
+                    <div class="cb" style="padding:1.2rem;text-align:center;border-top:3px solid var(--c-orange);background:rgba(245,158,11,.05)">
+                        <p style="margin:0 0 8px;font-size:.78rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:600">E-commerce típico</p>
+                        <p style="margin:0;font-size:1.4rem;color:var(--c-orange);font-weight:700;font-family:'Fira Code',monospace">1–5 GB</p>
+                        <p style="margin:4px 0 0;font-size:.8rem;color:var(--text-muted)">logs diarios</p>
+                    </div>
+                    <div class="cb" style="padding:1.2rem;text-align:center;border-top:3px solid var(--accent-primary);background:rgba(56,189,248,.05)">
+                        <p style="margin:0 0 8px;font-size:.78rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:600">Netflix</p>
+                        <p style="margin:0;font-size:1.4rem;color:var(--accent-primary);font-weight:700;font-family:'Fira Code',monospace">500B</p>
+                        <p style="margin:4px 0 0;font-size:.8rem;color:var(--text-muted)">eventos/día</p>
+                    </div>
+                </div>
+                <div class="co" style="border-color:var(--c-green)"><i class="fa-solid fa-lightbulb" style="color:var(--c-green);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.88rem;color:#e2e8f0"><strong style="color:var(--c-green)">Tu ventaja competitiva:</strong> Si a los 25 años ya sabes procesar datos a escala masiva, tienes 10 años de ventaja sobre colegas que aprenderán cuando sea demasiado tarde. Las herramientas (Spark, Kafka) se aprenden. La mentalidad de <strong>"cómo dividir un problema en paralelo"</strong> es lo que verdaderamente escasea.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- S5: TITULO SECCION 1 -->
+        <div class="slide">
+            <div class="card" style="text-align:center;justify-content:center;height:50vh">
+                <p style="color:var(--accent-primary);letter-spacing:3px;text-transform:uppercase;font-size:.85rem;font-weight:700">Primera parte</p>
+                <h1 style="font-size:4rem">Procesamiento<br />Distribuido</h1>
+                <p style="font-size:1rem;color:var(--text-muted);max-width:600px;margin:8px auto 0">Cómo dividir un problema gigante en miles de problemas pequeños que se resuelven en paralelo.</p>
+            </div>
+        </div>
+
+        <!-- S6: POR QUE DISTRIBUIR -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">¿Por qué necesitamos procesamiento distribuido?</h2>
+                <p style="color:var(--c-red);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">El límite de una sola máquina</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-red);background:rgba(248,113,113,.04)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><i class="fa-solid fa-computer" style="color:var(--c-red)"></i><strong style="color:#fff;font-size:.92rem">Escalamiento vertical (Scale Up)</strong></div>
+                        <p style="margin:0;font-size:.88rem">Agregar más RAM, CPU o disco a <strong>una sola máquina</strong>. Tiene un techo físico y económico: llega un punto donde no se puede agregar más.</p>
+                        <p style="margin:6px 0 0;font-size:.8rem;color:var(--c-red)"><i class="fa-solid fa-xmark"></i> Costoso, limitado, punto único de falla</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-green);background:rgba(74,222,128,.04)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><i class="fa-solid fa-server" style="color:var(--c-green)"></i><strong style="color:#fff;font-size:.92rem">Escalamiento horizontal (Scale Out)</strong></div>
+                        <p style="margin:0;font-size:.88rem">Agregar <strong>más máquinas</strong> (<span class="g">nodos<span class="t">Cada computadora individual dentro de un clúster. Un nodo almacena una porción de los datos y ejecuta parte del procesamiento. Los nodos trabajan en paralelo y se comunican entre sí por red.</span></span>) que trabajen en paralelo sobre porciones del dato. No tiene techo teórico.</p>
+                        <p style="margin:6px 0 0;font-size:.8rem;color:var(--c-green)"><i class="fa-solid fa-check"></i> Económico, elástico, <span class="g">tolerante a fallos<span class="t">Capacidad de un sistema distribuido para seguir funcionando aunque uno o varios nodos fallen. Los datos se replican en múltiples nodos, así si uno se cae, otro toma su lugar sin perder información.</span></span></p>
+                    </div>
+                </div>
+                <div class="co" style="border-color:var(--accent-primary)"><i class="fa-solid fa-lightbulb" style="color:var(--accent-primary);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.92rem;color:#e2e8f0;line-height:1.5"><strong style="color:var(--accent-primary)">Analogía:</strong> Imagina que debes contar todas las palabras de una biblioteca de 1 millón de libros. Con escalamiento vertical, buscas a la persona más rápida del mundo. Con escalamiento horizontal, contratas 1,000 personas y cada una cuenta 1,000 libros. Al final, <strong>suman los resultados</strong>.</p>
+                </div>
+                <div class="en-sencillo"><span class="es-icon">En sencillo</span><p>Una sola computadora no da abasto con millones de datos. La solución: muchas computadoras trabajando en equipo, cada una con un pedacito del problema.</p></div>
+            </div>
+        </div>
+
+        <!-- S7: MAPREDUCE CONCEPTO -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">El paradigma MapReduce</h2>
+                <p style="color:var(--accent-secondary);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">La idea que revolucionó el Big Data</p>
+                <div class="co" style="border-color:var(--accent-secondary);margin-bottom:14px"><i class="fa-solid fa-scroll" style="color:var(--accent-secondary);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.92rem;color:#e2e8f0;line-height:1.5"><strong style="color:#fff">MapReduce</strong> fue publicado por Google en 2004. Es un modelo de programación que divide cualquier cálculo sobre datos masivos en <strong>dos fases</strong> que se ejecutan en paralelo sobre un <span class="g gl">clúster<span class="t">Conjunto de computadoras (nodos) interconectadas que trabajan juntas como un solo sistema. Cada nodo almacena una porción de los datos y ejecuta parte del cómputo.</span></span> de máquinas.</p>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:center;margin-bottom:14px">
+                    <div class="cb" style="padding:1rem;text-align:center;border-left:4px solid var(--accent-primary)">
+                        <i class="fa-solid fa-arrows-split-up-and-left" style="color:var(--accent-primary);font-size:1.4rem;margin-bottom:6px"></i>
+                        <p style="margin:0;font-size:.85rem"><strong style="color:var(--accent-primary)">MAP</strong><br/>Cada nodo toma su porción de datos y la transforma en pares <span class="tag" style="font-size:.75rem;color:var(--c-cyan)">(clave, valor)</span></p>
+                    </div>
+                    <i class="fa-solid fa-arrow-right" style="color:#475569;font-size:1rem"></i>
+                    <div class="cb" style="padding:1rem;text-align:center;border-left:4px solid var(--c-orange)">
+                        <i class="fa-solid fa-shuffle" style="color:var(--c-orange);font-size:1.4rem;margin-bottom:6px"></i>
+                        <p style="margin:0;font-size:.85rem"><strong style="color:var(--c-orange)">SHUFFLE</strong><br/>El sistema agrupa todos los pares con la <strong>misma clave</strong> y los envía al mismo nodo</p>
+                    </div>
+                    <i class="fa-solid fa-arrow-right" style="color:#475569;font-size:1rem"></i>
+                    <div class="cb" style="padding:1rem;text-align:center;border-left:4px solid var(--c-green)">
+                        <i class="fa-solid fa-compress" style="color:var(--c-green);font-size:1.4rem;margin-bottom:6px"></i>
+                        <p style="margin:0;font-size:.85rem"><strong style="color:var(--c-green)">REDUCE</strong><br/>Cada nodo combina los valores de cada clave en un <strong>resultado final</strong></p>
+                    </div>
+                </div>
+                <div class="co" style="border-color:var(--c-cyan)"><i class="fa-solid fa-store" style="color:var(--c-cyan);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.88rem;color:#e2e8f0"><strong style="color:var(--c-cyan)">Ejemplo e-commerce:</strong> Contar cuántas veces se vendió cada producto en 50 millones de transacciones. MAP emite ("Producto_X", 1) por cada venta. REDUCE suma todos los 1's por producto.</p>
+                </div>
+                <div class="en-sencillo"><span class="es-icon">En sencillo</span><p>MapReduce = dividir el trabajo en partes (Map), organizar por categoría (Shuffle), y sumar los resultados (Reduce). Como repartir exámenes entre 10 profesores para calificar más rápido.</p></div>
+            </div>
+        </div>
+
+        <!-- S8: MAPREDUCE VISUAL -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1200px">
+                <h2 style="font-size:2rem;margin-bottom:4px">MapReduce paso a paso</h2>
+                <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:12px">Conteo de productos vendidos en un e-commerce</p>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                    <!-- INPUT -->
+                    <div style="display:flex;align-items:center;gap:8px">
+                        <span style="font-size:.75rem;color:#64748b;width:70px;text-align:right;flex-shrink:0">INPUT</span>
+                        <div style="display:flex;gap:6px;flex-wrap:wrap">
+                            <span class="tag" style="color:var(--text-muted);font-size:.78rem;padding:4px 10px">Zapatos</span>
+                            <span class="tag" style="color:var(--text-muted);font-size:.78rem;padding:4px 10px">Camiseta</span>
+                            <span class="tag" style="color:var(--text-muted);font-size:.78rem;padding:4px 10px">Zapatos</span>
+                            <span class="tag" style="color:var(--text-muted);font-size:.78rem;padding:4px 10px">Reloj</span>
+                            <span class="tag" style="color:var(--text-muted);font-size:.78rem;padding:4px 10px">Camiseta</span>
+                            <span class="tag" style="color:var(--text-muted);font-size:.78rem;padding:4px 10px">Zapatos</span>
+                            <span class="tag" style="color:var(--text-muted);font-size:.78rem;padding:4px 10px">Reloj</span>
+                            <span class="tag" style="color:var(--text-muted);font-size:.78rem;padding:4px 10px">Camiseta</span>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-arrow-down" style="color:#475569;text-align:center;font-size:.8rem"></i>
+                    <!-- MAP -->
+                    <div style="display:flex;align-items:center;gap:8px">
+                        <span style="font-size:.75rem;color:var(--accent-primary);width:70px;text-align:right;flex-shrink:0;font-weight:600">MAP</span>
+                        <div style="display:flex;gap:6px;flex-wrap:wrap">
+                            <span class="tag" style="color:var(--accent-primary);font-size:.78rem;padding:4px 10px">(Zapatos, 1)</span>
+                            <span class="tag" style="color:var(--accent-primary);font-size:.78rem;padding:4px 10px">(Camiseta, 1)</span>
+                            <span class="tag" style="color:var(--accent-primary);font-size:.78rem;padding:4px 10px">(Zapatos, 1)</span>
+                            <span class="tag" style="color:var(--accent-primary);font-size:.78rem;padding:4px 10px">(Reloj, 1)</span>
+                            <span class="tag" style="color:var(--accent-primary);font-size:.78rem;padding:4px 10px">(Camiseta, 1)</span>
+                            <span class="tag" style="color:var(--accent-primary);font-size:.78rem;padding:4px 10px">(Zapatos, 1)</span>
+                            <span class="tag" style="color:var(--accent-primary);font-size:.78rem;padding:4px 10px">(Reloj, 1)</span>
+                            <span class="tag" style="color:var(--accent-primary);font-size:.78rem;padding:4px 10px">(Camiseta, 1)</span>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-arrow-down" style="color:#475569;text-align:center;font-size:.8rem"></i>
+                    <!-- SHUFFLE -->
+                    <div style="display:flex;align-items:center;gap:8px">
+                        <span style="font-size:.75rem;color:var(--c-orange);width:70px;text-align:right;flex-shrink:0;font-weight:600">SHUFFLE</span>
+                        <div style="display:flex;gap:12px;flex-wrap:wrap">
+                            <div style="background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);border-radius:8px;padding:6px 12px">
+                                <span style="font-size:.78rem;color:var(--accent-primary);font-family:'Fira Code',monospace">Zapatos → [1, 1, 1]</span>
+                            </div>
+                            <div style="background:rgba(192,132,252,.08);border:1px solid rgba(192,132,252,.2);border-radius:8px;padding:6px 12px">
+                                <span style="font-size:.78rem;color:var(--accent-secondary);font-family:'Fira Code',monospace">Camiseta → [1, 1, 1]</span>
+                            </div>
+                            <div style="background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);border-radius:8px;padding:6px 12px">
+                                <span style="font-size:.78rem;color:var(--c-green);font-family:'Fira Code',monospace">Reloj → [1, 1]</span>
+                            </div>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-arrow-down" style="color:#475569;text-align:center;font-size:.8rem"></i>
+                    <!-- REDUCE -->
+                    <div style="display:flex;align-items:center;gap:8px">
+                        <span style="font-size:.75rem;color:var(--c-green);width:70px;text-align:right;flex-shrink:0;font-weight:600">REDUCE</span>
+                        <div style="display:flex;gap:12px;flex-wrap:wrap">
+                            <div style="background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);border-radius:8px;padding:8px 16px">
+                                <span style="font-size:.88rem;color:#fff;font-weight:600;font-family:'Fira Code',monospace">Zapatos = <span style="color:var(--accent-primary)">3</span></span>
+                            </div>
+                            <div style="background:rgba(192,132,252,.15);border:1px solid rgba(192,132,252,.3);border-radius:8px;padding:8px 16px">
+                                <span style="font-size:.88rem;color:#fff;font-weight:600;font-family:'Fira Code',monospace">Camiseta = <span style="color:var(--accent-secondary)">3</span></span>
+                            </div>
+                            <div style="background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.3);border-radius:8px;padding:8px 16px">
+                                <span style="font-size:.88rem;color:#fff;font-weight:600;font-family:'Fira Code',monospace">Reloj = <span style="color:var(--c-green)">2</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="co" style="border-color:var(--accent-secondary);margin-top:12px"><i class="fa-solid fa-lightbulb" style="color:var(--accent-secondary);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.85rem;color:#e2e8f0">Con 8 transacciones se ve trivial. Pero imagina <strong>50 millones</strong>: cada nodo procesa su fragmento en paralelo y el resultado se obtiene en minutos, no en horas.</p>
+                </div>
+                <div class="en-sencillo"><span class="es-icon">En sencillo</span><p>Cada producto se marca con un "1" (Map), se agrupan los iguales (Shuffle), y se suman (Reduce). Así contas millones de ventas en segundos.</p></div>
+            </div>
+        </div>
+
+        <!-- S9: MAPREDUCE A PYSPARK -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1200px">
+                <h2 style="font-size:2rem;margin-bottom:6px">De MapReduce a PySpark: la abstracción</h2>
+                <p style="color:var(--accent-primary);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">Cómo Spark simplifica el modelo</p>
+                <div class="co" style="border-color:var(--accent-primary);margin-bottom:14px"><i class="fa-solid fa-code-branch" style="color:var(--accent-primary);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.92rem;color:#e2e8f0;line-height:1.5">MapReduce te obliga a pensar en Map, Shuffle y Reduce <strong>explícitamente.</strong> PySpark <span class="g"><strong>abstrae</strong><span class="t">Abstraer significa ocultar la complejidad interna detrás de una interfaz simple. En vez de escribir Map, Shuffle y Reduce por separado, Spark te da operaciones como groupBy() que hacen todo internamente.</span></span> esas fases en operaciones de alto nivel como <span class="tag" style="color:var(--accent-primary)">groupBy</span> y <span class="tag" style="color:var(--accent-primary)">agg()</span>. Por debajo, Spark sigue haciendo Map-Shuffle-Reduce, pero <strong>tú solo escribes lógica de negocio.</strong></p>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:20px;align-items:center;margin-bottom:12px">
+                    <!-- CONCEPTUAL -->
+                    <div style="display:flex;flex-direction:column;gap:8px">
+                        <p style="font-size:.85rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Conceptualmente (MapReduce)</p>
+                        <div class="cb" style="padding:.9rem;text-align:center;border-left:4px solid var(--accent-primary)">
+                            <p style="margin:0;font-size:.82rem"><strong style="color:var(--accent-primary)">MAP</strong><br/>Emitir pares (clave, valor)</p>
+                        </div>
+                        <div style="text-align:center;color:#475569;font-size:.85rem">↓ Shuffle</div>
+                        <div class="cb" style="padding:.9rem;text-align:center;border-left:4px solid var(--c-green)">
+                            <p style="margin:0;font-size:.82rem"><strong style="color:var(--c-green)">REDUCE</strong><br/>Agregar por clave</p>
+                        </div>
+                    </div>
+                    <!-- ARROWS -->
+                    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;height:100%;padding:0 10px">
+                        <i class="fa-solid fa-arrow-right" style="color:#475569;font-size:1.2rem"></i>
+                        <p style="font-size:.75rem;color:var(--text-muted);font-weight:600">se mapea a</p>
+                        <i class="fa-solid fa-arrow-right" style="color:#475569;font-size:1.2rem"></i>
+                    </div>
+                    <!-- CODE -->
+                    <div style="display:flex;flex-direction:column;gap:8px">
+                        <p style="font-size:.85rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">En PySpark (código real)</p>
+                        <div class="code-wrap">
+                            <div class="mch">
+                                <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+                                <span class="mt">python</span>
+                            </div>
+                            <pre>df.groupBy("categoria")\
+    .agg(count("*"))</pre>
+                        </div>
+                        <p style="font-size:.78rem;color:var(--accent-primary);margin:4px 0 0;text-align:center"><i class="fa-solid fa-equals"></i> Map + Shuffle + Reduce</p>
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                    <div class="cb" style="padding:.9rem 1.1rem;border-left:3px solid var(--accent-secondary);background:rgba(192,132,252,.04)">
+                        <p style="margin:0;font-size:.85rem;color:#e2e8f0"><strong style="color:var(--accent-secondary)">groupBy()</strong> = MAP<br/>Agrupa datos por clave (distribuido)</p>
+                    </div>
+                    <div class="cb" style="padding:.9rem 1.1rem;border-left:3px solid var(--c-green);background:rgba(74,222,128,.04)">
+                        <p style="margin:0;font-size:.85rem;color:#e2e8f0"><strong style="color:var(--c-green)">agg(count())</strong> = REDUCE<br/>Agregación final por clave</p>
+                    </div>
+                </div>
+                <div class="en-sencillo"><span class="es-icon">En sencillo</span><p>Lo que en teoría son 3 fases separadas (Map-Shuffle-Reduce), en PySpark se escribe en una línea: groupBy() + agg(). Spark hace el trabajo sucio por vos.</p></div>
+            </div>
+        </div>
+
+        <!-- S10: HADOOP -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">Apache Hadoop</h2>
+                <p style="color:var(--c-orange);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">El ecosistema fundacional del Big Data</p>
+                <div class="co" style="border-color:var(--c-orange);margin-bottom:14px"><i class="fa-solid fa-elephant" style="color:var(--c-orange);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.92rem;color:#e2e8f0;line-height:1.5"><strong style="color:#fff">Hadoop</strong> es un framework <span class="g gl">open-source<span class="t">Software de código abierto: cualquier persona puede ver, modificar y distribuir el código. Hadoop fue creado por Doug Cutting en Yahoo! inspirado en los papers de Google sobre GFS y MapReduce.</span></span> que implementa MapReduce sobre un sistema de archivos distribuido. Fue la primera solución mainstream para procesar <span class="g">petabytes<span class="t">1 Petabyte = 1,024 Terabytes = ~1 millón de Gigabytes. Para referencia: toda la biblioteca del Congreso de EE.UU. digitalizada ocupa ~15 PB.</span></span> de datos.</p>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+                    <div class="cb" style="padding:1rem;text-align:center;border-top:3px solid var(--accent-primary)">
+                        <i class="fa-solid fa-hard-drive" style="color:var(--accent-primary);font-size:1.3rem;margin-bottom:8px"></i>
+                        <p style="margin:0"><strong style="color:#fff;font-size:.92rem">HDFS</strong></p>
+                        <p style="margin:4px 0 0;font-size:.82rem"><span class="g gl">Hadoop Distributed File System<span class="t">Sistema de archivos que divide cada archivo en bloques de 128 MB y los replica en 3 nodos distintos. Si un nodo falla, los datos siguen disponibles en las copias.</span></span>. Divide archivos en bloques de 128 MB, replicados en 3 nodos por defecto.</p>
+                    </div>
+                    <div class="cb" style="padding:1rem;text-align:center;border-top:3px solid var(--accent-secondary)">
+                        <i class="fa-solid fa-gears" style="color:var(--accent-secondary);font-size:1.3rem;margin-bottom:8px"></i>
+                        <p style="margin:0"><strong style="color:#fff;font-size:.92rem">MapReduce Engine</strong></p>
+                        <p style="margin:4px 0 0;font-size:.82rem">El motor que orquesta la ejecución de las fases Map, Shuffle y Reduce en todos los nodos del clúster.</p>
+                    </div>
+                    <div class="cb" style="padding:1rem;text-align:center;border-top:3px solid var(--c-green)">
+                        <i class="fa-solid fa-cubes" style="color:var(--c-green);font-size:1.3rem;margin-bottom:8px"></i>
+                        <p style="margin:0"><strong style="color:#fff;font-size:.92rem">YARN</strong></p>
+                        <p style="margin:4px 0 0;font-size:.82rem"><span class="g gl">Yet Another Resource Negotiator<span class="t">Gestor de recursos de Hadoop. Decide cuánta CPU y memoria asignar a cada tarea y en qué nodo ejecutarla. Permite que múltiples aplicaciones compartan el clúster.</span></span>. Gestiona los recursos (CPU, memoria) del clúster entre múltiples aplicaciones.</p>
+                    </div>
+                </div>
+                <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:1.2rem;margin-bottom:12px;text-align:center">
+                    <p style="margin:0 0 12px;font-size:.8rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:1px">Arquitectura en Capas de Hadoop</p>
+                    <svg viewBox="0 0 300 200" style="width:100%;max-width:300px;margin:0 auto">
+                        <!-- HDFS Layer -->
+                        <rect x="20" y="140" width="260" height="45" fill="rgba(56,189,248,.1)" stroke="rgba(56,189,248,.4)" stroke-width="2" rx="4"/>
+                        <text x="150" y="170" font-size="14" fill="#38bdf8" text-anchor="middle" font-weight="600">HDFS (Storage Layer)</text>
+                        <!-- Arrow up -->
+                        <path d="M 150 140 L 150 120" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#arrowhead-hadoop)"/>
+                        <!-- YARN Layer -->
+                        <rect x="20" y="75" width="260" height="45" fill="rgba(192,132,252,.1)" stroke="rgba(192,132,252,.4)" stroke-width="2" rx="4"/>
+                        <text x="150" y="105" font-size="14" fill="#c084fc" text-anchor="middle" font-weight="600">YARN (Resource Manager)</text>
+                        <!-- Arrow up -->
+                        <path d="M 150 75 L 150 55" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#arrowhead-hadoop)"/>
+                        <!-- MapReduce/Spark Layer -->
+                        <rect x="20" y="10" width="260" height="45" fill="rgba(74,222,128,.1)" stroke="rgba(74,222,128,.4)" stroke-width="2" rx="4"/>
+                        <text x="150" y="40" font-size="14" fill="#4ade80" text-anchor="middle" font-weight="600">MapReduce / Spark (Execution)</text>
+                        <!-- Arrow marker -->
+                        <defs><marker id="arrowhead-hadoop" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><polygon points="0 0, 10 3, 0 6" fill="#475569"/></marker></defs>
+                    </svg>
+                </div>
+                <div class="co" style="border-color:var(--c-red)"><i class="fa-solid fa-triangle-exclamation" style="color:var(--c-red);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.85rem;color:#e2e8f0"><strong style="color:var(--c-red)">Limitación clave:</strong> MapReduce en Hadoop escribe resultados intermedios a disco después de cada fase. Esto lo hace <strong>lento para procesos iterativos</strong> como los algoritmos de machine learning que necesitan muchas pasadas por los datos. Aquí es donde entra <strong>Spark</strong>.</p>
+                </div>
+                <div class="en-sencillo"><span class="es-icon">En sencillo</span><p>Hadoop = un estante gigante (HDFS) que reparte tus archivos entre muchas computadoras, con un jefe (YARN) que decide quién hace qué, y los trabajadores (MapReduce) que procesan los datos.</p></div>
+            </div>
+        </div>
+
+        <!-- S11: SPARK -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">Apache Spark</h2>
+                <p style="color:var(--c-cyan);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">Procesamiento en memoria — hasta 100x más rápido</p>
+                <div class="co" style="border-color:var(--c-cyan);margin-bottom:14px"><i class="fa-solid fa-bolt" style="color:var(--c-cyan);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.92rem;color:#e2e8f0;line-height:1.5"><strong style="color:#fff">Spark</strong> fue creado en el AMPLab de UC Berkeley en 2009. Su innovación principal: mantener los datos en <span class="g gl">memoria RAM<span class="t">A diferencia de Hadoop que lee y escribe a disco, Spark mantiene los datos intermedios en RAM. Esto elimina el cuello de botella del I/O de disco y acelera drásticamente los procesos iterativos.</span></span> entre operaciones, evitando el costoso <span class="g">I/O<span class="t">Input/Output (Entrada/Salida). Se refiere a las operaciones de lectura y escritura en disco. El I/O de disco es mucho más lento que acceder a datos en memoria RAM, por eso Spark evita escribir a disco entre operaciones.</span></span> a disco de Hadoop. Esto lo hace ideal para algoritmos iterativos de minería de datos y <span class="g gr">machine learning<span class="t">Aprendizaje automático: rama de la inteligencia artificial donde los modelos aprenden patrones a partir de datos, sin ser programados explícitamente para cada caso. Incluye técnicas como regresión, clasificación, clustering y redes neuronales.</span></span>.</p>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--accent-primary)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i class="fa-solid fa-database" style="color:var(--accent-primary)"></i><strong style="color:#fff;font-size:.92rem">Spark SQL</strong></div>
+                        <p style="margin:0;font-size:.85rem">Consultas SQL sobre datos distribuidos. Usa <span class="g gl">DataFrames<span class="t">Estructura tabular distribuida (como una tabla de base de datos) que Spark optimiza automáticamente. Similar a un DataFrame de Pandas, pero escalable a clústeres.</span></span> optimizados automáticamente por el motor <span class="g gr">Catalyst<span class="t">Optimizador interno de Spark SQL. Analiza tu consulta y automáticamente reorganiza las operaciones para ejecutarlas de la forma más eficiente posible, similar a cómo un optimizador de base de datos mejora queries SQL.</span></span>.</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--accent-secondary)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i class="fa-solid fa-brain" style="color:var(--accent-secondary)"></i><strong style="color:#fff;font-size:.92rem">MLlib</strong></div>
+                        <p style="margin:0;font-size:.85rem">Biblioteca de <strong>machine learning distribuido</strong>: regresión, clasificación, <span class="g">clustering<span class="t">Técnica de aprendizaje no supervisado que agrupa datos similares en clústeres (grupos). Ejemplo: agrupar clientes por comportamiento de compra sin etiquetas previas. Algoritmos comunes: K-Means, DBSCAN.</span></span>, reglas de asociación, <span class="g">PCA<span class="t">Principal Component Analysis (Análisis de Componentes Principales). Técnica que reduce la dimensionalidad de los datos conservando la mayor cantidad de información posible. Útil cuando tienes muchas variables y quieres simplificar.</span></span> — todo ejecutándose en el clúster.</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-green)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i class="fa-solid fa-water" style="color:var(--c-green)"></i><strong style="color:#fff;font-size:.92rem">Spark Streaming</strong></div>
+                        <p style="margin:0;font-size:.85rem">Procesa datos en <span class="g gl">micro-batches<span class="t">En lugar de procesar dato por dato, Spark Streaming agrupa los eventos que llegan en ventanas de tiempo pequeñas (ej: 1 segundo) y los procesa como mini-lotes. Es un balance entre latencia y throughput.</span></span> (ventanas de ~1 segundo). Ideal para combinar datos históricos con flujos en tiempo real.</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-pink)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i class="fa-solid fa-diagram-project" style="color:var(--c-pink)"></i><strong style="color:#fff;font-size:.92rem">GraphX</strong></div>
+                        <p style="margin:0;font-size:.85rem">Motor para análisis de grafos a gran escala: <span class="g gl">PageRank<span class="t">Algoritmo creado por Google para medir la importancia de páginas web según cuántas otras páginas enlazan a ella. En grafos generales, mide la importancia relativa de cualquier nodo en una red.</span></span>, detección de comunidades, caminos más cortos — sobre millones de nodos y aristas.</p>
+                    </div>
+                </div>
+                <div class="en-sencillo"><span class="es-icon">En sencillo</span><p>Spark hace lo mismo que Hadoop pero guarda todo en memoria RAM en vez de escribir a disco. Es como hacer cuentas en la pizarra vs. copiar todo a un cuaderno entre cada paso — muchísimo más rápido.</p></div>
+            </div>
+        </div>
+
+        <!-- S12: DEMO PYSPARK -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1250px">
+                <h2 style="font-size:2rem;margin-bottom:4px">[Demo] Conteo de ventas con PySpark</h2>
+                <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:12px">Así se ve un MapReduce moderno usando la API de Spark en Python.</p>
+                <div style="display:grid;grid-template-columns:1.15fr .85fr;gap:14px;align-items:start">
+                    <div class="code-wrap">
+                        <div class="mch">
+                            <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+                            <span class="mt">python — ventas_spark.py</span>
+                        </div>
+                        <pre><span style="color:#c084fc">from</span> <span style="color:#38bdf8">pyspark.sql</span> <span style="color:#c084fc">import</span> <span style="color:#38bdf8">SparkSession</span>
+<span style="color:#c084fc">from</span> <span style="color:#38bdf8">pyspark.sql.functions</span> <span style="color:#c084fc">import</span> <span style="color:#38bdf8">col, count, sum as spark_sum</span>
+
+<span style="color:#636e88"># Crear sesión de Spark</span>
+<span style="color:#94a3b8">spark</span> <span style="color:#c084fc">=</span> <span style="color:#38bdf8">SparkSession</span>.builder \
+    .appName(<span style="color:#4ade80">"VentasEcommerce"</span>) \
+    .getOrCreate()
+
+<span style="color:#636e88"># Leer CSV de 50M de transacciones</span>
+<span style="color:#94a3b8">df</span> <span style="color:#c084fc">=</span> <span style="color:#94a3b8">spark</span>.read.csv(
+    <span style="color:#4ade80">"hdfs:///data/ventas.csv"</span>,
+    header=<span style="color:#c084fc">True</span>,
+    inferSchema=<span style="color:#c084fc">True</span>
+)
+
+<span style="color:#636e88"># Top 10 productos más vendidos</span>
+<span style="color:#94a3b8">top_productos</span> <span style="color:#c084fc">=</span> <span style="color:#94a3b8">df</span>.groupBy(<span style="color:#4ade80">"producto"</span>) \
+    .agg(
+        count(<span style="color:#4ade80">"*"</span>).alias(<span style="color:#4ade80">"total_ventas"</span>),
+        spark_sum(<span style="color:#4ade80">"monto"</span>).alias(<span style="color:#4ade80">"ingreso"</span>)
+    ) \
+    .orderBy(col(<span style="color:#4ade80">"total_ventas"</span>).desc()) \
+    .limit(<span style="color:#f59e0b">10</span>)
+
+<span style="color:#94a3b8">top_productos</span>.show()</pre>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:10px">
+                        <div class="cb" style="padding:.9rem 1.1rem;border-left:3px solid var(--c-cyan);background:rgba(34,211,238,.04)">
+                            <p style="margin:0;font-size:.85rem;color:#e2e8f0;line-height:1.5"><strong style="color:var(--c-cyan)">¿Qué pasa internamente?</strong> Spark <strong>no carga</strong> los 50M de registros en una sola máquina. Los distribuye en <span class="g gl">particiones<span class="t">Spark divide automáticamente el DataFrame en fragmentos (particiones) que se procesan en paralelo en diferentes nodos del clúster. Más particiones = más paralelismo.</span></span> y ejecuta el groupBy/agg en paralelo.</p>
+                        </div>
+                        <div class="cb" style="padding:.9rem 1.1rem;border-left:3px solid var(--accent-primary);background:rgba(56,189,248,.04)">
+                            <p style="margin:0;font-size:.85rem;color:#e2e8f0;line-height:1.5"><strong style="color:var(--accent-primary)"><span class="g gl">Lazy evaluation<span class="t">Evaluación perezosa: Spark no ejecuta operaciones inmediatamente. En vez de eso, construye un plan de ejecución (DAG) y solo lo ejecuta cuando necesitas un resultado concreto (como .show() o .write()). Esto permite optimizar todo el plan antes de correr.</span></span>:</strong> Spark no ejecuta nada hasta el <span class="tag" style="font-size:.78rem;color:var(--accent-primary)">.show()</span>. Antes, solo construye un plan de ejecución que el optimizador <strong><span class="g gr">Catalyst<span class="t">Motor de optimización de Spark SQL. Reorganiza y simplifica automáticamente el plan de ejecución para minimizar el tiempo de procesamiento y el uso de recursos.</span></span></strong> mejora automáticamente.</p>
+                        </div>
+                        <div class="cb" style="padding:.9rem 1.1rem;border-left:3px solid var(--c-green);background:rgba(74,222,128,.04)">
+                            <p style="margin:0;font-size:.85rem;color:#e2e8f0;line-height:1.5"><strong style="color:var(--c-green)">Comparación:</strong> Este mismo análisis con <span class="g">Pandas<span class="t">Biblioteca de Python para análisis de datos en una sola máquina. Excelente para datasets pequeños-medianos (&lt;8 GB), pero no escala a datos masivos porque carga todo en la RAM de una computadora.</span></span> en una laptop cargaría todo en RAM y fallaría con >8GB de datos. Spark lo maneja con facilidad.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="en-sencillo"><span class="es-icon">En sencillo</span><p>Este código lee 50 millones de ventas, las agrupa por producto y cuenta cuántas hay de cada uno — todo en paralelo. Pandas no podría con esto, Spark sí.</p></div>
+            </div>
+        </div>
+
+        <!-- S13: HADOOP vs SPARK -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:12px">Hadoop vs. Spark — ¿Cuándo usar cada uno?</h2>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+                    <div class="cb" style="padding:1.2rem;border-top:3px solid var(--c-orange)">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                            <i class="fa-solid fa-elephant" style="color:var(--c-orange);font-size:1.2rem"></i>
+                            <strong style="color:#fff;font-size:1rem">Hadoop MapReduce</strong>
+                        </div>
+                        <p style="font-size:.85rem;margin-bottom:8px"><span style="color:var(--c-green)">✓</span> <span class="g gl">ETL<span class="t">Extract, Transform, Load (Extraer, Transformar, Cargar). Proceso de tomar datos de una fuente (Extract), limpiarlos y transformarlos (Transform), y guardarlos en un destino como un data warehouse (Load). Es el paso fundamental antes de cualquier análisis.</span></span> masivos de petabytes (una sola pasada)</p>
+                        <p style="font-size:.85rem;margin-bottom:8px"><span style="color:var(--c-green)">✓</span> Almacenamiento económico en HDFS</p>
+                        <p style="font-size:.85rem;margin-bottom:8px"><span style="color:var(--c-green)">✓</span> Tolerancia a fallos probada (20+ años)</p>
+                        <p style="font-size:.85rem;margin-bottom:0"><span style="color:var(--c-red)">✗</span> Lento para procesos iterativos (ML)</p>
+                    </div>
+                    <div class="cb" style="padding:1.2rem;border-top:3px solid var(--c-cyan)">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                            <i class="fa-solid fa-bolt" style="color:var(--c-cyan);font-size:1.2rem"></i>
+                            <strong style="color:#fff;font-size:1rem">Apache Spark</strong>
+                        </div>
+                        <p style="font-size:.85rem;margin-bottom:8px"><span style="color:var(--c-green)">✓</span> Algoritmos iterativos (ML, grafos)</p>
+                        <p style="font-size:.85rem;margin-bottom:8px"><span style="color:var(--c-green)">✓</span> Análisis interactivo y exploratorio</p>
+                        <p style="font-size:.85rem;margin-bottom:8px"><span style="color:var(--c-green)">✓</span> Streaming en micro-batches</p>
+                        <p style="font-size:.85rem;margin-bottom:0"><span style="color:var(--c-red)">✗</span> Requiere más RAM (más costoso)</p>
+                    </div>
+                </div>
+                <div class="co" style="border-color:var(--accent-primary)"><i class="fa-solid fa-handshake" style="color:var(--accent-primary);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.92rem;color:#e2e8f0"><strong style="color:var(--accent-primary)">En la práctica se complementan:</strong> HDFS almacena los datos, Spark los procesa. Un <span class="g">pipeline<span class="t">Secuencia automatizada de pasos que los datos siguen desde su origen hasta su destino final. Cada paso transforma, limpia o enriquece los datos. Similar a una línea de ensamblaje en una fábrica.</span></span> típico usa Hadoop para ingestión y almacenamiento, y Spark para análisis y machine learning sobre esos mismos datos.</p>
+                </div>
+                <div class="en-sencillo"><span class="es-icon">En sencillo</span><p>No es uno u otro: Hadoop guarda los datos, Spark los analiza. Son como el disco duro y el procesador — trabajan juntos.</p></div>
+            </div>
+        </div>
+
+        <!-- S14: TITULO SECCION 2 -->
+        <div class="slide">
+            <div class="card" style="text-align:center;justify-content:center;height:50vh">
+                <p style="color:var(--accent-secondary);letter-spacing:3px;text-transform:uppercase;font-size:.85rem;font-weight:700">Segunda parte</p>
+                <h1 style="font-size:3.8rem">Aprendizaje<br />en Línea</h1>
+                <p style="font-size:1rem;color:var(--text-muted);max-width:650px;margin:8px auto 0">Modelos que aprenden y se actualizan continuamente con cada nuevo dato, sin necesidad de re-entrenar desde cero.</p>
+            </div>
+        </div>
+
+        <!-- S15: BATCH vs ONLINE -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">Batch Learning vs. Online Learning</h2>
+                <p style="color:var(--accent-secondary);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">Dos filosofías de entrenamiento de modelos</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+                    <div class="cb" style="padding:1.2rem;border-left:4px solid var(--text-muted)">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                            <i class="fa-solid fa-box" style="color:var(--text-muted);font-size:1.2rem"></i>
+                            <strong style="color:#fff;font-size:1rem">Batch Learning (Offline)</strong>
+                        </div>
+                        <p style="font-size:.88rem;margin-bottom:8px">Se entrena el modelo con <strong>todos los datos disponibles</strong> de una vez. Si llegan datos nuevos, hay que re-entrenar desde cero.</p>
+                        <p style="font-size:.82rem;color:var(--text-muted);margin:0">Ejemplo: Entrenar un modelo de clasificación cada noche con las ventas del día.</p>
+                    </div>
+                    <div class="cb" style="padding:1.2rem;border-left:4px solid var(--accent-secondary)">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                            <i class="fa-solid fa-wave-square" style="color:var(--accent-secondary);font-size:1.2rem"></i>
+                            <strong style="color:#fff;font-size:1rem">Online Learning (Incremental)</strong>
+                        </div>
+                        <p style="font-size:.88rem;margin-bottom:8px">El modelo se actualiza <strong>con cada nuevo dato</strong> (o mini-lote) sin necesidad de ver los datos anteriores. Se adapta continuamente.</p>
+                        <p style="font-size:.82rem;color:var(--text-muted);margin:0">Ejemplo: Un filtro de spam que aprende de cada correo que el usuario marca.</p>
+                    </div>
+                </div>
+                <div class="co" style="border-color:var(--c-cyan)"><i class="fa-solid fa-question-circle" style="color:var(--c-cyan);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.92rem;color:#e2e8f0;line-height:1.5"><strong style="color:var(--c-cyan)">¿Cuándo usar Online Learning?</strong> Cuando los datos son demasiado grandes para caber en memoria, cuando llegan en flujo continuo, o cuando el comportamiento de los datos <strong>cambia con el tiempo</strong> (<span class="g">concept drift<span class="t">Fenómeno donde la relación entre las variables de entrada y la variable objetivo cambia con el tiempo. Ej: los patrones de compra cambian con la temporada. Un modelo estático se vuelve obsoleto.</span></span>).</p>
+                </div>
+                <div class="en-sencillo"><span class="es-icon">En sencillo</span><p>Batch = estudiar todo el libro la noche antes del examen. Online = estudiar un poco cada día y adaptarte según lo que va cayendo en los quices.</p></div>
+            </div>
+        </div>
+
+        <!-- S16: CONCEPT DRIFT -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">Concept Drift: cuando los datos cambian</h2>
+                <p style="color:var(--c-pink);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">El enemigo silencioso de los modelos estáticos</p>
+                <div class="co" style="border-color:var(--c-pink);margin-bottom:14px"><i class="fa-solid fa-wind" style="color:var(--c-pink);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.92rem;color:#e2e8f0;line-height:1.5">El <strong style="color:#fff">concept drift</strong> ocurre cuando la distribución de los datos cambia con el tiempo. Un modelo entrenado con datos de enero puede dar predicciones incorrectas en julio porque el <strong>comportamiento del fenómeno</strong> ya cambió.</p>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+                    <div class="cb" style="padding:1rem;text-align:center;border-top:3px solid var(--c-orange)">
+                        <i class="fa-solid fa-chart-line" style="color:var(--c-orange);font-size:1.3rem;margin-bottom:6px"></i>
+                        <p style="margin:0;font-size:.85rem"><strong style="color:var(--c-orange)">Drift gradual</strong><br/>Las preferencias de compra cambian lentamente con la moda o las estaciones.</p>
+                    </div>
+                    <div class="cb" style="padding:1rem;text-align:center;border-top:3px solid var(--c-red)">
+                        <i class="fa-solid fa-bolt-lightning" style="color:var(--c-red);font-size:1.3rem;margin-bottom:6px"></i>
+                        <p style="margin:0;font-size:.85rem"><strong style="color:var(--c-red)">Drift abrupto</strong><br/>Una pandemia cambia radicalmente los patrones de compra de un día para otro.</p>
+                    </div>
+                    <div class="cb" style="padding:1rem;text-align:center;border-top:3px solid var(--accent-secondary)">
+                        <i class="fa-solid fa-repeat" style="color:var(--accent-secondary);font-size:1.3rem;margin-bottom:6px"></i>
+                        <p style="margin:0;font-size:.85rem"><strong style="color:var(--accent-secondary)">Drift recurrente</strong><br/>Cada diciembre suben las ventas de regalos; en enero vuelven a bajar.</p>
+                    </div>
+                </div>
+                <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:1.2rem;margin-bottom:12px">
+                    <p style="margin:0 0 10px;font-size:.8rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:1px">Ejemplo Concreto: Ventas por Categoría</p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                        <div style="background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);border-radius:8px;padding:1rem">
+                            <p style="margin:0 0 8px;font-size:.82rem;color:var(--accent-primary);font-weight:600">Enero (Invierno)</p>
+                            <div style="display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:#e2e8f0">
+                                <p style="margin:0"><strong style="color:#fff">Electrónica:</strong> <span style="color:var(--accent-primary);font-weight:700">70%</span></p>
+                                <p style="margin:0"><strong style="color:#fff">Ropa:</strong> <span style="color:var(--accent-primary);font-weight:700">20%</span></p>
+                                <p style="margin:0"><strong style="color:#fff">Otros:</strong> <span style="color:var(--accent-primary);font-weight:700">10%</span></p>
+                            </div>
+                        </div>
+                        <div style="background:rgba(244,114,182,.08);border:1px solid rgba(244,114,182,.2);border-radius:8px;padding:1rem">
+                            <p style="margin:0 0 8px;font-size:.82rem;color:var(--c-pink);font-weight:600">Julio (Verano/Playa)</p>
+                            <div style="display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:#e2e8f0">
+                                <p style="margin:0"><strong style="color:#fff">Electrónica:</strong> <span style="color:var(--c-pink);font-weight:700">20%</span></p>
+                                <p style="margin:0"><strong style="color:#fff">Ropa/Playa:</strong> <span style="color:var(--c-pink);font-weight:700">65%</span></p>
+                                <p style="margin:0"><strong style="color:#fff">Otros:</strong> <span style="color:var(--c-pink);font-weight:700">15%</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    <p style="margin:10px 0 0;font-size:.8rem;color:var(--text-muted);font-style:italic">Un modelo entrenado en enero predecirá mal en julio. Necesita re-entrenamiento o actualización online.</p>
+                </div>
+                <div class="co" style="border-color:var(--c-green)"><i class="fa-solid fa-shield" style="color:var(--c-green);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.88rem;color:#e2e8f0"><strong style="color:var(--c-green)">Solución:</strong> El aprendizaje en línea combate el concept drift porque el modelo se actualiza continuamente. Además, se pueden usar técnicas como <strong>ventanas deslizantes</strong> (solo considerar los últimos N datos) y <strong>detección de drift</strong> (alertar cuando la distribución cambia significativamente).</p>
+                </div>
+                <div class="en-sencillo"><span class="es-icon">En sencillo</span><p>Lo que era verdad en enero puede ser mentira en julio. Si tu modelo no se actualiza, va a predecir como si el mundo nunca cambiara — y sí cambia.</p></div>
+            </div>
+        </div>
+
+        <!-- S17: ALGORITMOS ONLINE -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">Algoritmos de Aprendizaje en Línea</h2>
+                <p style="color:var(--accent-primary);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">Los más utilizados en minería de datos masivos</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--accent-primary);background:rgba(56,189,248,.04)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i class="fa-solid fa-arrow-trend-up" style="color:var(--accent-primary)"></i><strong style="color:#fff;font-size:.92rem"><span class="g gl">SGD<span class="t">Stochastic Gradient Descent (Descenso de Gradiente Estocástico). Algoritmo de optimización que ajusta los pesos del modelo usando un solo ejemplo (o mini-lote) a la vez, en lugar de todo el dataset. "Estocástico" = aleatorio, porque elige ejemplos al azar.</span></span> (Stochastic Gradient Descent)</strong></div>
+                        <p style="margin:0;font-size:.85rem">En lugar de calcular el gradiente sobre <strong>todos</strong> los datos (batch), lo calcula sobre <strong>un solo ejemplo</strong> (o un mini-lote) y actualiza los pesos inmediatamente. Es el motor detrás de la mayoría de modelos online.</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--accent-secondary);background:rgba(192,132,252,.04)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i class="fa-solid fa-filter" style="color:var(--accent-secondary)"></i><strong style="color:#fff;font-size:.92rem"><span class="g gl">Perceptrón<span class="t">Modelo de clasificación lineal inspirado en las neuronas biológicas. Aprende ajustando pesos cuando comete errores. Es la base de las redes neuronales modernas, pero en su forma simple es un clasificador lineal rápido y eficiente.</span></span> / Passive-Aggressive</strong></div>
+                        <p style="margin:0;font-size:.85rem">Clasificadores lineales que se actualizan solo cuando cometen un error o cuando el margen de confianza es bajo. Simples, rápidos y eficaces para <span class="g gl">clasificación binaria<span class="t">Tipo de problema de machine learning donde el modelo debe decidir entre exactamente dos categorías: sí/no, fraude/legítimo, spam/no-spam. Es el caso más simple de clasificación.</span></span> en streaming.</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-green);background:rgba(74,222,128,.04)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i class="fa-solid fa-sitemap" style="color:var(--c-green)"></i><strong style="color:#fff;font-size:.92rem">Hoeffding Trees</strong></div>
+                        <p style="margin:0;font-size:.85rem"><span class="g gl">Árboles de decisión incrementales<span class="t">Construyen el árbol observando un flujo de datos. Usan el límite de Hoeffding para decidir cuándo tienen suficiente evidencia estadística para crear una nueva rama, sin necesidad de ver todos los datos.</span></span> que crecen ramas solo cuando tienen suficiente evidencia estadística. Perfectos para clasificación sobre flujos de datos.</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-orange);background:rgba(245,158,11,.04)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i class="fa-solid fa-circle-nodes" style="color:var(--c-orange)"></i><strong style="color:#fff;font-size:.92rem">Mini-Batch K-Means</strong></div>
+                        <p style="margin:0;font-size:.85rem">Versión online de K-Means: en cada iteración toma un <strong>mini-lote</strong> aleatorio del flujo de datos y actualiza los <span class="g">centroides<span class="t">El punto central de cada clúster en K-Means. Es el "promedio" de todos los puntos asignados a ese grupo. El algoritmo mueve los centroides iterativamente hasta que los grupos se estabilizan.</span></span>. Ideal para segmentación de clientes en tiempo real.</p>
+                    </div>
+                </div>
+                <div class="co" style="border-color:var(--c-cyan)"><i class="fa-solid fa-code" style="color:var(--c-cyan);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.85rem;color:#e2e8f0"><strong style="color:var(--c-cyan)">En Python:</strong> <span class="g gl">scikit-learn<span class="t">Biblioteca de Python más popular para machine learning clásico. Ofrece algoritmos de clasificación, regresión, clustering y preprocesamiento. Funciona en una sola máquina, ideal para prototipos y datasets medianos.</span></span> ofrece <span class="tag" style="font-size:.78rem;color:var(--c-cyan)">SGDClassifier</span>, <span class="tag" style="font-size:.78rem;color:var(--c-cyan)">MiniBatchKMeans</span> y <span class="tag" style="font-size:.78rem;color:var(--c-cyan)">partial_fit()</span> en varios estimadores para aprendizaje incremental.</p>
+                </div>
+                <div class="en-sencillo"><span class="es-icon">En sencillo</span><p>Estos algoritmos aprenden "de a poquito" con cada dato nuevo, sin necesitar repasar toda la historia. Perfectos para datos que no paran de llegar.</p></div>
+            </div>
+        </div>
+
+        <!-- S18: DEMO ONLINE LEARNING -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1250px">
+                <h2 style="font-size:2rem;margin-bottom:4px">[Demo] Online Learning con partial_fit</h2>
+                <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:12px">Entrenamiento incremental de un clasificador sobre un flujo simulado de transacciones.</p>
+                <div style="display:grid;grid-template-columns:1.15fr .85fr;gap:14px;align-items:start">
+                    <div class="code-wrap">
+                        <div class="mch">
+                            <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+                            <span class="mt">python — online_fraud.py</span>
+                        </div>
+                        <pre><span style="color:#c084fc">from</span> <span style="color:#38bdf8">sklearn.linear_model</span> <span style="color:#c084fc">import</span> <span style="color:#38bdf8">SGDClassifier</span>
+<span style="color:#c084fc">from</span> <span style="color:#38bdf8">sklearn.preprocessing</span> <span style="color:#c084fc">import</span> <span style="color:#38bdf8">StandardScaler</span>
+<span style="color:#c084fc">from</span> <span style="color:#38bdf8">sklearn.metrics</span> <span style="color:#c084fc">import</span> <span style="color:#38bdf8">accuracy_score</span>
+<span style="color:#c084fc">import</span> <span style="color:#38bdf8">numpy</span> <span style="color:#c084fc">as</span> <span style="color:#94a3b8">np</span>
+
+<span style="color:#636e88"># Clasificador online para detección de fraude</span>
+<span style="color:#94a3b8">clf</span> <span style="color:#c084fc">=</span> <span style="color:#38bdf8">SGDClassifier</span>(loss=<span style="color:#4ade80">"log_loss"</span>, random_state=<span style="color:#f59e0b">42</span>)
+<span style="color:#94a3b8">scaler</span> <span style="color:#c084fc">=</span> <span style="color:#38bdf8">StandardScaler</span>()
+
+<span style="color:#636e88"># Simular flujo de transacciones con patrones reales</span>
+<span style="color:#94a3b8">classes</span> <span style="color:#c084fc">=</span> [<span style="color:#f59e0b">0</span>, <span style="color:#f59e0b">1</span>]  <span style="color:#636e88"># 0=legítima, 1=fraude</span>
+
+<span style="color:#c084fc">for</span> <span style="color:#94a3b8">batch_num</span> <span style="color:#c084fc">in</span> range(<span style="color:#f59e0b">100</span>):
+    <span style="color:#636e88"># Características: monto, hora_del_día, distancia</span>
+    <span style="color:#94a3b8">monto</span> <span style="color:#c084fc">=</span> <span style="color:#94a3b8">np</span>.random.lognormal(<span style="color:#f59e0b">3</span>, <span style="color:#f59e0b">1</span>, <span style="color:#f59e0b">1000</span>)
+    <span style="color:#94a3b8">hora</span> <span style="color:#c084fc">=</span> <span style="color:#94a3b8">np</span>.random.randint(<span style="color:#f59e0b">0</span>, <span style="color:#f59e0b">24</span>, <span style="color:#f59e0b">1000</span>)
+    <span style="color:#94a3b8">distancia</span> <span style="color:#c084fc">=</span> <span style="color:#94a3b8">np</span>.random.gamma(<span style="color:#f59e0b">2</span>, <span style="color:#f59e0b">5</span>, <span style="color:#f59e0b">1000</span>)
+    <span style="color:#94a3b8">X_batch</span> <span style="color:#c084fc">=</span> <span style="color:#94a3b8">np</span>.column_stack([<span style="color:#94a3b8">monto</span>, <span style="color:#94a3b8">hora</span>, <span style="color:#94a3b8">distancia</span>])
+
+    <span style="color:#636e88"># Fraude: montos altos + horas nocturnas + distancia grande</span>
+    <span style="color:#94a3b8">y_batch</span> <span style="color:#c084fc">=</span> ((<span style="color:#94a3b8">monto</span> <span style="color:#c084fc">></span> <span style="color:#f59e0b">500</span>) <span style="color:#c084fc">&amp;</span>
+             ((<span style="color:#94a3b8">hora</span> <span style="color:#c084fc"><</span> <span style="color:#f59e0b">6</span>) <span style="color:#c084fc">|</span> (<span style="color:#94a3b8">hora</span> <span style="color:#c084fc">></span> <span style="color:#f59e0b">22</span>))).astype(<span style="color:#f59e0b">int</span>)
+    <span style="color:#94a3b8">y_batch</span>[<span style="color:#94a3b8">np</span>.random.choice(<span style="color:#f59e0b">1000</span>, <span style="color:#f59e0b">30</span>, replace=<span style="color:#c084fc">False</span>)] <span style="color:#c084fc">=</span> <span style="color:#f59e0b">1</span>
+
+    <span style="color:#636e88"># Escalar y entrenar incrementalmente</span>
+    <span style="color:#94a3b8">X_scaled</span> <span style="color:#c084fc">=</span> <span style="color:#94a3b8">scaler</span>.partial_fit(
+        <span style="color:#94a3b8">X_batch</span>).transform(<span style="color:#94a3b8">X_batch</span>)
+    <span style="color:#94a3b8">clf</span>.partial_fit(
+        <span style="color:#94a3b8">X_scaled</span>, <span style="color:#94a3b8">y_batch</span>, classes=<span style="color:#94a3b8">classes</span>)
+
+<span style="color:#38bdf8">print</span>(f<span style="color:#4ade80">"Modelo entrenado con {100*1000:,}"</span>
+      f<span style="color:#4ade80">" transacciones incrementalmente"</span>)</pre>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:10px">
+                        <div class="cb" style="padding:.9rem 1.1rem;border-left:3px solid var(--accent-primary);background:rgba(56,189,248,.04)">
+                            <p style="margin:0;font-size:.85rem;color:#e2e8f0;line-height:1.5"><strong style="color:var(--accent-primary)">Características realistas:</strong><br/><span class="tag" style="font-size:.75rem">Monto</span> montos altos correlacionan con fraude<br/><span class="tag" style="font-size:.75rem">Hora</span> fraude nocturno (2–6 AM, 22–24 h)<br/><span class="tag" style="font-size:.75rem">Distancia</span> transacciones lejanas tienen más riesgo</p>
+                        </div>
+                        <div class="cb" style="padding:.9rem 1.1rem;border-left:3px solid var(--accent-secondary);background:rgba(192,132,252,.04)">
+                            <p style="margin:0;font-size:.85rem;color:#e2e8f0;line-height:1.5"><strong style="color:var(--accent-secondary)">Clave: partial_fit()</strong><br/>A diferencia de <span class="tag" style="font-size:.78rem">fit()</span> que requiere todos los datos, <span class="tag" style="font-size:.78rem">partial_fit()</span> actualiza con cada lote <strong>sin olvidar</strong> lo aprendido.</p>
+                        </div>
+                        <div class="cb" style="padding:.9rem 1.1rem;border-left:3px solid var(--c-orange);background:rgba(245,158,11,.04)">
+                            <p style="margin:0;font-size:.85rem;color:#e2e8f0;line-height:1.5"><strong style="color:var(--c-orange)">En producción:</strong> Cada batch = últimos 5 minutos de transacciones reales. Modelo actualizado sin downtime, adaptándose al concept drift.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="en-sencillo"><span class="es-icon">En sencillo</span><p>partial_fit() le dice al modelo: "aprendé de estos 1,000 datos nuevos sin olvidar lo que ya sabés." Así se entrena con 100,000 datos sin cargarlos todos en memoria.</p></div>
+            </div>
+        </div>
+
+        <!-- S19: BATCH vs STREAM -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">Procesamiento Batch vs. Streaming</h2>
+                <p style="color:var(--c-green);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">Dos paradigmas complementarios</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+                    <div class="cb" style="padding:1.2rem;border-left:4px solid var(--accent-primary)">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                            <i class="fa-solid fa-boxes-stacked" style="color:var(--accent-primary);font-size:1.2rem"></i>
+                            <strong style="color:#fff;font-size:1rem">Batch Processing</strong>
+                        </div>
+                        <p style="font-size:.85rem;margin-bottom:6px"><strong><span class="g gl">Latencia<span class="t">Tiempo que transcurre desde que un dato llega hasta que obtienes un resultado. Baja latencia (milisegundos) = respuesta casi instantánea. Alta latencia (horas) = procesamiento por lotes.</span></span>:</strong> Minutos a horas</p>
+                        <p style="font-size:.85rem;margin-bottom:6px"><strong>Datos:</strong> Finitos, acotados</p>
+                        <p style="font-size:.85rem;margin-bottom:6px"><strong>Herramientas:</strong> Hadoop MR, Spark batch</p>
+                        <p style="font-size:.85rem;margin-bottom:0"><strong>Casos:</strong> Reportes diarios, <span class="g">ETL<span class="t">Extract, Transform, Load (Extraer, Transformar, Cargar). Proceso de mover datos de una fuente, transformarlos y cargarlos en un destino para análisis.</span></span> nocturno, entrenamiento de modelos</p>
+                    </div>
+                    <div class="cb" style="padding:1.2rem;border-left:4px solid var(--c-pink)">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                            <i class="fa-solid fa-satellite-dish" style="color:var(--c-pink);font-size:1.2rem"></i>
+                            <strong style="color:#fff;font-size:1rem">Stream Processing</strong>
+                        </div>
+                        <p style="font-size:.85rem;margin-bottom:6px"><strong>Latencia:</strong> Milisegundos a segundos</p>
+                        <p style="font-size:.85rem;margin-bottom:6px"><strong>Datos:</strong> Infinitos, continuos</p>
+                        <p style="font-size:.85rem;margin-bottom:6px"><strong>Herramientas:</strong> Kafka, Flink, Spark Streaming</p>
+                        <p style="font-size:.85rem;margin-bottom:0"><strong>Casos:</strong> Fraude en tiempo real, alertas, <span class="g gr">dashboards<span class="t">Paneles de control visuales que muestran métricas clave en tiempo real mediante gráficos, tablas y contadores. Permiten monitorear el estado de un sistema o negocio de un vistazo.</span></span> en vivo</p>
+                    </div>
+                </div>
+                <div class="co" style="border-color:#fbbf24"><i class="fa-solid fa-lightbulb" style="color:#fbbf24;margin-top:2px"></i>
+                    <p style="margin:0;font-size:.92rem;color:#e2e8f0;line-height:1.5"><strong style="color:#fbbf24">Arquitectura Lambda:</strong> Muchas empresas usan <strong>ambos</strong>. Un pipeline batch procesa datos históricos para generar modelos precisos, mientras un pipeline streaming aplica esos modelos en tiempo real y detecta anomalías inmediatas.</p>
+                </div>
+                <div class="en-sencillo"><span class="es-icon">En sencillo</span><p>Batch = ver el resumen de noticias a las 10pm. Streaming = ver las noticias en vivo conforme pasan. Ambos son útiles, depende de qué tan rápido necesitás la respuesta.</p></div>
+            </div>
+        </div>
+
+        <!-- S20: TITULO SECCION 3 -->
+        <div class="slide">
+            <div class="card" style="text-align:center;justify-content:center;height:50vh">
+                <p style="color:var(--c-green);letter-spacing:3px;text-transform:uppercase;font-size:.85rem;font-weight:700">Tercera parte</p>
+                <h1 style="font-size:3.8rem">Herramientas y<br />Plataformas</h1>
+                <p style="font-size:1rem;color:var(--text-muted);max-width:650px;margin:8px auto 0">El ecosistema completo para minar datos masivos en la industria real.</p>
+            </div>
+        </div>
+
+        <!-- S21: KAFKA Y FLINK -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">Apache Kafka & Apache Flink</h2>
+                <p style="color:var(--c-pink);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">El dúo del procesamiento en tiempo real</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+                    <div class="cb" style="padding:1.2rem;border-top:3px solid var(--c-green)">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                            <i class="fa-solid fa-tower-broadcast" style="color:var(--c-green);font-size:1.2rem"></i>
+                            <strong style="color:#fff;font-size:1rem">Apache Kafka</strong>
+                        </div>
+                        <p style="font-size:.88rem;margin-bottom:8px">Plataforma de <span class="g gl">mensajería distribuida<span class="t">Sistema que permite enviar y recibir mensajes (eventos) entre aplicaciones de forma desacoplada, tolerante a fallos y con alta velocidad. Kafka puede manejar millones de eventos por segundo.</span></span> que actúa como una "autopista de datos". Los productores envían eventos (transacciones, clics, logs) y los consumidores los leen en tiempo real.</p>
+                        <p style="font-size:.82rem;color:var(--c-green);margin:0"><i class="fa-solid fa-arrow-right"></i> LinkedIn, Netflix, Uber lo usan como columna vertebral de sus datos.</p>
+                    </div>
+                    <div class="cb" style="padding:1.2rem;border-top:3px solid var(--accent-primary)">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                            <i class="fa-solid fa-wind" style="color:var(--accent-primary);font-size:1.2rem"></i>
+                            <strong style="color:#fff;font-size:1rem">Apache Flink</strong>
+                        </div>
+                        <p style="font-size:.88rem;margin-bottom:8px">Motor de <strong>procesamiento de streams nativo</strong>. A diferencia de Spark (que usa micro-batches), Flink procesa evento por evento con latencia de <strong>milisegundos</strong>. Soporta <span class="g gr">ventanas de tiempo<span class="t">Agrupaciones temporales de eventos. Ej: "contar clics por minuto". Flink soporta ventanas fijas (tumbling), deslizantes (sliding) y de sesión (basadas en actividad del usuario).</span></span> y estado complejo.</p>
+                        <p style="font-size:.82rem;color:var(--accent-primary);margin:0"><i class="fa-solid fa-arrow-right"></i> Alibaba procesa +40 PB/día de datos con Flink.</p>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;justify-content:center;padding:12px;background:rgba(255,255,255,.03);border-radius:12px;border:1px solid var(--glass-border)">
+                    <span class="tag" style="color:var(--c-green);padding:6px 14px;font-size:.85rem"><i class="fa-solid fa-cart-shopping"></i> Evento</span>
+                    <i class="fa-solid fa-arrow-right" style="color:#475569;font-size:.7rem"></i>
+                    <span class="tag" style="color:var(--c-green);padding:6px 14px;font-size:.85rem">Kafka</span>
+                    <i class="fa-solid fa-arrow-right" style="color:#475569;font-size:.7rem"></i>
+                    <span class="tag" style="color:var(--accent-primary);padding:6px 14px;font-size:.85rem">Flink / Spark</span>
+                    <i class="fa-solid fa-arrow-right" style="color:#475569;font-size:.7rem"></i>
+                    <span class="tag" style="color:var(--accent-secondary);padding:6px 14px;font-size:.85rem">Modelo ML</span>
+                    <i class="fa-solid fa-arrow-right" style="color:#475569;font-size:.7rem"></i>
+                    <span class="tag" style="color:#fbbf24;padding:6px 14px;font-size:.85rem"><i class="fa-solid fa-bell"></i> Acción</span>
+                </div>
+                <div class="en-sencillo"><span class="es-icon">En sencillo</span><p>Kafka = la tubería que transporta los datos en tiempo real de un lado a otro. Flink = el cerebro que analiza esos datos al vuelo, sin esperar a que se acumulen.</p></div>
+            </div>
+        </div>
+
+        <!-- S22: ECOSISTEMA COMPLETO -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:12px">Ecosistema de herramientas para datos masivos</h2>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+                    <div class="cb" style="padding:1rem;border-left:4px solid var(--accent-primary)">
+                        <p style="margin:0 0 6px"><strong style="color:var(--accent-primary);font-size:.9rem"><i class="fa-solid fa-database"></i> Almacenamiento</strong></p>
+                        <p style="margin:0;font-size:.83rem"><strong>HDFS</strong> — archivos distribuidos<br/><strong>Amazon S3</strong> — almacenamiento en nube<br/><strong>Delta Lake</strong> — tablas <span class="g">ACID<span class="t">Atomicity, Consistency, Isolation, Durability. Propiedades que garantizan que las transacciones en una base de datos sean confiables: o se completan totalmente o no se hacen, sin dejar datos corruptos.</span></span> sobre archivos<br/><strong>Apache HBase</strong> — base <span class="g gr">NoSQL<span class="t">Bases de datos "No solo SQL" diseñadas para escalar horizontalmente. No usan tablas relacionales tradicionales. Tipos: columnar (HBase), documentos (MongoDB), clave-valor (Redis), grafos (Neo4j).</span></span> columnar</p>
+                    </div>
+                    <div class="cb" style="padding:1rem;border-left:4px solid var(--accent-secondary)">
+                        <p style="margin:0 0 6px"><strong style="color:var(--accent-secondary);font-size:.9rem"><i class="fa-solid fa-gears"></i> Procesamiento</strong></p>
+                        <p style="margin:0;font-size:.83rem"><strong>Spark</strong> — batch + streaming<br/><strong>Flink</strong> — streaming nativo<br/><strong>Hadoop MR</strong> — ETL masivo<br/><strong>Dask</strong> — Pandas distribuido en Python</p>
+                    </div>
+                    <div class="cb" style="padding:1rem;border-left:4px solid var(--c-green)">
+                        <p style="margin:0 0 6px"><strong style="color:var(--c-green);font-size:.9rem"><i class="fa-solid fa-brain"></i> ML Distribuido</strong></p>
+                        <p style="margin:0;font-size:.83rem"><strong>Spark MLlib</strong> — ML sobre Spark<br/><strong>H2O.ai</strong> — <span class="g">AutoML<span class="t">Automated Machine Learning. Herramientas que automatizan el proceso de selección de algoritmos, ajuste de hiperparámetros y feature engineering. Permiten crear modelos sin ser experto en ML.</span></span> escalable<br/><strong>Ray</strong> — computación distribuida<br/><strong>Horovod</strong> — deep learning distribuido</p>
+                    </div>
+                    <div class="cb" style="padding:1rem;border-left:4px solid var(--c-orange)">
+                        <p style="margin:0 0 6px"><strong style="color:var(--c-orange);font-size:.9rem"><i class="fa-solid fa-tower-broadcast"></i> Ingestión</strong></p>
+                        <p style="margin:0;font-size:.83rem"><strong>Kafka</strong> — cola de mensajes<br/><strong>Apache NiFi</strong> — flujos de datos<br/><strong>Flume</strong> — logs en tiempo real<br/><strong>Debezium</strong> — <span class="g">CDC<span class="t">Change Data Capture (Captura de Datos de Cambio). Técnica que detecta y captura automáticamente cada inserción, actualización o eliminación en una base de datos, y la envía como evento a un sistema de streaming.</span></span> desde BD</p>
+                    </div>
+                    <div class="cb" style="padding:1rem;border-left:4px solid var(--c-cyan)">
+                        <p style="margin:0 0 6px"><strong style="color:var(--c-cyan);font-size:.9rem"><i class="fa-solid fa-magnifying-glass-chart"></i> Consulta</strong></p>
+                        <p style="margin:0;font-size:.83rem"><strong>Presto/Trino</strong> — <span class="g gl">SQL federado<span class="t">Capacidad de ejecutar consultas SQL que acceden a múltiples fuentes de datos (HDFS, S3, MySQL, etc.) como si fueran una sola base de datos, sin mover los datos de su ubicación original.</span></span><br/><strong>Apache Hive</strong> — SQL sobre HDFS<br/><strong>Apache Druid</strong> — <span class="g">OLAP<span class="t">Online Analytical Processing. Tecnología optimizada para consultas analíticas complejas sobre grandes volúmenes de datos (sumas, promedios, agrupaciones). Diseñada para leer datos rápidamente, no para transacciones individuales.</span></span> en tiempo real<br/><strong>ClickHouse</strong> — analítica columnar</p>
+                    </div>
+                    <div class="cb" style="padding:1rem;border-left:4px solid var(--c-pink)">
+                        <p style="margin:0 0 6px"><strong style="color:var(--c-pink);font-size:.9rem"><i class="fa-solid fa-cloud"></i> Cloud Managed</strong></p>
+                        <p style="margin:0;font-size:.83rem"><strong>AWS EMR</strong> — Hadoop/Spark en AWS<br/><strong>Google BigQuery</strong> — warehouse <span class="g">serverless<span class="t">Modelo de computación en la nube donde no administras servidores. Pagas solo por lo que usas (consultas ejecutadas, datos procesados) y la infraestructura escala automáticamente.</span></span><br/><strong>Azure Synapse</strong> — analítica unificada<br/><strong>Databricks</strong> — Spark como servicio</p>
+                    </div>
+                </div>
+                <div class="co" style="border-color:#fbbf24;background:rgba(251,191,36,.08);margin-top:12px"><i class="fa-solid fa-crown" style="color:#fbbf24;margin-top:2px;font-size:1.1rem"></i>
+                    <div style="margin:0">
+                        <p style="margin:0 0 10px;font-size:.92rem;color:#e2e8f0;line-height:1.5"><strong style="color:#fbbf24">Si solo aprendes 3 herramientas, que sean estas:</strong></p>
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+                            <div style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);border-radius:8px;padding:.8rem;text-align:center">
+                                <p style="margin:0 0 4px;font-size:.85rem;color:var(--accent-primary);font-weight:700"><i class="fa-solid fa-bolt"></i> Spark</p>
+                                <p style="margin:0;font-size:.78rem;color:var(--text-muted)">Procesamiento batch + ML distribuido</p>
+                            </div>
+                            <div style="background:rgba(244,114,182,.1);border:1px solid rgba(244,114,182,.2);border-radius:8px;padding:.8rem;text-align:center">
+                                <p style="margin:0 0 4px;font-size:.85rem;color:var(--c-pink);font-weight:700"><i class="fa-solid fa-tower-broadcast"></i> Kafka</p>
+                                <p style="margin:0;font-size:.78rem;color:var(--text-muted)">Ingestión y streaming en tiempo real</p>
+                            </div>
+                            <div style="background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.2);border-radius:8px;padding:.8rem;text-align:center">
+                                <p style="margin:0 0 4px;font-size:.85rem;color:var(--c-green);font-weight:700"><i class="fa-solid fa-cloud"></i> BigQuery/Databricks</p>
+                                <p style="margin:0;font-size:.78rem;color:var(--text-muted)">Cloud managed (sin administración)</p>
+                            </div>
+                        </div>
+                        <p style="margin:10px 0 0;font-size:.8rem;color:var(--text-muted)"><i class="fa-solid fa-check" style="color:#fbbf24"></i> Estas 3 cubren el 90% de los casos en la industria. El resto son especializaciones.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- S23: TITULO CASOS -->
+        <div class="slide">
+            <div class="card" style="text-align:center;justify-content:center;height:50vh">
+                <p style="color:var(--c-orange);letter-spacing:3px;text-transform:uppercase;font-size:.85rem;font-weight:700">Cuarta parte</p>
+                <h1 style="font-size:3.8rem">Casos de Éxito</h1>
+                <p style="font-size:1rem;color:var(--text-muted);max-width:650px;margin:8px auto 0">Cómo la industria aplica minería de datos a gran escala para generar valor empresarial.</p>
+            </div>
+        </div>
+
+        <!-- S24: CASO NETFLIX -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">Caso 1: Netflix — Personalización a escala</h2>
+                <p style="color:var(--c-red);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">230+ millones de suscriptores, miles de millones de interacciones</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-red)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i class="fa-solid fa-database" style="color:var(--c-red)"></i><strong style="color:#fff;font-size:.92rem">El desafío</strong></div>
+                        <p style="margin:0;font-size:.85rem">Procesar miles de millones de eventos diarios (reproducciones, pausas, búsquedas, ratings) para personalizar la experiencia de cada usuario en tiempo real.</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--accent-primary)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i class="fa-solid fa-wrench" style="color:var(--accent-primary)"></i><strong style="color:#fff;font-size:.92rem">La solución</strong></div>
+                        <p style="margin:0;font-size:.85rem"><strong>Kafka</strong> para ingestión de eventos, <strong>Spark</strong> para entrenamiento de modelos de recomendación, y un sistema de <strong>online learning</strong> que ajusta recomendaciones al instante.</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-green)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i class="fa-solid fa-chart-pie" style="color:var(--c-green)"></i><strong style="color:#fff;font-size:.92rem">El resultado</strong></div>
+                        <p style="margin:0;font-size:.85rem">El 80% del contenido visto proviene de recomendaciones. Netflix estima que su motor de recomendación ahorra $1 billón/año en retención de clientes.</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--accent-secondary)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i class="fa-solid fa-graduation-cap" style="color:var(--accent-secondary)"></i><strong style="color:#fff;font-size:.92rem">Lección</strong></div>
+                        <p style="margin:0;font-size:.85rem">La combinación de batch (entrenar modelos profundos) + streaming (ajustar en tiempo real) es más poderosa que cualquiera por separado.</p>
+                    </div>
+                </div>
+                <div class="en-sencillo"><span class="es-icon">En sencillo</span><p>Netflix combina un modelo grande entrenado con todos los datos (batch) más ajustes instantáneos según lo que estás viendo ahora (streaming). Por eso las recomendaciones se sienten tan personales.</p></div>
+            </div>
+        </div>
+
+        <!-- S25: CASO UBER -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">Caso 2: Uber — Precios dinámicos en tiempo real</h2>
+                <p style="color:var(--c-orange);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">Millones de viajes diarios, precios que cambian cada segundo</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-orange)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i class="fa-solid fa-car" style="color:var(--c-orange)"></i><strong style="color:#fff;font-size:.92rem">El desafío</strong></div>
+                        <p style="margin:0;font-size:.85rem">Calcular el precio óptimo de cada viaje en milisegundos, considerando demanda actual, oferta de conductores, clima, tráfico y eventos especiales.</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--accent-primary)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i class="fa-solid fa-microchip" style="color:var(--accent-primary)"></i><strong style="color:#fff;font-size:.92rem">La solución</strong></div>
+                        <p style="margin:0;font-size:.85rem">Plataforma interna <strong>Michelangelo</strong>: Kafka para eventos de GPS, Spark para features en batch, y modelos de ML que se actualizan incrementalmente con datos de mercado en tiempo real.</p>
+                    </div>
+                </div>
+                <div class="co" style="border-color:var(--c-cyan)"><i class="fa-solid fa-lightbulb" style="color:var(--c-cyan);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.88rem;color:#e2e8f0"><strong style="color:var(--c-cyan)">Para su proyecto:</strong> El pricing dinámico es directamente aplicable a e-commerce. Imaginen ajustar precios de productos en función de la demanda actual, inventario y competencia — es minería de datos en streaming aplicada al negocio.</p>
+                </div>
+                <div class="en-sencillo"><span class="es-icon">En sencillo</span><p>Uber cambia el precio cada segundo porque su modelo aprende en tiempo real de la oferta y demanda. Es minería de datos en streaming aplicada al negocio, en vivo.</p></div>
+            </div>
+        </div>
+
+        <!-- S26: CASO FINANZAS -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">Caso 3: Banca — Detección de fraude en milisegundos</h2>
+                <p style="color:var(--accent-secondary);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">$32 mil millones en fraude evitados anualmente por la industria</p>
+                <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px">
+                    <div class="cb" style="padding:.9rem 1.2rem;border-left:4px solid var(--accent-primary);display:flex;gap:12px">
+                        <div style="background:var(--accent-primary);color:#0f172a;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0">1</div>
+                        <p style="margin:0;font-size:.88rem;color:#e2e8f0"><strong style="color:#fff">Ingestión:</strong> Cada transacción con tarjeta genera un evento en <strong>Kafka</strong> con datos del monto, ubicación, comercio, hora y dispositivo.</p>
+                    </div>
+                    <div class="cb" style="padding:.9rem 1.2rem;border-left:4px solid var(--accent-secondary);display:flex;gap:12px">
+                        <div style="background:var(--accent-secondary);color:#0f172a;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0">2</div>
+                        <p style="margin:0;font-size:.88rem;color:#e2e8f0"><strong style="color:#fff"><span class="g gl">Feature engineering<span class="t">Proceso de crear variables (features) derivadas a partir de datos crudos que alimentan al modelo de ML. Ejemplo: a partir de "hora de transacción" crear "es horario nocturno" (sí/no). Es el paso más importante del pipeline de ML.</span></span>:</strong> <strong>Flink</strong> calcula en tiempo real: frecuencia de uso en la última hora, distancia geográfica respecto a la última transacción, desviación del monto promedio.</p>
+                    </div>
+                    <div class="cb" style="padding:.9rem 1.2rem;border-left:4px solid var(--c-cyan);display:flex;gap:12px">
+                        <div style="background:var(--c-cyan);color:#0f172a;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0">3</div>
+                        <p style="margin:0;font-size:.88rem;color:#e2e8f0"><strong style="color:#fff">Scoring:</strong> Un modelo de <strong><span class="g gl">gradient boosting<span class="t">Técnica de machine learning que combina muchos modelos simples (árboles de decisión) secuencialmente. Cada nuevo árbol corrige los errores del anterior. Algoritmos populares: XGBoost, LightGBM. Es uno de los métodos más efectivos para datos tabulares.</span></span></strong> entrenado offline (batch) evalúa la transacción en &lt;50ms y asigna un <span class="g gr">score de riesgo<span class="t">Puntuación numérica (generalmente de 0 a 1) que indica la probabilidad de que una transacción sea fraudulenta. Valores cercanos a 1 = alta probabilidad de fraude. El umbral de decisión lo define el negocio.</span></span>.</p>
+                    </div>
+                    <div class="cb" style="padding:.9rem 1.2rem;border-left:4px solid var(--c-green);display:flex;gap:12px">
+                        <div style="background:var(--c-green);color:#0f172a;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0">4</div>
+                        <p style="margin:0;font-size:.88rem;color:#e2e8f0"><strong style="color:#fff">Acción:</strong> Si el score supera el umbral → bloquear la tarjeta y notificar al usuario. El modelo se <strong>re-entrena diariamente</strong> con las transacciones confirmadas como fraude o legítimas.</p>
+                    </div>
+                </div>
+                <div class="en-sencillo"><span class="es-icon">En sencillo</span><p>Cada vez que pagás con tarjeta, un modelo de ML decide en menos de 50 milisegundos si es fraude o no. Funciona porque combina datos históricos (batch) con el análisis de tu compra en ese instante (streaming).</p></div>
+            </div>
+        </div>
+
+        <!-- S27: ARQUITECTURA LAMBDA -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">Arquitectura Lambda: unificando batch + streaming</h2>
+                <p style="color:var(--accent-primary);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">El patrón arquitectónico más usado en Big Data</p>
+                <div class="co" style="border-color:var(--accent-primary);margin-bottom:14px"><i class="fa-solid fa-layer-group" style="color:var(--accent-primary);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.92rem;color:#e2e8f0;line-height:1.5">La <strong style="color:#fff">Arquitectura Lambda</strong> combina tres capas para obtener lo mejor de ambos mundos: la <strong>precisión</strong> del procesamiento batch con la <strong>velocidad</strong> del streaming.</p>
+                </div>
+                <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:1.2rem;margin-bottom:12px;text-align:center;overflow-x:auto">
+                    <svg viewBox="0 0 600 120" style="width:100%;min-width:500px;height:120px">
+                        <!-- Data Sources -->
+                        <rect x="10" y="45" width="60" height="30" fill="rgba(34,211,238,.2)" stroke="rgba(34,211,238,.5)" stroke-width="1.5" rx="3"/>
+                        <text x="40" y="65" font-size="11" fill="#22d3ee" text-anchor="middle" font-weight="600">Datos</text>
+                        <!-- Arrow from sources -->
+                        <path d="M 70 60 L 95 60" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#arrowhead-small)"/>
+                        <!-- Fork -->
+                        <circle cx="100" cy="60" r="3" fill="#475569"/>
+                        <!-- Left path to Batch -->
+                        <path d="M 100 60 L 100 35 L 160 35" stroke="#38bdf8" stroke-width="2" fill="none" marker-end="url(#arrowhead-batch)"/>
+                        <!-- Right path to Speed -->
+                        <path d="M 100 60 L 100 85 L 160 85" stroke="#f472b6" stroke-width="2" fill="none" marker-end="url(#arrowhead-speed)"/>
+                        <!-- Batch Layer -->
+                        <rect x="160" y="20" width="80" height="30" fill="rgba(56,189,248,.15)" stroke="#38bdf8" stroke-width="2" rx="3"/>
+                        <text x="200" y="40" font-size="11" fill="#38bdf8" text-anchor="middle" font-weight="600">Batch Layer</text>
+                        <!-- Speed Layer -->
+                        <rect x="160" y="70" width="80" height="30" fill="rgba(244,114,182,.15)" stroke="#f472b6" stroke-width="2" rx="3"/>
+                        <text x="200" y="90" font-size="11" fill="#f472b6" text-anchor="middle" font-weight="600">Speed Layer</text>
+                        <!-- Arrows to Serving -->
+                        <path d="M 240 35 L 290 50" stroke="#38bdf8" stroke-width="2" fill="none" marker-end="url(#arrowhead-batch2)"/>
+                        <path d="M 240 85 L 290 70" stroke="#f472b6" stroke-width="2" fill="none" marker-end="url(#arrowhead-speed2)"/>
+                        <!-- Serving Layer -->
+                        <rect x="290" y="40" width="100" height="40" fill="rgba(74,222,128,.15)" stroke="#4ade80" stroke-width="2" rx="3"/>
+                        <text x="340" y="58" font-size="11" fill="#4ade80" text-anchor="middle" font-weight="600">Serving Layer</text>
+                        <text x="340" y="72" font-size="9" fill="#94a3b8" text-anchor="middle">(Fusiona batch+speed)</text>
+                        <!-- Arrow to User -->
+                        <path d="M 390 60 L 435 60" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#arrowhead-small)"/>
+                        <!-- User/Dashboard -->
+                        <rect x="435" y="45" width="60" height="30" fill="rgba(107,114,128,.2)" stroke="rgba(107,114,128,.5)" stroke-width="1.5" rx="3"/>
+                        <text x="465" y="65" font-size="11" fill="#d1d5db" text-anchor="middle" font-weight="600">Dashboard</text>
+                        <!-- Arrow markers -->
+                        <defs>
+                            <marker id="arrowhead-small" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><polygon points="0 0, 6 3, 0 6" fill="#475569"/></marker>
+                            <marker id="arrowhead-batch" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><polygon points="0 0, 6 3, 0 6" fill="#38bdf8"/></marker>
+                            <marker id="arrowhead-speed" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><polygon points="0 0, 6 3, 0 6" fill="#f472b6"/></marker>
+                            <marker id="arrowhead-batch2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><polygon points="0 0, 6 3, 0 6" fill="#38bdf8"/></marker>
+                            <marker id="arrowhead-speed2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><polygon points="0 0, 6 3, 0 6" fill="#f472b6"/></marker>
+                        </defs>
+                    </svg>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px">
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--accent-primary);background:rgba(56,189,248,.04)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><i class="fa-solid fa-boxes-stacked" style="color:var(--accent-primary)"></i><strong style="color:#fff;font-size:.92rem">Capa Batch (Batch Layer)</strong></div>
+                        <p style="margin:0;font-size:.85rem">Procesa <strong>todos los datos históricos</strong> periódicamente (cada hora/día). Genera vistas precalculadas exactas. Herramientas: Hadoop, Spark batch.</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-pink);background:rgba(244,114,182,.04)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><i class="fa-solid fa-bolt" style="color:var(--c-pink)"></i><strong style="color:#fff;font-size:.92rem">Capa de Velocidad (Speed Layer)</strong></div>
+                        <p style="margin:0;font-size:.85rem">Procesa <strong>solo los datos nuevos</strong> desde el último batch. Resultados aproximados pero inmediatos. Herramientas: Flink, Spark Streaming, Kafka Streams.</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-green);background:rgba(74,222,128,.04)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><i class="fa-solid fa-eye" style="color:var(--c-green)"></i><strong style="color:#fff;font-size:.92rem">Capa de Servicio (Serving Layer)</strong></div>
+                        <p style="margin:0;font-size:.85rem"><strong>Fusiona</strong> los resultados de batch + speed y los sirve al usuario final. Cuando batch termina, reemplaza los datos de speed. Herramientas: Druid, Cassandra, ElasticSearch.</p>
+                    </div>
+                </div>
+                <div class="co" style="border-color:var(--c-orange)"><i class="fa-solid fa-store" style="color:var(--c-orange);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.85rem;color:#e2e8f0"><strong style="color:var(--c-orange)">Ejemplo e-commerce:</strong> Batch calcula las ventas totales por categoría cada noche. Speed actualiza el conteo en tiempo real durante el día. El dashboard siempre muestra datos actuales.</p>
+                </div>
+                <div class="en-sencillo"><span class="es-icon">En sencillo</span><p>Lambda usa dos caminos: uno lento pero exacto (batch) y otro rápido pero aproximado (streaming). Combinás ambos para tener respuestas inmediatas que se corrigen con precisión después.</p></div>
+            </div>
+        </div>
+
+        <!-- S28: COMO ELEGIR -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:12px">¿Cómo elegir la herramienta correcta?</h2>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--accent-primary)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i class="fa-solid fa-clock" style="color:var(--accent-primary)"></i><strong style="color:#fff;font-size:.92rem">¿Qué latencia necesitas?</strong></div>
+                        <p style="margin:0;font-size:.85rem"><strong>Segundos:</strong> Flink, Kafka Streams<br/><strong>Minutos:</strong> Spark Streaming<br/><strong>Horas:</strong> Spark batch, Hadoop</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--accent-secondary)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i class="fa-solid fa-hard-drive" style="color:var(--accent-secondary)"></i><strong style="color:#fff;font-size:.92rem">¿Cuántos datos?</strong></div>
+                        <p style="margin:0;font-size:.85rem"><strong>&lt;10 GB:</strong> Pandas, scikit-learn<br/><strong>10 GB–1 TB:</strong> Dask, Spark local<br/><strong>&gt;1 TB:</strong> Spark clúster, Hadoop</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-green)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i class="fa-solid fa-brain" style="color:var(--c-green)"></i><strong style="color:#fff;font-size:.92rem">¿Qué tipo de análisis?</strong></div>
+                        <p style="margin:0;font-size:.85rem"><strong>Exploración:</strong> Spark SQL + notebooks<br/><strong>ML iterativo:</strong> Spark MLlib, Ray<br/><strong>Grafos:</strong> GraphX, Neo4j</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-orange)">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i class="fa-solid fa-wallet" style="color:var(--c-orange)"></i><strong style="color:#fff;font-size:.92rem">¿Qué presupuesto?</strong></div>
+                        <p style="margin:0;font-size:.85rem"><strong>Bajo:</strong> Open-source (Spark, Kafka)<br/><strong>Medio:</strong> Databricks, EMR spot<br/><strong>Alto:</strong> BigQuery, Synapse serverless</p>
+                    </div>
+                </div>
+                <div class="co" style="border-color:#fbbf24"><i class="fa-solid fa-lightbulb" style="color:#fbbf24;margin-top:2px"></i>
+                    <p style="margin:0;font-size:.88rem;color:#e2e8f0"><strong style="color:#fbbf24">Regla práctica:</strong> Empieza siempre con la herramienta más simple que resuelva tu problema. Si Pandas funciona, no necesitas Spark. La complejidad debe estar justificada por el volumen y la velocidad de los datos.</p>
+                </div>
+                <div class="en-sencillo"><span class="es-icon">En sencillo</span><p>Empezá siempre con lo más simple (Pandas). Solo escalá a Spark, Kafka o Flink cuando tus datos realmente lo necesiten. La herramienta correcta es la más simple que resuelva tu problema.</p></div>
+            </div>
+        </div>
+
+        <!-- S29: CONEXION PROYECTO -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:10px">Conexión con su Proyecto y Práctica 2</h2>
+                <div class="co" style="border-color:var(--c-pink);margin-bottom:14px"><i class="fa-solid fa-laptop-code" style="color:var(--c-pink);margin-top:2px"></i>
+                    <p style="margin:0;font-size:.92rem;color:#e2e8f0;line-height:1.5">Esta semana <strong style="color:var(--c-pink)">inician la segunda práctica</strong> y continúan con la solución computacional. Lo visto hoy les da herramientas para escalar su análisis.</p>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--accent-primary)">
+                        <p style="margin:0 0 8px"><strong style="color:var(--accent-primary);font-size:.92rem">PySpark para su dataset</strong></p>
+                        <ol style="margin:0;padding-left:18px;font-size:.82rem;color:var(--text-muted)">
+                            <li>Ejecutar: <span class="tag" style="font-size:.7rem">pip install pyspark</span></li>
+                            <li>Cargar CSV: <span class="tag" style="font-size:.7rem">spark.read.csv("datos.csv")</span></li>
+                            <li>Replicar su <span class="tag" style="font-size:.7rem">groupBy</span> de Pandas en Spark</li>
+                            <li>Comparar tiempos y documentar ganancia</li>
+                        </ol>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--accent-secondary)">
+                        <p style="margin:0 0 8px"><strong style="color:var(--accent-secondary);font-size:.92rem">MiniBatchKMeans online</strong></p>
+                        <ol style="margin:0;padding-left:18px;font-size:.82rem;color:var(--text-muted)">
+                            <li>Importar: <span class="tag" style="font-size:.7rem">from sklearn.cluster import MiniBatchKMeans</span></li>
+                            <li>Dividir datos en lotes de 1,000 filas</li>
+                            <li>Aplicar <span class="tag" style="font-size:.7rem">partial_fit()</span> cada lote</li>
+                            <li>Mostrar evolución de segmentos</li>
+                        </ol>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-cyan)">
+                        <p style="margin:0 0 8px"><strong style="color:var(--c-cyan);font-size:.92rem">Concept drift detection</strong></p>
+                        <ol style="margin:0;padding-left:18px;font-size:.82rem;color:var(--text-muted)">
+                            <li>Separar datos por período (mes/semana)</li>
+                            <li>Calcular distribuciones estadísticas</li>
+                            <li>Usar <span class="tag" style="font-size:.7rem"><span class="g">ks_test<span class="t">Kolmogorov-Smirnov test. Prueba estadística que compara dos distribuciones para determinar si son significativamente diferentes. Útil para detectar concept drift: si la distribución de enero es distinta a la de julio, hay drift.</span></span></span> para detectar cambios</li>
+                            <li>Visualizar cambio con histogramas</li>
+                        </ol>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-green)">
+                        <p style="margin:0 0 8px"><strong style="color:var(--c-green);font-size:.92rem">Arquitectura Lambda simplificada</strong></p>
+                        <ol style="margin:0;padding-left:18px;font-size:.82rem;color:var(--text-muted)">
+                            <li>Batch: Spark procesa histórico nightly</li>
+                            <li>Speed: Actualización online con cada transacción</li>
+                            <li>Serving: API que combina ambos resultados</li>
+                            <li>Diagrama en informe con flujo de datos</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- S30: ERRORES COMUNES -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">Errores Comunes: Qué NO hacer</h2>
+                <p style="color:var(--c-red);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">Las tramillas mentales más frecuentes</p>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-red);background:rgba(248,113,113,.04);display:flex;gap:12px">
+                        <div style="flex-shrink:0;margin-top:2px"><i class="fa-solid fa-xmark" style="color:var(--c-red);font-size:1.1rem"></i></div>
+                        <div>
+                            <p style="margin:0 0 4px;font-size:.92rem;color:#fff"><strong>Mito:</strong> "Spark reemplaza a Hadoop"</p>
+                            <p style="margin:0;font-size:.85rem;color:var(--text-muted)"><i class="fa-solid fa-check" style="color:var(--c-green)"></i> Realidad: Se complementan. Spark sobre HDFS es muy común. Spark usa YARN de Hadoop para orquestar recursos.</p>
+                        </div>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-red);background:rgba(248,113,113,.04);display:flex;gap:12px">
+                        <div style="flex-shrink:0;margin-top:2px"><i class="fa-solid fa-xmark" style="color:var(--c-red);font-size:1.1rem"></i></div>
+                        <div>
+                            <p style="margin:0 0 4px;font-size:.92rem;color:#fff"><strong>Mito:</strong> "Online learning siempre es mejor que batch"</p>
+                            <p style="margin:0;font-size:.85rem;color:var(--text-muted)"><i class="fa-solid fa-check" style="color:var(--c-green)"></i> Realidad: Depende. Batch es más preciso, online es más rápido. Usa ambos (Arquitectura Lambda).</p>
+                        </div>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-red);background:rgba(248,113,113,.04);display:flex;gap:12px">
+                        <div style="flex-shrink:0;margin-top:2px"><i class="fa-solid fa-xmark" style="color:var(--c-red);font-size:1.1rem"></i></div>
+                        <div>
+                            <p style="margin:0 0 4px;font-size:.92rem;color:#fff"><strong>Mito:</strong> "Más herramientas = solución mejor"</p>
+                            <p style="margin:0;font-size:.85rem;color:var(--text-muted)"><i class="fa-solid fa-check" style="color:var(--c-green)"></i> Realidad: Empieza simple. Si Pandas funciona, no necesitas Spark. La complejidad debe estar justificada.</p>
+                        </div>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-red);background:rgba(248,113,113,.04);display:flex;gap:12px">
+                        <div style="flex-shrink:0;margin-top:2px"><i class="fa-solid fa-xmark" style="color:var(--c-red);font-size:1.1rem"></i></div>
+                        <div>
+                            <p style="margin:0 0 4px;font-size:.92rem;color:#fff"><strong>Mito:</strong> "Big Data es solo volumen"</p>
+                            <p style="margin:0;font-size:.85rem;color:var(--text-muted)"><i class="fa-solid fa-check" style="color:var(--c-green)"></i> Realidad: Son <span class="g">3 Vs<span class="t">Las tres dimensiones del Big Data definidas por Doug Laney en 2001: Volumen (cantidad de datos), Velocidad (rapidez con que llegan) y Variedad (diferentes formatos: texto, imágenes, logs, etc.).</span></span>: volumen, <strong>velocidad</strong> (streaming), variedad (múltiples formatos). Uno solo puede justificar Big Data.</p>
+                        </div>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-red);background:rgba(248,113,113,.04);display:flex;gap:12px">
+                        <div style="flex-shrink:0;margin-top:2px"><i class="fa-solid fa-xmark" style="color:var(--c-red);font-size:1.1rem"></i></div>
+                        <div>
+                            <p style="margin:0 0 4px;font-size:.92rem;color:#fff"><strong>Mito:</strong> "El modelo es lo más importante"</p>
+                            <p style="margin:0;font-size:.85rem;color:var(--text-muted)"><i class="fa-solid fa-check" style="color:var(--c-green)"></i> Realidad: El <strong><span class="g gl">pipeline de datos<span class="t">Secuencia completa de pasos desde la ingestión del dato crudo hasta la entrega del resultado: extracción, limpieza, transformación, entrenamiento del modelo y despliegue. Un pipeline robusto importa más que un modelo sofisticado.</span></span></strong> es lo crítico. Datos limpios + modelo simple > datos sucios + modelo sofisticado.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- S31: RESUMEN -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:14px">Resumen y Conclusiones</h2>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                    <div class="cb" style="padding:.9rem 1.2rem;border-left:4px solid var(--accent-primary);background:rgba(56,189,248,.04);display:flex;gap:10px">
+                        <i class="fa-solid fa-server" style="color:var(--accent-primary);margin-top:3px;flex-shrink:0"></i>
+                        <p style="margin:0;font-size:.92rem;color:#e2e8f0">El <strong style="color:#fff">procesamiento distribuido</strong> (MapReduce, Spark) permite analizar datos que ninguna máquina individual podría manejar, dividiendo el trabajo en tareas paralelas.</p>
+                    </div>
+                    <div class="cb" style="padding:.9rem 1.2rem;border-left:4px solid var(--accent-secondary);background:rgba(192,132,252,.04);display:flex;gap:10px">
+                        <i class="fa-solid fa-wave-square" style="color:var(--accent-secondary);margin-top:3px;flex-shrink:0"></i>
+                        <p style="margin:0;font-size:.92rem;color:#e2e8f0">El <strong style="color:#fff">aprendizaje en línea</strong> permite modelos que se adaptan continuamente al cambio (concept drift), sin necesidad de re-entrenar desde cero.</p>
+                    </div>
+                    <div class="cb" style="padding:.9rem 1.2rem;border-left:4px solid var(--c-green);background:rgba(74,222,128,.04);display:flex;gap:10px">
+                        <i class="fa-solid fa-puzzle-piece" style="color:var(--c-green);margin-top:3px;flex-shrink:0"></i>
+                        <p style="margin:0;font-size:.92rem;color:#e2e8f0"><strong style="color:#fff">Batch y streaming se complementan</strong>: la arquitectura Lambda combina la precisión del batch con la inmediatez del streaming para resultados óptimos.</p>
+                    </div>
+                    <div class="cb" style="padding:.9rem 1.2rem;border-left:4px solid var(--c-orange);background:rgba(245,158,11,.04);display:flex;gap:10px">
+                        <i class="fa-solid fa-toolbox" style="color:var(--c-orange);margin-top:3px;flex-shrink:0"></i>
+                        <p style="margin:0;font-size:.92rem;color:#e2e8f0">El <strong style="color:#fff">ecosistema</strong> (Hadoop, Spark, Kafka, Flink) cubre almacenamiento, procesamiento, ingestión y análisis — elegir depende del volumen, la latencia y el presupuesto.</p>
+                    </div>
+                    <div class="cb" style="padding:.9rem 1.2rem;border-left:4px solid #fbbf24;background:rgba(251,191,36,.04);display:flex;gap:10px">
+                        <i class="fa-solid fa-arrow-right-long" style="color:#fbbf24;margin-top:3px;flex-shrink:0"></i>
+                        <p style="margin:0;font-size:.92rem;color:#e2e8f0"><strong style="color:#fbbf24">Próxima clase (11):</strong> Arrancamos el <strong style="color:#fff">Módulo 6 — Minería de datos en entornos específicos</strong>: sector financiero, salud, mercadotecnia y ética en la minería de datos.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- S32: RECURSOS -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1100px">
+                <h2 style="font-size:2rem;margin-bottom:6px">Recursos para profundizar</h2>
+                <p style="color:var(--accent-primary);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:14px">Bibliografía recomendada de SINT-201</p>
+                <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--accent-primary);background:rgba(56,189,248,.04)">
+                        <p style="margin:0 0 4px;font-size:.92rem;color:#fff"><strong style="color:var(--accent-primary)">Libro obligatorio — Spark</strong></p>
+                        <p style="margin:0;font-size:.85rem;color:var(--text-muted)">Haines, S. (2022). <em>Modern Data Engineering with Apache Spark</em>. Apress. (Disponible vía UCenfotec OverDrive)</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--accent-secondary);background:rgba(192,132,252,.04)">
+                        <p style="margin:0 0 4px;font-size:.92rem;color:#fff"><strong style="color:var(--accent-secondary)">Libro obligatorio — Hadoop</strong></p>
+                        <p style="margin:0;font-size:.85rem;color:var(--text-muted)">Aquino do Vale, V. (2021). <em>Data Processing and Modeling with Hadoop</em>. BPB Publications. (Disponible vía UCenfotec OverDrive)</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-cyan);background:rgba(34,211,238,.04)">
+                        <p style="margin:0 0 4px;font-size:.92rem;color:#fff"><strong style="color:var(--c-cyan)">Documentación Oficial — PySpark</strong></p>
+                        <p style="margin:0;font-size:.85rem;color:var(--text-muted)"><a href="https://spark.apache.org/docs/latest" style="color:var(--c-cyan);text-decoration:none;font-weight:600">spark.apache.org/docs/latest</a> — Quickstart y API reference</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-green);background:rgba(74,222,128,.04)">
+                        <p style="margin:0 0 4px;font-size:.92rem;color:#fff"><strong style="color:var(--c-green)">Documentación Oficial — Kafka</strong></p>
+                        <p style="margin:0;font-size:.85rem;color:var(--text-muted)"><a href="https://kafka.apache.org/documentation" style="color:var(--c-green);text-decoration:none;font-weight:600">kafka.apache.org/documentation</a> — Intro y guía rápida</p>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-pink);background:rgba(244,114,182,.04)">
+                        <p style="margin:0 0 4px;font-size:.92rem;color:#fff"><strong style="color:var(--c-pink)">Paper Fundacional</strong></p>
+                        <p style="margin:0;font-size:.85rem;color:var(--text-muted)">Dean & Ghemawat (2004). <em>"<span class="g">MapReduce<span class="t">Modelo de programación y sistema de procesamiento para datos masivos. Los datos se mapean (transforman) en paralelo, se agrupan por clave, y luego se reducen (agregan) en el resultado final.</span></span>: Simplified Data Processing on Large Datasets"</em> — Google Research</p>
+                    </div>
+                </div>
+                <div class="co" style="border-color:#fbbf24;background:rgba(251,191,36,.08)"><i class="fa-solid fa-book" style="color:#fbbf24;margin-top:2px"></i>
+                    <p style="margin:0;font-size:.88rem;color:#e2e8f0"><strong style="color:#fbbf24">Nota importante:</strong> El libro de Haines es la <strong style="color:#fff">lectura obligatoria</strong> de esta semana. Capítulos relevantes para la sesión 10: consulta las indicaciones del profesor en el aula virtual.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- S33: PREGUNTATE ESTO -->
+        <div class="slide">
+            <div class="card" style="padding:1.8rem;max-width:1000px">
+                <h2 style="font-size:2rem;margin-bottom:6px">Pregúntate esto</h2>
+                <p style="color:var(--accent-secondary);font-size:.8rem;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:16px">Evaluación rápida: ¿dominaste los conceptos?</p>
+                <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:14px">
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--accent-primary);background:rgba(56,189,248,.04)">
+                        <p style="margin:0;font-size:.92rem;color:#fff"><strong>1.</strong> ¿Por qué Spark es más rápido que Hadoop para K-Means iterativo?</p>
+                        <details class="reveal-answer"><summary>Ver respuesta</summary><p>Porque Spark mantiene los datos intermedios en memoria RAM entre iteraciones, mientras que Hadoop MapReduce escribe a disco después de cada pasada. K-Means necesita muchas iteraciones, así que el ahorro de I/O es enorme.</p></details>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--accent-secondary);background:rgba(192,132,252,.04)">
+                        <p style="margin:0;font-size:.92rem;color:#fff"><strong>2.</strong> ¿Qué tipo de concept drift sufriría un modelo de ventas navideñas?</p>
+                        <details class="reveal-answer"><summary>Ver respuesta</summary><p>Drift recurrente (o estacional). Cada diciembre suben las ventas de regalos y en enero bajan drásticamente. El patrón se repite cada año, pero un modelo entrenado solo con datos de enero no lo capturaría.</p></details>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-green);background:rgba(74,222,128,.04)">
+                        <p style="margin:0;font-size:.92rem;color:#fff"><strong>3.</strong> ¿Cuál es la diferencia principal entre Kafka y Spark Streaming?</p>
+                        <details class="reveal-answer"><summary>Ver respuesta</summary><p>Kafka es una plataforma de mensajería — transporta datos de un punto a otro. Spark Streaming es un motor de procesamiento — analiza y transforma esos datos. Kafka es la tubería, Spark es el cerebro que procesa lo que pasa por ella.</p></details>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-orange);background:rgba(245,158,11,.04)">
+                        <p style="margin:0;font-size:.92rem;color:#fff"><strong>4.</strong> Si tu dataset cabe en RAM de tu laptop, ¿necesitas Spark?</p>
+                        <details class="reveal-answer"><summary>Ver respuesta</summary><p>Probablemente no. Pandas y scikit-learn serán más simples y rápidos para datasets pequeños. Spark brilla cuando los datos NO caben en una sola máquina. Usar Spark para 500 MB es como alquilar un camión para llevar una mochila.</p></details>
+                    </div>
+                    <div class="cb" style="padding:1rem 1.2rem;border-left:4px solid var(--c-cyan);background:rgba(34,211,238,.04)">
+                        <p style="margin:0;font-size:.92rem;color:#fff"><strong>5.</strong> ¿Qué capa de la Arquitectura Lambda da resultados aproximados pero inmediatos?</p>
+                        <details class="reveal-answer"><summary>Ver respuesta</summary><p>La Capa de Velocidad (Speed Layer). Procesa solo los datos nuevos desde el último batch, dando resultados rápidos pero aproximados. Cuando termina el siguiente ciclo batch, esos resultados se reemplazan por los exactos.</p></details>
+                    </div>
+                </div>
+                <div class="co" style="border-color:var(--c-green);background:rgba(74,222,128,.08)"><i class="fa-solid fa-trophy" style="color:var(--c-green);margin-top:2px;font-size:1.1rem"></i>
+                    <p style="margin:0;font-size:.88rem;color:#e2e8f0"><strong style="color:var(--c-green)">Si puedes responder estas 5 preguntas,</strong> <strong>dominaste los conceptos clave</strong> de esta sesión. Las respuestas están esparcidas por los diapositivas anteriores. Si tienes dudas, revisa las secciones correspondientes.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="fn"><span class="sc" id="sc">01 / 01</span></div>
+    <script>
+        const s = document.querySelectorAll('.slide'); let c = 0, tx = 0, te = 0;
+        function u() { s.forEach((x, i) => x.classList.toggle('active', i === c)); document.getElementById('sc').textContent = `${String(c + 1).padStart(2, '0')} / ${String(s.length).padStart(2, '0')}`; document.getElementById('pb').style.width = ((c + 1) / s.length * 100) + '%' }
+        function n() { if (c < s.length - 1) { c++; u() } }
+        function p() { if (c > 0) { c--; u() } }
+
+        document.addEventListener('keydown', e => {
+            const inCode = e.target.closest && e.target.closest('.code-wrap');
+            if (['ArrowRight'].includes(e.code)) n();
+            if (['Space', 'PageDown'].includes(e.code) && !inCode) n();
+            if (['ArrowLeft'].includes(e.code)) p();
+            if (['PageUp'].includes(e.code) && !inCode) p();
+            if (e.code === 'F2') { if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(()=>{}); } else { document.exitFullscreen(); } }
+        });
+
+        document.addEventListener('touchstart', e => {
+            tx = e.changedTouches[0].screenX;
+            te = 0;
+        }, { passive: true });
+        document.addEventListener('touchend', e => {
+            if (e.target.closest && e.target.closest('.code-wrap')) return;
+            te = e.changedTouches[0].screenX;
+            if (te < tx - 50) n();
+            if (te > tx + 50) p();
+        }, { passive: true });
+
+        document.querySelectorAll('.code-wrap pre').forEach(el => {
+            el.addEventListener('wheel', e => { e.stopPropagation() }, { passive: true });
+        });
+
+        u();
+    </script>
+</body>
+
+</html>
