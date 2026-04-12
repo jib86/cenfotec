@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SINT-648 · Semana 1 · Introducción a la IA Generativa</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-deep: #0a0f1a;
+    --bg-card: #111827;
+    --bg-card-alt: #1e293b;
+    --border-subtle: rgba(56, 189, 248, 0.08);
+    --border-accent: rgba(56, 189, 248, 0.2);
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --cyan: #38bdf8;
+    --purple: #a78bfa;
+    --green: #34d399;
+    --amber: #fbbf24;
+    --red: #f87171;
+    --pink: #f472b6;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ─── SLIDE SECTIONS ─── */
+.slide {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 80px 60px;
+    border-bottom: 1px solid var(--border-subtle);
+    position: relative;
+}
+
+.slide:last-child { border-bottom: none; }
+
+.slide-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    display: block;
+}
+
+.slide-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 5px;
+    display: inline-block;
+    margin-bottom: 16px;
+}
+
+h1.hero-title {
+    font-size: 3.4rem;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin-bottom: 20px;
+}
+
+h2.section-title {
+    font-size: 2.15rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    margin-bottom: 24px;
+    color: var(--text-primary);
+}
+
+h3.subsection-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--text-primary);
+}
+
+.lead {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    max-width: 1280px;
+    line-height: 1.7;
+}
+
+p.body-text {
+    font-size: 1.08rem;
+    color: var(--text-secondary);
+    line-height: 1.75;
+    margin-bottom: 16px;
+    max-width: 1280px;
+}
+
+.highlight-box {
+    background: linear-gradient(160deg, var(--bg-card), var(--bg-card-alt));
+    border-radius: 14px;
+    padding: 24px 28px;
+    border: 1px solid var(--border-subtle);
+    margin-bottom: 16px;
+}
+
+.concept-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.concept-card {
+    background: linear-gradient(160deg, var(--bg-card), var(--bg-card-alt));
+    border-radius: 14px;
+    padding: 24px 26px;
+    border: 1px solid var(--border-subtle);
+    transition: border-color 0.3s ease;
+}
+
+.concept-card:hover {
+    border-color: var(--border-accent);
+}
+
+.concept-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 14px;
+    font-size: 1.3rem;
+}
+
+.concept-card h4 {
+    font-size: 1.12rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.concept-card p {
+    font-size: 0.98rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* Comparison table */
+.comparison-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 20px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+}
+
+.comparison-table th {
+    background: var(--bg-card);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 14px 20px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.comparison-table td {
+    padding: 14px 20px;
+    font-size: 1rem;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    background: var(--bg-deep);
+}
+
+.comparison-table tr:last-child td { border-bottom: none; }
+
+.comparison-table td:first-child {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Timeline */
+.timeline {
+    position: relative;
+    padding-left: 36px;
+    margin-top: 24px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--cyan), var(--purple), var(--green), var(--amber));
+    border-radius: 2px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 28px;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -30px;
+    top: 6px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--cyan);
+    background: var(--bg-deep);
+}
+
+.timeline-item .year {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--cyan);
+    margin-bottom: 4px;
+}
+
+.timeline-item h4 {
+    font-size: 1.08rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.timeline-item p {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+/* Callout */
+.callout {
+    border-left: 3px solid;
+    padding: 18px 22px;
+    border-radius: 0 12px 12px 0;
+    margin: 20px 0;
+}
+
+.callout.info {
+    border-color: var(--cyan);
+    background: rgba(56, 189, 248, 0.05);
+}
+
+.callout.warning {
+    border-color: var(--amber);
+    background: rgba(251, 191, 36, 0.05);
+}
+
+.callout.idea {
+    border-color: var(--purple);
+    background: rgba(167, 139, 250, 0.05);
+}
+
+.callout-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.callout p {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Diagram boxes */
+.flow-diagram {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: wrap;
+    margin: 24px 0;
+    justify-content: center;
+}
+
+.flow-step {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 16px 20px;
+    text-align: center;
+    min-width: 140px;
+    flex: 0 0 auto;
+}
+
+.flow-step .step-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.flow-step .step-text {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.flow-arrow {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    padding: 0 8px;
+    flex: 0 0 auto;
+}
+
+/* Tag pills */
+.tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 5px;
+    display: inline-block;
+    margin: 2px 4px 2px 0;
+}
+
+/* Nav */
+.nav-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10, 15, 26, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 14px 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.nav-brand {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--cyan);
+    letter-spacing: 0.05em;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.nav-links {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.nav-links a {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 4px 10px;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.nav-links a:hover {
+    color: var(--text-primary);
+    background: rgba(255,255,255,0.05);
+}
+
+.fs-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--bg-deep);
+    background: var(--cyan);
+    border: none;
+    padding: 5px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+}
+
+.fs-btn:hover { opacity: 0.85; }
+
+.fs-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.04);
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Analogy box */
+.analogy-box {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    background: linear-gradient(160deg, var(--bg-card), var(--bg-card-alt));
+    border-radius: 14px;
+    padding: 24px 28px;
+    border: 1px solid var(--border-subtle);
+    margin: 20px 0;
+}
+
+.analogy-emoji {
+    font-size: 2.2rem;
+    flex-shrink: 0;
+    line-height: 1;
+    margin-top: 2px;
+}
+
+.analogy-box p { font-size: 1.02rem; color: var(--text-secondary); line-height: 1.65; margin: 0; }
+.analogy-box strong { color: var(--text-primary); }
+
+/* Two column */
+.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin: 20px 0;
+}
+
+@media (max-width: 700px) {
+    .two-col { grid-template-columns: 1fr; }
+    .concept-grid { grid-template-columns: 1fr !important; }
+    h1.hero-title { font-size: 2rem; }
+    .slide { padding: 50px 24px; }
+    .nav-bar { padding: 12px 20px; }
+    .flow-diagram { flex-direction: column; }
+    .flow-arrow { transform: rotate(90deg); }
+    .fs-hint { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- NAVIGATION                                         -->
+<!-- ═══════════════════════════════════════════════════ -->
+<nav class="nav-bar">
+    <div class="nav-brand">SINT-648 · Semana 1</div>
+    <div class="nav-right">
+        <div class="nav-links">
+            <a href="#intro">Introducción</a>
+            <a href="#que-es">¿Qué es?</a>
+            <a href="#diferencias">Diferencias</a>
+            <a href="#como-funciona">Funcionamiento</a>
+            <a href="#arquitecturas">Arquitecturas</a>
+            <a href="#tipos-datos">Tipos de Datos</a>
+            <a href="#modelos">Modelos</a>
+            <a href="#limitaciones">Limitaciones</a>
+            <a href="#resumen">Resumen</a>
+        </div>
+        <button class="fs-btn" onclick="toggleFullscreen()" id="fsBtn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+            Pantalla completa
+        </button>
+        <span class="fs-hint">F2</span>
+    </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SLIDE 0: HERO                                      -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="slide" id="intro" style="padding-top: 100px; padding-bottom: 100px;">
+    <span class="slide-label" style="color: var(--cyan); background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.2);">Tema 1 · Semana 1</span>
+    <h1 class="hero-title">
+        Introducción a la<br>
+        <span style="color: var(--cyan);">IA Generativa</span>
+    </h1>
+    <p class="lead" style="margin-bottom: 32px;">
+        En esta sesión exploraremos qué es la inteligencia artificial generativa, cómo funciona internamente, en qué se diferencia del aprendizaje automático tradicional y qué tipos de datos puede procesar y generar. Al terminar, tendrás las bases conceptuales necesarias para crear contenido con modelos generativos.
+    </p>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+        <span class="tag" style="color: var(--cyan); background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.15);">Dr. J. Ignacio Borge</span>
+        <span class="tag" style="color: var(--green); background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.15);">Universidad CENFOTEC</span>
+        <span class="tag" style="color: var(--purple); background: rgba(167,139,250,0.1); border: 1px solid rgba(167,139,250,0.15);">Escuela de Sistemas Inteligentes</span>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SLIDE 1: ¿QUÉ ES LA IA GENERATIVA?                -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="slide" id="que-es">
+    <span class="slide-number">01 / 08</span>
+    <h2 class="section-title">¿Qué es la IA Generativa?</h2>
+
+    <p class="body-text">
+        La <strong style="color: var(--text-primary);">Inteligencia Artificial Generativa</strong> (IA Generativa o GenAI) es una rama de la inteligencia artificial que se enfoca en <em>crear contenido nuevo y original</em>. A diferencia de la IA tradicional, que clasifica, predice o analiza datos existentes, la IA generativa <strong style="color: var(--cyan);">produce</strong> — genera texto, imágenes, música, código, video y otros tipos de contenido que no existían antes.
+    </p>
+
+    <div class="analogy-box">
+        <div class="analogy-emoji">🧠</div>
+        <div>
+            <p><strong>Analogía clave:</strong> Pensá en una calculadora vs. un artista. La calculadora siempre da la respuesta correcta (2+2 = 4). Un artista, en cambio, <em>crea</em> algo nuevo cada vez que trabaja. La IA generativa es como ese artista: aprende patrones de millones de ejemplos y luego produce algo original basándose en esos patrones.</p>
+        </div>
+    </div>
+
+    <p class="body-text">
+        ¿Cómo lo hace? La IA generativa aprende la <strong style="color: var(--text-primary);">distribución estadística</strong> de los datos con los que se entrena. Si un modelo aprende de millones de textos, entiende los patrones del lenguaje (gramática, semántica, estilo). Si aprende de millones de imágenes, entiende los patrones visuales (color, composición, textura). Luego, cuando le das una instrucción (un <strong style="color: var(--purple);">prompt</strong>), usa esos patrones para generar una respuesta nueva, palabra por palabra o píxel por píxel.
+    </p>
+
+    <div class="callout info">
+        <span class="callout-label" style="color: var(--cyan);">Dato clave</span>
+        <p>Los modelos generativos son <strong>probabilísticos</strong>: no dan siempre la misma respuesta al mismo prompt. Esto significa que hay <em>variabilidad creativa</em> (lo cual es poderoso) pero también <em>impredecibilidad</em> (lo cual debe gestionarse). Esta es una diferencia fundamental con el software tradicional.</p>
+    </div>
+
+    <h3 class="subsection-title" style="margin-top: 32px;">¿Por qué importa ahora?</h3>
+    <p class="body-text">
+        Aunque la investigación en IA generativa tiene décadas, la explosión reciente se debe a tres factores que convergieron:
+    </p>
+
+    <div class="concept-grid" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="concept-card">
+            <div class="concept-icon" style="background: rgba(56,189,248,0.1); color: var(--cyan);">📊</div>
+            <h4>Datos masivos</h4>
+            <p>Internet generó cantidades enormes de texto, imágenes y audio. Los modelos necesitan millones (o miles de millones) de ejemplos para aprender patrones complejos.</p>
+        </div>
+        <div class="concept-card">
+            <div class="concept-icon" style="background: rgba(167,139,250,0.1); color: var(--purple);">⚡</div>
+            <h4>Poder computacional</h4>
+            <p>Las GPUs modernas permiten entrenar modelos con miles de millones de parámetros. Entrenar GPT-3, por ejemplo, habría sido imposible con la tecnología de hace 15 años.</p>
+        </div>
+        <div class="concept-card">
+            <div class="concept-icon" style="background: rgba(52,211,153,0.1); color: var(--green);">🏗️</div>
+            <h4>Arquitectura Transformer</h4>
+            <p>El paper "Attention Is All You Need" (2017) introdujo los Transformers, una arquitectura que procesa secuencias en paralelo y captura relaciones a larga distancia. Es la base de GPT, Claude, Gemini y casi todos los modelos modernos.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SLIDE 2: DIFERENCIAS                               -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="slide" id="diferencias">
+    <span class="slide-number">02 / 08</span>
+    <h2 class="section-title">IA Generativa vs. Aprendizaje Automático Tradicional</h2>
+
+    <p class="body-text">
+        Para entender qué hace especial a la IA generativa, necesitamos compararla con lo que ya existía. El <strong style="color: var(--text-primary);">aprendizaje automático (machine learning) tradicional</strong> se enfoca en <em>analizar</em> datos existentes: clasificar, predecir, detectar. La IA generativa, en cambio, <em>crea</em> datos nuevos.
+    </p>
+
+    <table class="comparison-table">
+        <thead>
+            <tr>
+                <th style="width: 25%;">Aspecto</th>
+                <th style="width: 37%;">ML Tradicional</th>
+                <th style="width: 38%;">IA Generativa</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Objetivo</td>
+                <td>Analizar, clasificar, predecir</td>
+                <td>Crear contenido nuevo y original</td>
+            </tr>
+            <tr>
+                <td>Ejemplo</td>
+                <td>"¿Este correo es spam o no?" → <span class="tag" style="color: var(--red); background: rgba(248,113,113,0.1);">Spam</span></td>
+                <td>"Escríbeme un correo profesional" → <span class="tag" style="color: var(--green); background: rgba(52,211,153,0.1);">Texto completo generado</span></td>
+            </tr>
+            <tr>
+                <td>Tipo de salida</td>
+                <td>Etiqueta, número, categoría, probabilidad</td>
+                <td>Texto, imagen, audio, código, video</td>
+            </tr>
+            <tr>
+                <td>Datos de entrenamiento</td>
+                <td>Datasets estructurados y etiquetados</td>
+                <td>Grandes corpus de datos no etiquetados (texto de internet, imágenes, etc.)</td>
+            </tr>
+            <tr>
+                <td>Determinismo</td>
+                <td>Generalmente determinista (misma entrada → misma salida)</td>
+                <td>Probabilístico (misma entrada puede → diferentes salidas)</td>
+            </tr>
+            <tr>
+                <td>Interacción</td>
+                <td>API con inputs estructurados</td>
+                <td>Lenguaje natural (prompts en texto)</td>
+            </tr>
+            <tr>
+                <td>Tamaño del modelo</td>
+                <td>Puede ser pequeño (miles de parámetros)</td>
+                <td>Típicamente muy grande (miles de millones de parámetros)</td>
+            </tr>
+            <tr>
+                <td>Técnicas comunes</td>
+                <td>Regresión, árboles de decisión, SVM, random forests, redes neuronales pequeñas</td>
+                <td>Transformers, GANs, modelos de difusión, autoencoders variacionales</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="callout idea" style="margin-top: 28px;">
+        <span class="callout-label" style="color: var(--purple);">Importante</span>
+        <p>La IA generativa <strong>es</strong> un subcampo del aprendizaje automático: usa redes neuronales profundas que se entrenan con datos. La diferencia fundamental está en el <em>objetivo</em>: en lugar de aprender a clasificar, aprende a generar. Pero las bases matemáticas (gradientes, funciones de pérdida, optimización) son las mismas.</p>
+    </div>
+
+    <h3 class="subsection-title" style="margin-top: 32px;">IA Discriminativa vs. IA Generativa</h3>
+    <p class="body-text">
+        Otra forma de entender la diferencia es usando los términos técnicos:
+    </p>
+
+    <div class="two-col">
+        <div class="highlight-box">
+            <h4 style="color: var(--amber); margin-bottom: 8px;">Modelos Discriminativos</h4>
+            <p style="font-size: 1.02rem; color: var(--text-secondary); line-height: 1.6;">
+                Aprenden la <strong>frontera de decisión</strong> entre categorías. Responden: "Dado este input, ¿a qué categoría pertenece?"
+            </p>
+            <p style="font-size: 0.95rem; color: var(--text-muted); margin-top: 8px;">
+                Ejemplo: Un modelo que ve una foto y dice "esto es un gato" con 97% de confianza.
+            </p>
+        </div>
+        <div class="highlight-box">
+            <h4 style="color: var(--cyan); margin-bottom: 8px;">Modelos Generativos</h4>
+            <p style="font-size: 1.02rem; color: var(--text-secondary); line-height: 1.6;">
+                Aprenden la <strong>distribución completa</strong> de los datos. Responden: "¿Cómo se ve un ejemplo nuevo que siga estos patrones?"
+            </p>
+            <p style="font-size: 0.95rem; color: var(--text-muted); margin-top: 8px;">
+                Ejemplo: Un modelo al que le decís "generá una foto de un gato con sombrero" y crea una imagen nueva que nunca existió.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SLIDE 3: CÓMO FUNCIONA                             -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="slide" id="como-funciona">
+    <span class="slide-number">03 / 08</span>
+    <h2 class="section-title">¿Cómo funciona la IA Generativa?</h2>
+
+    <p class="body-text">
+        Vamos a descomponer el funcionamiento paso a paso, usando como ejemplo un modelo de lenguaje (LLM) como ChatGPT, Claude o Gemini. Los principios básicos aplican también a modelos de imagen, audio y código.
+    </p>
+
+    <h3 class="subsection-title" style="margin-top: 28px;">El ciclo completo: de texto a texto</h3>
+
+    <div class="flow-diagram">
+        <div class="flow-step">
+            <span class="step-label" style="color: var(--cyan);">Paso 1</span>
+            <span class="step-text">Tokenización</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+            <span class="step-label" style="color: var(--purple);">Paso 2</span>
+            <span class="step-text">Embeddings</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+            <span class="step-label" style="color: var(--green);">Paso 3</span>
+            <span class="step-text">Atención</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+            <span class="step-label" style="color: var(--amber);">Paso 4</span>
+            <span class="step-text">Red Neuronal</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+            <span class="step-label" style="color: var(--red);">Paso 5</span>
+            <span class="step-text">Predicción</span>
+        </div>
+    </div>
+
+    <!-- Paso 1 -->
+    <div class="highlight-box" style="margin-top: 32px;">
+        <h3 class="subsection-title" style="color: var(--cyan);">Paso 1: Tokenización</h3>
+        <p class="body-text" style="margin-bottom: 12px;">
+            Los modelos no entienden palabras como las entendemos nosotros. Primero, el texto se divide en <strong style="color: var(--text-primary);">tokens</strong> — unidades más pequeñas que pueden ser palabras completas, fragmentos de palabras o incluso caracteres individuales.
+        </p>
+        <div style="background: var(--bg-deep); border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; margin-top: 8px; border: 1px solid var(--border-subtle);">
+            <span style="color: var(--text-muted);">Input:</span> <span style="color: var(--text-primary);">"La inteligencia artificial es fascinante"</span><br><br>
+            <span style="color: var(--text-muted);">Tokens:</span>
+            <span class="tag" style="color: var(--cyan); background: rgba(56,189,248,0.1);">La</span>
+            <span class="tag" style="color: var(--purple); background: rgba(167,139,250,0.1);">intel</span><span class="tag" style="color: var(--purple); background: rgba(167,139,250,0.1);">igencia</span>
+            <span class="tag" style="color: var(--green); background: rgba(52,211,153,0.1);">artificial</span>
+            <span class="tag" style="color: var(--amber); background: rgba(251,191,36,0.1);">es</span>
+            <span class="tag" style="color: var(--red); background: rgba(248,113,113,0.1);">fascin</span><span class="tag" style="color: var(--red); background: rgba(248,113,113,0.1);">ante</span>
+        </div>
+        <p style="font-size: 0.95rem; color: var(--text-muted); margin-top: 10px;">
+            Notá que "inteligencia" y "fascinante" se dividieron en sub-tokens. Esto permite al modelo manejar cualquier palabra, incluso las que nunca vio antes, combinando fragmentos conocidos.
+        </p>
+    </div>
+
+    <!-- Paso 2 -->
+    <div class="highlight-box">
+        <h3 class="subsection-title" style="color: var(--purple);">Paso 2: Embeddings (Vectorización)</h3>
+        <p class="body-text" style="margin-bottom: 12px;">
+            Cada token se convierte en un <strong style="color: var(--text-primary);">vector numérico</strong> — una lista de números que captura el significado semántico de la palabra. Palabras con significados similares tendrán vectores cercanos en el espacio matemático.
+        </p>
+        <div class="analogy-box" style="margin: 12px 0 0 0;">
+            <div class="analogy-emoji">📍</div>
+            <div>
+                <p><strong>Analogía:</strong> Imaginá un mapa donde cada palabra es un punto. Las palabras "perro" y "gato" estarían cerca (ambos son animales domésticos), mientras que "perro" y "constitución" estarían lejos. Los embeddings son las coordenadas de cada palabra en ese mapa multidimensional.</p>
+            </div>
+        </div>
+        <p style="font-size: 0.95rem; color: var(--text-muted); margin-top: 12px;">
+            En modelos modernos, estos vectores tienen cientos o miles de dimensiones (GPT-4 usa vectores de 12,288 dimensiones). Además, se agrega un <strong>encoding posicional</strong> que le indica al modelo el orden de las palabras en la oración, ya que el Transformer procesa todos los tokens en paralelo.
+        </p>
+    </div>
+
+    <!-- Paso 3 -->
+    <div class="highlight-box">
+        <h3 class="subsection-title" style="color: var(--green);">Paso 3: Mecanismo de Atención (Self-Attention)</h3>
+        <p class="body-text" style="margin-bottom: 12px;">
+            Esta es la innovación clave de los Transformers. El mecanismo de atención permite que <strong style="color: var(--text-primary);">cada palabra "mire" a todas las demás palabras de la secuencia</strong> para entender el contexto.
+        </p>
+        <p class="body-text" style="margin-bottom: 12px;">
+            Considerá estas dos oraciones:
+        </p>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px;">
+            <div style="flex: 1; min-width: 250px; background: var(--bg-deep); padding: 14px 18px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                <p style="font-size: 1.02rem; color: var(--text-secondary); margin: 0;">
+                    "Fui al <strong style="color: var(--green);">banco</strong> a depositar dinero."
+                </p>
+                <p style="font-size: 1.02rem; color: var(--text-muted); margin: 6px 0 0 0;">→ banco = institución financiera</p>
+            </div>
+            <div style="flex: 1; min-width: 250px; background: var(--bg-deep); padding: 14px 18px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                <p style="font-size: 1.02rem; color: var(--text-secondary); margin: 0;">
+                    "Me senté en el <strong style="color: var(--amber);">banco</strong> del parque."
+                </p>
+                <p style="font-size: 1.02rem; color: var(--text-muted); margin: 6px 0 0 0;">→ banco = asiento</p>
+            </div>
+        </div>
+        <p class="body-text">
+            La misma palabra "banco" tiene significados completamente diferentes. El mecanismo de atención resuelve esto: analiza las relaciones entre <em>todas</em> las palabras de la oración y ajusta la representación de cada una según su contexto. La palabra "depositar" y "dinero" le indican al modelo que "banco" se refiere a la institución financiera, mientras que "senté" y "parque" le indican el otro significado.
+        </p>
+
+        <div class="callout info" style="margin-top: 16px;">
+            <span class="callout-label" style="color: var(--cyan);">Técnicamente</span>
+            <p>Cada token se transforma en tres vectores: <strong>Query (Q)</strong>, <strong>Key (K)</strong> y <strong>Value (V)</strong>. Es como un motor de búsqueda interno: el Query es "¿qué estoy buscando?", el Key es "¿qué tengo para ofrecer?" y el Value es "¿qué información doy cuando hay match?". Las puntuaciones de atención determinan cuánto debe "prestar atención" cada token a los demás.</p>
+        </div>
+    </div>
+
+    <!-- Paso 4 -->
+    <div class="highlight-box">
+        <h3 class="subsection-title" style="color: var(--amber);">Paso 4: Red Neuronal Feed-Forward</h3>
+        <p class="body-text">
+            Después de la atención, cada token pasa por una <strong style="color: var(--text-primary);">red neuronal</strong> que refina su representación. Podés pensar en esto como un "procesamiento adicional" donde el modelo aplica transformaciones matemáticas no lineales para extraer patrones más complejos. Este proceso (atención + red neuronal) se repite muchas veces — los modelos modernos tienen docenas o incluso cientos de estas capas apiladas.
+        </p>
+    </div>
+
+    <!-- Paso 5 -->
+    <div class="highlight-box">
+        <h3 class="subsection-title" style="color: var(--red);">Paso 5: Predicción del siguiente token</h3>
+        <p class="body-text" style="margin-bottom: 12px;">
+            Finalmente, el modelo predice <strong style="color: var(--text-primary);">cuál es la palabra más probable que viene después</strong>. Esto se hace calculando una probabilidad para cada token posible en su vocabulario (que puede tener más de 100,000 tokens).
+        </p>
+        <div style="background: var(--bg-deep); border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; border: 1px solid var(--border-subtle);">
+            <span style="color: var(--text-muted);">Prompt:</span> <span style="color: var(--text-primary);">"El cielo es de color"</span><br><br>
+            <span style="color: var(--text-muted);">Probabilidades:</span><br>
+            <span style="color: var(--cyan);">azul</span> <span style="color: var(--text-muted);">→ 72%</span> <span style="display: inline-block; width: 144px; height: 8px; background: linear-gradient(90deg, var(--cyan), rgba(56,189,248,0.3)); border-radius: 4px; vertical-align: middle; margin-left: 8px;"></span><br>
+            <span style="color: var(--purple);">celeste</span> <span style="color: var(--text-muted);">→ 12%</span> <span style="display: inline-block; width: 24px; height: 8px; background: linear-gradient(90deg, var(--purple), rgba(167,139,250,0.3)); border-radius: 4px; vertical-align: middle; margin-left: 8px;"></span><br>
+            <span style="color: var(--amber);">rojo</span> <span style="color: var(--text-muted);">→ 5%</span> <span style="display: inline-block; width: 10px; height: 8px; background: linear-gradient(90deg, var(--amber), rgba(251,191,36,0.3)); border-radius: 4px; vertical-align: middle; margin-left: 8px;"></span><br>
+            <span style="color: var(--text-muted);">...</span>
+        </div>
+        <p style="font-size: 0.95rem; color: var(--text-muted); margin-top: 12px;">
+            El modelo selecciona un token (no siempre el más probable — hay un parámetro llamado <strong style="color: var(--text-secondary);">temperatura</strong> que controla cuánta aleatoriedad se agrega), lo emite, y luego repite todo el proceso con el nuevo token incluido. Así genera texto palabra por palabra, de forma autoregresiva.
+        </p>
+    </div>
+
+    <div class="callout warning" style="margin-top: 24px;">
+        <span class="callout-label" style="color: var(--amber);">Parámetro clave: Temperatura</span>
+        <p><strong>Temperatura baja (ej: 0.1):</strong> El modelo elige casi siempre la palabra más probable → texto más predecible y "seguro".<br>
+        <strong>Temperatura alta (ej: 1.5):</strong> El modelo da más chance a palabras menos probables → texto más creativo pero también más arriesgado (puede volverse incoherente).</p>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SLIDE 4: ARQUITECTURAS                             -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="slide" id="arquitecturas">
+    <span class="slide-number">04 / 08</span>
+    <h2 class="section-title">Arquitecturas fundamentales</h2>
+
+    <p class="body-text">
+        No todos los modelos generativos funcionan igual. A lo largo de la historia de la IA generativa, han surgido distintas arquitecturas, cada una con fortalezas específicas. Las tres más importantes son:
+    </p>
+
+    <div class="concept-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); margin-top: 24px;">
+        <!-- Transformers -->
+        <div class="concept-card" style="border-color: rgba(56,189,248,0.15);">
+            <div class="concept-icon" style="background: rgba(56,189,248,0.1); color: var(--cyan);">🔄</div>
+            <h4 style="color: var(--cyan);">Transformers</h4>
+            <span class="tag" style="color: var(--cyan); background: rgba(56,189,248,0.1); margin-bottom: 8px; display: inline-block;">Dominante actual</span>
+            <p>
+                Introducidos en 2017 por investigadores de Google con el paper "Attention Is All You Need". Procesan secuencias completas en paralelo gracias al mecanismo de auto-atención.
+            </p>
+            <p style="margin-top: 8px;">
+                <strong style="color: var(--text-primary);">Cómo funciona:</strong> Cada elemento de la secuencia "atiende" a todos los demás, capturando relaciones de largo alcance. Esto resuelve el problema de las arquitecturas anteriores (RNNs) que perdían contexto en secuencias largas.
+            </p>
+            <p style="margin-top: 8px;">
+                <strong style="color: var(--text-primary);">Se usa en:</strong> GPT (OpenAI), Claude (Anthropic), Gemini (Google), LLaMA (Meta), Mistral.
+            </p>
+            <p style="margin-top: 8px;">
+                <strong style="color: var(--text-primary);">Mejor para:</strong> Texto, código, razonamiento, multimodal.
+            </p>
+        </div>
+
+        <!-- GANs -->
+        <div class="concept-card" style="border-color: rgba(167,139,250,0.15);">
+            <div class="concept-icon" style="background: rgba(167,139,250,0.1); color: var(--purple);">⚔️</div>
+            <h4 style="color: var(--purple);">GANs (Redes Adversarias Generativas)</h4>
+            <span class="tag" style="color: var(--purple); background: rgba(167,139,250,0.1); margin-bottom: 8px; display: inline-block;">Pioneras en imágenes</span>
+            <p>
+                Introducidas por Ian Goodfellow en 2014. Consisten en <strong>dos redes</strong> que compiten entre sí: un Generador (crea contenido) y un Discriminador (evalúa si es real o falso).
+            </p>
+            <p style="margin-top: 8px;">
+                <strong style="color: var(--text-primary);">Cómo funciona:</strong> El generador intenta crear imágenes tan realistas que engañen al discriminador. El discriminador mejora detectando falsificaciones. Ambos mejoran en un ciclo competitivo, como un falsificador vs. un detective.
+            </p>
+            <p style="margin-top: 8px;">
+                <strong style="color: var(--text-primary);">Se usó en:</strong> StyleGAN (caras realistas), CycleGAN, Pix2Pix.
+            </p>
+            <p style="margin-top: 8px;">
+                <strong style="color: var(--text-primary);">Mejor para:</strong> Generación de imágenes fotorrealistas, transferencia de estilo.
+            </p>
+        </div>
+
+        <!-- Diffusion -->
+        <div class="concept-card" style="border-color: rgba(52,211,153,0.15);">
+            <div class="concept-icon" style="background: rgba(52,211,153,0.1); color: var(--green);">🌫️</div>
+            <h4 style="color: var(--green);">Modelos de Difusión</h4>
+            <span class="tag" style="color: var(--green); background: rgba(52,211,153,0.1); margin-bottom: 8px; display: inline-block;">Estado del arte en imágenes</span>
+            <p>
+                Son la arquitectura detrás de DALL-E 3, Midjourney y Stable Diffusion. Funcionan de una manera contra-intuitiva pero brillante.
+            </p>
+            <p style="margin-top: 8px;">
+                <strong style="color: var(--text-primary);">Cómo funciona:</strong> Durante el entrenamiento, se agrega <em>ruido</em> gradualmente a una imagen hasta destruirla por completo. El modelo aprende a <strong>revertir</strong> ese proceso: dado ruido puro, reconstruye una imagen coherente, paso a paso, removiendo el ruido. Es como aprender a restaurar una pintura viéndola deteriorarse miles de veces.
+            </p>
+            <p style="margin-top: 8px;">
+                <strong style="color: var(--text-primary);">Se usa en:</strong> DALL-E 3, Midjourney, Stable Diffusion, Adobe Firefly.
+            </p>
+            <p style="margin-top: 8px;">
+                <strong style="color: var(--text-primary);">Mejor para:</strong> Generación de imágenes a partir de texto, edición de imágenes, video.
+            </p>
+        </div>
+    </div>
+
+    <h3 class="subsection-title" style="margin-top: 36px;">Breve historia de la IA Generativa</h3>
+    <div class="timeline">
+        <div class="timeline-item">
+            <div class="year">2014</div>
+            <h4>Nacen las GANs</h4>
+            <p>Ian Goodfellow publica el paper fundacional. La idea de dos redes compitiendo revoluciona la generación de imágenes.</p>
+        </div>
+        <div class="timeline-item" style="--dot-color: var(--purple);">
+            <div class="year" style="color: var(--purple);">2017</div>
+            <h4>"Attention Is All You Need"</h4>
+            <p>Investigadores de Google publican el paper que introduce la arquitectura Transformer. Es probablemente el paper más influyente en la historia reciente de la IA.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="year" style="color: var(--green);">2018–2020</div>
+            <h4>GPT-1, GPT-2, GPT-3</h4>
+            <p>OpenAI lanza versiones sucesivas de GPT, cada una más grande. GPT-3 (175 mil millones de parámetros) demuestra que escalar el modelo mejora dramáticamente la calidad.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="year" style="color: var(--amber);">2022</div>
+            <h4>ChatGPT y la explosión pública</h4>
+            <p>ChatGPT (basado en GPT-3.5) alcanza 100 millones de usuarios en 2 meses, convirtiéndose en la app de más rápido crecimiento en la historia. Simultáneamente, Stable Diffusion y DALL-E 2 democratizan la generación de imágenes.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="year" style="color: var(--pink);">2023–2024</div>
+            <h4>Era multimodal y competencia</h4>
+            <p>GPT-4 acepta texto e imágenes. Claude (Anthropic), Gemini (Google), LLaMA (Meta) y Mistral compiten con modelos cada vez más capaces. Surgen modelos de video (Sora) y voz (ElevenLabs).</p>
+        </div>
+        <div class="timeline-item">
+            <div class="year" style="color: var(--red);">2025–2026</div>
+            <h4>Agentes autónomos y especialización</h4>
+            <p>Los modelos evolucionan de "asistentes conversacionales" a "agentes" capaces de ejecutar tareas complejas de múltiples pasos. Se desarrollan modelos especializados por industria y modelos más pequeños pero eficientes (SLMs).</p>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SLIDE 5: TIPOS DE DATOS                            -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="slide" id="tipos-datos">
+    <span class="slide-number">05 / 08</span>
+    <h2 class="section-title">Tipos de datos en IA Generativa</h2>
+
+    <p class="body-text">
+        La IA generativa no se limita al texto. Hoy, los modelos pueden procesar y generar múltiples tipos de datos, y los modelos más avanzados son <strong style="color: var(--text-primary);">multimodales</strong>: aceptan y producen diferentes formatos simultáneamente.
+    </p>
+
+    <div class="concept-grid" style="grid-template-columns: repeat(3, 1fr); margin-top: 24px;">
+        <div class="concept-card">
+            <div class="concept-icon" style="background: rgba(56,189,248,0.1); color: var(--cyan);">📝</div>
+            <h4>Texto</h4>
+            <p>
+                <strong style="color: var(--text-primary);">Genera:</strong> Artículos, emails, poesía, resúmenes, traducciones, guiones, diálogos.
+            </p>
+            <p style="margin-top: 6px;">
+                <strong style="color: var(--text-primary);">Modelos:</strong> GPT-4o, Claude, Gemini, LLaMA 3, Mistral.
+            </p>
+            <p style="margin-top: 6px;">
+                <strong style="color: var(--text-primary);">Cómo:</strong> Predice el siguiente token basándose en toda la secuencia anterior (autoregresivo).
+            </p>
+        </div>
+        <div class="concept-card">
+            <div class="concept-icon" style="background: rgba(167,139,250,0.1); color: var(--purple);">🖼️</div>
+            <h4>Imágenes</h4>
+            <p>
+                <strong style="color: var(--text-primary);">Genera:</strong> Ilustraciones, fotografías realistas, arte conceptual, logos, diagramas.
+            </p>
+            <p style="margin-top: 6px;">
+                <strong style="color: var(--text-primary);">Modelos:</strong> DALL-E 3, Midjourney, Stable Diffusion, Adobe Firefly.
+            </p>
+            <p style="margin-top: 6px;">
+                <strong style="color: var(--text-primary);">Cómo:</strong> Modelos de difusión que eliminan ruido progresivamente, guiados por un prompt textual.
+            </p>
+        </div>
+        <div class="concept-card">
+            <div class="concept-icon" style="background: rgba(52,211,153,0.1); color: var(--green);">💻</div>
+            <h4>Código</h4>
+            <p>
+                <strong style="color: var(--text-primary);">Genera:</strong> Funciones, clases, tests, scripts, aplicaciones completas, debugging.
+            </p>
+            <p style="margin-top: 6px;">
+                <strong style="color: var(--text-primary);">Modelos:</strong> GitHub Copilot, Claude Code, Cursor, Codex.
+            </p>
+            <p style="margin-top: 6px;">
+                <strong style="color: var(--text-primary);">Cómo:</strong> LLMs entrenados con repositorios de código abierto. Tratan el código como un lenguaje más.
+            </p>
+        </div>
+        <div class="concept-card">
+            <div class="concept-icon" style="background: rgba(251,191,36,0.1); color: var(--amber);">🔊</div>
+            <h4>Audio / Voz</h4>
+            <p>
+                <strong style="color: var(--text-primary);">Genera:</strong> Voz sintética, música, efectos de sonido, doblaje, podcasts.
+            </p>
+            <p style="margin-top: 6px;">
+                <strong style="color: var(--text-primary);">Modelos:</strong> ElevenLabs, OpenAI Voice Engine, Suno, Udio.
+            </p>
+            <p style="margin-top: 6px;">
+                <strong style="color: var(--text-primary);">Cómo:</strong> Convierte texto (o audio de referencia) en espectrogramas, que luego se transforman en ondas de audio.
+            </p>
+        </div>
+        <div class="concept-card">
+            <div class="concept-icon" style="background: rgba(248,113,113,0.1); color: var(--red);">🎬</div>
+            <h4>Video</h4>
+            <p>
+                <strong style="color: var(--text-primary);">Genera:</strong> Clips cortos, animaciones, efectos visuales, video a partir de texto o imagen.
+            </p>
+            <p style="margin-top: 6px;">
+                <strong style="color: var(--text-primary);">Modelos:</strong> Sora (OpenAI), Runway, Pika Labs, Kling.
+            </p>
+            <p style="margin-top: 6px;">
+                <strong style="color: var(--text-primary);">Cómo:</strong> Extensiones de modelos de difusión que generan secuencias de fotogramas temporalmente coherentes.
+            </p>
+        </div>
+        <div class="concept-card">
+            <div class="concept-icon" style="background: rgba(244,114,182,0.1); color: var(--pink);">🧬</div>
+            <h4>Datos Científicos</h4>
+            <p>
+                <strong style="color: var(--text-primary);">Genera:</strong> Estructuras moleculares, proteínas, datos sintéticos, hipótesis experimentales.
+            </p>
+            <p style="margin-top: 6px;">
+                <strong style="color: var(--text-primary);">Modelos:</strong> AlphaFold, MegaMolBART, modelos de diseño de materiales.
+            </p>
+            <p style="margin-top: 6px;">
+                <strong style="color: var(--text-primary);">Cómo:</strong> Transformers y modelos de difusión adaptados a dominios específicos como biología y química.
+            </p>
+        </div>
+    </div>
+
+    <div class="callout idea" style="margin-top: 28px;">
+        <span class="callout-label" style="color: var(--purple);">Multimodalidad: la tendencia actual</span>
+        <p>Los modelos más recientes (GPT-4o, Claude, Gemini) son <strong>multimodales</strong>: pueden recibir texto + imágenes como input y generar texto como output. Algunos, como GPT-4o, incluso integran audio en tiempo real. Esta convergencia de modalidades es una de las tendencias más importantes de la IA generativa actual.</p>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SLIDE 6: MODELOS CLAVE                             -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="slide" id="modelos">
+    <span class="slide-number">06 / 08</span>
+    <h2 class="section-title">Modelos clave que debés conocer</h2>
+
+    <p class="body-text">
+        El ecosistema de IA generativa está dominado por algunos actores principales. Conocer estos modelos te permitirá elegir la herramienta correcta para cada tarea.
+    </p>
+
+    <table class="comparison-table" style="margin-top: 24px;">
+        <thead>
+            <tr>
+                <th>Modelo / Familia</th>
+                <th>Empresa</th>
+                <th>Tipo</th>
+                <th>Fortaleza principal</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="color: var(--cyan);">GPT-4o / GPT-4</td>
+                <td>OpenAI</td>
+                <td>LLM multimodal</td>
+                <td>Versatilidad general, razonamiento, código</td>
+            </tr>
+            <tr>
+                <td style="color: var(--purple);">Claude (Opus, Sonnet, Haiku)</td>
+                <td>Anthropic</td>
+                <td>LLM multimodal</td>
+                <td>Análisis extenso, documentos largos, seguridad</td>
+            </tr>
+            <tr>
+                <td style="color: var(--green);">Gemini (Ultra, Pro, Flash)</td>
+                <td>Google</td>
+                <td>LLM multimodal</td>
+                <td>Integración con Google, contexto muy largo</td>
+            </tr>
+            <tr>
+                <td style="color: var(--amber);">LLaMA 3</td>
+                <td>Meta</td>
+                <td>LLM open-source</td>
+                <td>Código abierto, personalizable, community</td>
+            </tr>
+            <tr>
+                <td style="color: var(--red);">DALL-E 3</td>
+                <td>OpenAI</td>
+                <td>Generación de imágenes</td>
+                <td>Seguimiento preciso de prompts textuales</td>
+            </tr>
+            <tr>
+                <td style="color: var(--pink);">Midjourney</td>
+                <td>Midjourney Inc.</td>
+                <td>Generación de imágenes</td>
+                <td>Calidad artística y estética excepcional</td>
+            </tr>
+            <tr>
+                <td>Stable Diffusion</td>
+                <td>Stability AI</td>
+                <td>Generación de imágenes</td>
+                <td>Open-source, ejecutable localmente</td>
+            </tr>
+            <tr>
+                <td>GitHub Copilot</td>
+                <td>GitHub / Microsoft</td>
+                <td>Asistente de código</td>
+                <td>Autocompletado en IDEs, generación de código</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="callout info" style="margin-top: 24px;">
+        <span class="callout-label" style="color: var(--cyan);">Nota sobre el proyecto del curso</span>
+        <p>Para el proyecto de este curso, podrás elegir <strong>cualquier</strong> modelo de IA generativa. La clave no es cuál modelo uses, sino <strong>cómo diseñes tus prompts</strong> para obtener resultados creativos y de calidad. Exploraremos las técnicas de Prompt Engineering a profundidad en la Semana 2.</p>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SLIDE 7: LIMITACIONES                              -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="slide" id="limitaciones">
+    <span class="slide-number">07 / 08</span>
+    <h2 class="section-title">Limitaciones y riesgos actuales</h2>
+
+    <p class="body-text">
+        La IA generativa es poderosa, pero no es perfecta. Entender sus limitaciones es tan importante como entender sus capacidades. Esto será fundamental para la Semana 4, donde profundizaremos en ética.
+    </p>
+
+    <div class="concept-grid" style="grid-template-columns: repeat(3, 1fr); margin-top: 24px;">
+        <div class="concept-card" style="border-color: rgba(248,113,113,0.15);">
+            <h4 style="color: var(--red);">🎭 Alucinaciones</h4>
+            <p>
+                Los modelos pueden generar información que <strong>suena convincente pero es completamente falsa</strong>. Un LLM puede inventar citas, datos estadísticos, nombres de papers o eventos históricos con total confianza. Esto sucede porque el modelo optimiza para que el texto suene plausible, no para que sea verdadero.
+            </p>
+            <p style="margin-top: 8px; color: var(--text-muted); font-size: 0.95rem;">
+                <strong style="color: var(--text-secondary);">Mitigación:</strong> Siempre verificar claims factuales. Usar modelos con capacidad de búsqueda web. Pedir fuentes al modelo y verificarlas.
+            </p>
+        </div>
+        <div class="concept-card" style="border-color: rgba(251,191,36,0.15);">
+            <h4 style="color: var(--amber);">⚖️ Sesgos heredados</h4>
+            <p>
+                Los modelos aprenden de datos creados por humanos, y esos datos contienen sesgos de género, raza, cultura y clase social. Si los datos de entrenamiento tienen subrepresentación de ciertos grupos, el modelo reproducirá y potencialmente amplificará esas inequidades.
+            </p>
+            <p style="margin-top: 8px; color: var(--text-muted); font-size: 0.95rem;">
+                <strong style="color: var(--text-secondary);">Mitigación:</strong> RLHF (aprendizaje por retroalimentación humana), datasets más diversos, auditorías de sesgo, red-teaming.
+            </p>
+        </div>
+        <div class="concept-card" style="border-color: rgba(167,139,250,0.15);">
+            <h4 style="color: var(--purple);">📋 Propiedad intelectual</h4>
+            <p>
+                ¿De quién es el contenido generado por IA? ¿Qué pasa si el modelo reproduce fragmentos de sus datos de entrenamiento? Estas preguntas legales siguen sin respuestas claras en muchas jurisdicciones. Hay demandas activas de artistas y autores contra empresas de IA.
+            </p>
+            <p style="margin-top: 8px; color: var(--text-muted); font-size: 0.95rem;">
+                <strong style="color: var(--text-secondary);">Contexto:</strong> Este es uno de los debates legales más importantes del momento, con implicaciones para toda la industria creativa.
+            </p>
+        </div>
+        <div class="concept-card" style="border-color: rgba(56,189,248,0.15);">
+            <h4 style="color: var(--cyan);">🌍 Costo ambiental</h4>
+            <p>
+                Entrenar modelos grandes requiere cantidades enormes de energía. Se ha estimado que entrenar GPT-3 consumió el equivalente a 500 toneladas métricas de CO₂. Los centros de datos también consumen cantidades significativas de agua para refrigeración.
+            </p>
+            <p style="margin-top: 8px; color: var(--text-muted); font-size: 0.95rem;">
+                <strong style="color: var(--text-secondary);">Tendencia:</strong> Se están desarrollando modelos más eficientes (SLMs) y técnicas de entrenamiento más sostenibles.
+            </p>
+        </div>
+        <div class="concept-card" style="border-color: rgba(52,211,153,0.15);">
+            <h4 style="color: var(--green);">🔒 No tiene "conocimiento" real</h4>
+            <p>
+                Los LLMs no "entienden" el mundo como los humanos. Reconocen patrones estadísticos en texto. Esto significa que pueden fallar en razonamiento lógico simple, matemáticas básicas (aunque mejoran rápidamente) y en situaciones que requieren conocimiento del mundo real.
+            </p>
+            <p style="margin-top: 8px; color: var(--text-muted); font-size: 0.95rem;">
+                <strong style="color: var(--text-secondary);">Debate:</strong> ¿Los modelos "comprenden" o simplemente "predicen"? Es una de las preguntas filosóficas más debatidas en IA.
+            </p>
+        </div>
+        <div class="concept-card" style="border-color: rgba(244,114,182,0.15);">
+            <h4 style="color: var(--pink);">📰 Desinformación</h4>
+            <p>
+                La capacidad de generar texto convincente, imágenes realistas, audio clonado y video falso (deepfakes) hace que la IA generativa sea una herramienta potencial para crear desinformación a escala. Esto plantea riesgos serios para la democracia y la confianza pública.
+            </p>
+            <p style="margin-top: 8px; color: var(--text-muted); font-size: 0.95rem;">
+                <strong style="color: var(--text-secondary);">Defensa:</strong> Marcas de agua digitales, herramientas de detección de IA, legislación emergente.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SLIDE 8: RESUMEN                                   -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="slide" id="resumen">
+    <span class="slide-number">08 / 08</span>
+    <h2 class="section-title">Resumen de la sesión</h2>
+
+    <p class="body-text" style="margin-bottom: 28px;">
+        Repasemos los conceptos clave de esta primera sesión:
+    </p>
+
+    <div style="display: flex; flex-direction: column; gap: 12px; max-width: 1280px;">
+        <div class="highlight-box" style="display: flex; gap: 16px; align-items: flex-start;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.98rem; font-weight: 700; color: var(--cyan); flex-shrink: 0;">01</span>
+            <p style="font-size: 1.25rem; color: var(--text-secondary); line-height: 1.6; margin: 0;">
+                <strong style="color: var(--text-primary);">La IA generativa crea contenido nuevo</strong> — no clasifica ni predice sobre datos existentes, sino que genera texto, imágenes, código, audio y video originales aprendiendo patrones estadísticos de grandes datasets.
+            </p>
+        </div>
+        <div class="highlight-box" style="display: flex; gap: 16px; align-items: flex-start;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.98rem; font-weight: 700; color: var(--purple); flex-shrink: 0;">02</span>
+            <p style="font-size: 1.25rem; color: var(--text-secondary); line-height: 1.6; margin: 0;">
+                <strong style="color: var(--text-primary);">Los Transformers son la arquitectura dominante</strong> — su mecanismo de auto-atención permite procesar secuencias en paralelo y capturar contexto a larga distancia, resolviendo las limitaciones de las RNNs.
+            </p>
+        </div>
+        <div class="highlight-box" style="display: flex; gap: 16px; align-items: flex-start;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.98rem; font-weight: 700; color: var(--green); flex-shrink: 0;">03</span>
+            <p style="font-size: 1.25rem; color: var(--text-secondary); line-height: 1.6; margin: 0;">
+                <strong style="color: var(--text-primary);">Los LLMs generan texto token por token</strong> — tokenización → embeddings → atención → red neuronal → predicción probabilística del siguiente token, en un ciclo autoregresivo.
+            </p>
+        </div>
+        <div class="highlight-box" style="display: flex; gap: 16px; align-items: flex-start;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.98rem; font-weight: 700; color: var(--amber); flex-shrink: 0;">04</span>
+            <p style="font-size: 1.25rem; color: var(--text-secondary); line-height: 1.6; margin: 0;">
+                <strong style="color: var(--text-primary);">Existen múltiples arquitecturas y modelos</strong> — Transformers para texto/código, modelos de difusión para imágenes, GANs para generación adversarial. Los modelos modernos tienden a ser multimodales.
+            </p>
+        </div>
+        <div class="highlight-box" style="display: flex; gap: 16px; align-items: flex-start;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.98rem; font-weight: 700; color: var(--red); flex-shrink: 0;">05</span>
+            <p style="font-size: 1.25rem; color: var(--text-secondary); line-height: 1.6; margin: 0;">
+                <strong style="color: var(--text-primary);">Las limitaciones son reales</strong> — alucinaciones, sesgos, propiedad intelectual, costo ambiental y potencial de desinformación. Usar IA generativa responsablemente requiere conocer estas limitaciones.
+            </p>
+        </div>
+    </div>
+
+    <div class="callout info" style="margin-top: 32px;">
+        <span class="callout-label" style="color: var(--cyan);">Próxima sesión · Semana 2</span>
+        <p><strong>Principios de Prompt Engineering</strong> — Aprenderemos a diseñar prompts efectivos, las técnicas clave (few-shot, chain-of-thought, instrucciones claras) y los errores comunes que debemos evitar. Es la habilidad más práctica y directamente aplicable de todo el curso.</p>
+    </div>
+
+    <div style="margin-top: 32px; padding: 24px 28px; background: linear-gradient(160deg, var(--bg-card), var(--bg-card-alt)); border-radius: 14px; border: 1px solid rgba(52,211,153,0.12);">
+        <h3 class="subsection-title" style="color: var(--green);">Recursos para profundizar</h3>
+        <div style="font-size: 0.98rem; color: var(--text-secondary); line-height: 1.8;">
+            <div style="margin-bottom: 6px; padding-left: 12px; border-left: 2px solid rgba(56,189,248,0.2);">
+                <strong style="color: var(--text-primary);">Lectura obligatoria:</strong> Capítulos 1-3 de Gamboa et al. (2024). <em>ChatGPT: obtén el máximo rendimiento a la IA Generativa.</em>
+            </div>
+            <div style="margin-bottom: 6px; padding-left: 12px; border-left: 2px solid rgba(167,139,250,0.2);">
+                <strong style="color: var(--text-primary);">Paper fundacional:</strong> Vaswani et al. (2017). "Attention Is All You Need" — el paper que introdujo los Transformers.
+            </div>
+            <div style="margin-bottom: 6px; padding-left: 12px; border-left: 2px solid rgba(52,211,153,0.2);">
+                <strong style="color: var(--text-primary);">Visual interactivo:</strong> <em>The Illustrated Transformer</em> de Jay Alammar — la mejor explicación visual de cómo funcionan los Transformers.
+            </div>
+            <div style="padding-left: 12px; border-left: 2px solid rgba(251,191,36,0.2);">
+                <strong style="color: var(--text-primary);">Interactivo:</strong> <em>Transformer Explainer</em> del Georgia Tech Polo Club — visualización interactiva para experimentar con la arquitectura.
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer style="text-align: center; padding: 40px; border-top: 1px solid var(--border-subtle);">
+    <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.84rem; color: var(--text-muted); letter-spacing: 0.05em;">
+        SINT-648 · Fundamentos de IA Generativa y Prompt Engineering · Universidad CENFOTEC · 2026
+    </p>
+</footer>
+
+<script>
+function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+        document.exitFullscreen().catch(() => {});
+    }
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'F2') {
+        e.preventDefault();
+        toggleFullscreen();
+    }
+});
+
+document.addEventListener('fullscreenchange', () => {
+    const btn = document.getElementById('fsBtn');
+    if (document.fullscreenElement) {
+        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg> Salir`;
+    } else {
+        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg> Pantalla completa`;
+    }
+});
+</script>
+
+</body>
+</html>
