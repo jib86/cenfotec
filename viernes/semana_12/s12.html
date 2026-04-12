@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Problemas de Satisfacción de Restricciones · Clase 10</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lato:wght@300;400;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-deep: #020617;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --c-cyan: #22d3ee;
+            --c-purple: #d8b4fe;
+            --c-pink: #f472b6;
+            --c-green: #4ade80;
+            --c-gold: #facc15;
+            --c-orange: #fb923c;
+            --glass-bg: rgba(15, 23, 42, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.03);
+            --glass-blur: blur(20px);
+            --radius-lg: 24px;
+            --radius-md: 16px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg-deep);
+            background-image: radial-gradient(circle at 50% 120%, #1e1b4b, #020617);
+            color: var(--text-main);
+            height: 100vh; overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+        body::before {
+            content: ''; position: absolute; top: -20%; left: -10%;
+            width: 50vw; height: 50vw;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.08), transparent 60%);
+            border-radius: 50%; pointer-events: none; z-index: -1;
+            animation: float 20s ease-in-out infinite;
+        }
+        body::after {
+            content: ''; position: absolute; bottom: -20%; right: -10%;
+            width: 50vw; height: 50vw;
+            background: radial-gradient(circle, rgba(192, 132, 252, 0.08), transparent 60%);
+            border-radius: 50%; pointer-events: none; z-index: -1;
+            animation: float 25s ease-in-out infinite reverse;
+        }
+        @keyframes float { 0%,100%{transform:translate(0,0)} 50%{transform:translate(20px,40px)} }
+        .progress-bar {
+            position: fixed; top: 0; left: 0; height: 3px;
+            background: linear-gradient(90deg, var(--c-cyan), var(--c-purple));
+            width: 0%; transition: width 0.3s; z-index: 200;
+            box-shadow: 0 0 15px var(--c-cyan);
+        }
+        .slide-counter {
+            position: fixed; bottom: 25px; right: 35px;
+            background: rgba(15, 23, 42, 0.8);
+            padding: 8px 16px; border-radius: 99px;
+            font-size: 0.85rem; color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px); z-index: 1000;
+        }
+        .slides-container { position: relative; width: 100%; height: 100%; overflow: hidden; }
+        .slide {
+            position: absolute; inset: 0;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; visibility: hidden;
+            transform: scale(0.96) translateY(15px);
+            transition: opacity 0.6s cubic-bezier(0.2,0.8,0.2,1), transform 0.6s cubic-bezier(0.2,0.8,0.2,1);
+            padding: 40px; pointer-events: none;
+        }
+        .slide.active { opacity:1; visibility:visible; transform:scale(1) translateY(0); pointer-events:all; z-index:10; }
+        .card {
+            background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-top: 1px solid var(--glass-highlight);
+            border-radius: var(--radius-lg);
+            padding: 2rem 2.6rem; width: 100%; max-width: 1150px; max-height: 92vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column; justify-content: flex-start; position: relative;
+        }
+        h1 {
+            font-family: 'Lato', sans-serif; font-weight: 900;
+            font-size: clamp(2.5rem,4.5vw,4.2rem);
+            line-height: 1.1; margin-bottom: 1rem;
+            background: linear-gradient(135deg, #fff 20%, #94a3b8 100%);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent; letter-spacing: -0.03em;
+        }
+        h2 {
+            font-family: 'Lato', sans-serif; font-weight: 800;
+            font-size: clamp(1.6rem,2.5vw,2.4rem); margin-bottom: 1rem;
+            background: linear-gradient(90deg, #fff, var(--c-cyan));
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent; letter-spacing: -0.02em;
+            display: flex; align-items: center; gap: 12px;
+        }
+        h3 { font-size: 1.1rem; color: #fff; margin-bottom: 0.5rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        p, li { font-size: 1rem; line-height: 1.6; color: var(--text-muted); margin-bottom: 0.5rem; }
+        strong { color: var(--text-main); font-weight: 600; }
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px,1fr)); gap: 1.1rem; align-items: stretch; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap: 1.1rem; align-items: stretch; }
+        .concept-box {
+            background: rgba(255,255,255,0.02); padding: 1.2rem;
+            border-radius: var(--radius-md); border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.3s ease; display: flex; flex-direction: column;
+        }
+        .concept-box:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); transform: translateY(-2px); }
+        .example-box { border-left: 4px solid var(--c-cyan); background: rgba(34,211,238,0.05); padding: 0.9rem 1.2rem; border-radius: 0 16px 16px 0; margin: 0.6rem 0; }
+        .warning-box { border-left: 4px solid var(--c-gold); background: rgba(250,204,21,0.05); padding: 0.9rem 1.2rem; border-radius: 0 16px 16px 0; margin: 0.6rem 0; }
+        .pill {
+            display: inline-flex; align-items: center; gap: 8px;
+            font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 2px; padding: 4px 13px; border-radius: 30px;
+            margin-bottom: 1rem; align-self: flex-start; border: 1px solid;
+        }
+        .pill-gold  { background: rgba(250,204,21,0.1); border-color: var(--c-gold); color: var(--c-gold); }
+        .pill-cyan  { background: rgba(34,211,238,0.1); border-color: var(--c-cyan); color: var(--c-cyan); }
+        .pill-pink  { background: rgba(244,114,182,0.1); border-color: var(--c-pink); color: var(--c-pink); }
+        .pill-purple{ background: rgba(216,180,254,0.1); border-color: var(--c-purple); color: var(--c-purple); }
+        .pill-green { background: rgba(74,222,128,0.1); border-color: var(--c-green); color: var(--c-green); }
+        .pill-orange{ background: rgba(251,146,60,0.1); border-color: var(--c-orange); color: var(--c-orange); }
+        .step-num {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 30px; height: 30px; min-width: 30px;
+            background: var(--c-cyan); color: #000;
+            border-radius: 50%; font-weight: 900;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
+        }
+        code {
+            font-family: 'JetBrains Mono', monospace; color: var(--c-gold);
+            background: rgba(0,0,0,0.4); padding: 2px 7px; border-radius: 6px;
+            font-size: 0.88em; border: 1px solid rgba(250,204,21,0.2);
+        }
+        .code-block {
+            background: rgba(0,0,0,0.5); border: 1px solid rgba(250,204,21,0.1);
+            border-radius: 14px; padding: 0.9rem 1.2rem;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+            line-height: 1.8; overflow-x: auto; margin: 0.5rem 0;
+        }
+        .code-block .kw { color: #facc15; font-weight: 700; }
+        .code-block .fact { color: #22d3ee; }
+        .code-block .var { color: #4ade80; }
+        .code-block .num { color: #f472b6; }
+        .code-block .cmt { color: #475569; font-style: italic; }
+        table { width: 100%; border-collapse: collapse; background: rgba(0,0,0,0.2); border-radius: 16px; overflow: hidden; margin-top: 0.6rem; }
+        th { background: rgba(255,255,255,0.05); color: var(--c-cyan); padding: 10px 14px; text-align: left; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 1px; }
+        td { padding: 9px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.9rem; color: var(--text-muted); }
+        td strong { color: var(--text-main); }
+        .icon-circle { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; min-width: 38px; border-radius: 50%; font-size: 0.95rem; }
+        .ic-cyan   { background: rgba(34,211,238,0.15); color: var(--c-cyan); }
+        .ic-purple { background: rgba(216,180,254,0.15); color: var(--c-purple); }
+        .ic-pink   { background: rgba(244,114,182,0.15); color: var(--c-pink); }
+        .ic-green  { background: rgba(74,222,128,0.15); color: var(--c-green); }
+        .ic-gold   { background: rgba(250,204,21,0.15); color: var(--c-gold); }
+        .ic-orange { background: rgba(251,146,60,0.15); color: var(--c-orange); }
+        .result-ok { display: inline-flex; align-items: center; gap: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; padding: 2px 8px; border-radius: 6px; font-weight: 700; background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.4); color: var(--c-green); }
+        .divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent); margin: 0.8rem 0; }
+        .graph-container { display: flex; justify-content: center; align-items: center; padding: 1rem; margin: 0.5rem 0; }
+        .graph-container svg { max-width: 100%; height: auto; }
+        ::-webkit-scrollbar { display: none; }
+        .big-number { font-family: 'Lato', sans-serif; font-weight: 900; font-size: 2.8rem; line-height: 1; background: linear-gradient(135deg, var(--c-cyan), var(--c-purple)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+        /* ===== TOOLTIP SYSTEM ===== */
+        .tt {
+            cursor: help;
+            color: var(--c-cyan); font-weight: 600;
+            border-bottom: 1.5px dashed rgba(34,211,238,0.5);
+            -webkit-text-fill-color: var(--c-cyan);
+            transition: border-color 0.2s;
+        }
+        .tt:hover { border-bottom-color: var(--c-gold); }
+        .tt .tt-box { display: none; pointer-events: none; }
+        #global-tooltip {
+            position: fixed; width: 320px;
+            background: rgba(2, 6, 23, 0.97); backdrop-filter: blur(16px);
+            border: 1px solid rgba(34,211,238,0.3); border-radius: 12px;
+            padding: 12px 16px; z-index: 9999;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.7);
+            pointer-events: none;
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.15s ease;
+            top: -9999px; left: -9999px;
+        }
+        #global-tooltip.visible { opacity: 1; visibility: visible; }
+        #global-tooltip .tt-label {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+            color: var(--c-cyan); text-transform: uppercase; letter-spacing: 1.5px;
+            margin-bottom: 6px; font-weight: 700; display: block;
+        }
+        #global-tooltip .tt-def {
+            font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;
+            font-weight: 400;
+        }
+
+        /* ===== CÓMO SE LEE (reading guide boxes) ===== */
+        .reading-guide {
+            background: rgba(250,204,21,0.06);
+            border: 1px solid rgba(250,204,21,0.2);
+            border-left: 3px solid var(--c-gold);
+            border-radius: 10px;
+            padding: 0.6rem 0.8rem;
+            margin-top: 0.5rem;
+        }
+        .reading-guide-label {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 0.65rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 1.5px; color: var(--c-gold); margin-bottom: 6px;
+        }
+        .reading-guide .rg-line {
+            display: flex; align-items: flex-start; gap: 8px;
+            margin-bottom: 4px; font-size: 0.8rem; line-height: 1.45;
+        }
+        .reading-guide .rg-line:last-child { margin-bottom: 0; }
+        .reading-guide .rg-code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0,0,0,0.3);
+            color: var(--c-cyan);
+            padding: 1px 6px;
+            border-radius: 4px;
+            white-space: nowrap;
+            font-size: 0.75rem;
+            min-width: fit-content;
+        }
+        .reading-guide .rg-arrow {
+            color: var(--c-gold);
+            font-weight: 700;
+            min-width: 16px;
+        }
+        .reading-guide .rg-text {
+            color: var(--text-muted);
+        }
+        .reading-guide .rg-text strong { color: var(--c-gold); }
+
+        /* ===== EN SENCILLO ===== */
+        .en-sencillo {
+            margin-top: auto; padding: 0.7rem 0.9rem;
+            background: linear-gradient(135deg, rgba(251,191,36,0.08), rgba(251,146,60,0.06));
+            border: 1px solid rgba(251,191,36,0.25);
+            border-left: 3px solid #fbbf24;
+            border-radius: 12px;
+        }
+        .en-sencillo-label {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 0.68rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 2px; color: #fbbf24; margin-bottom: 6px;
+        }
+        .en-sencillo p {
+            font-size: 0.88rem; color: #fef3c7; margin: 0;
+            font-style: normal; line-height: 1.55;
+            -webkit-text-fill-color: #fef3c7;
+        }
+        .en-sencillo strong {
+            color: #fde68a;
+            -webkit-text-fill-color: #fde68a;
+        }
+        .en-sencillo code {
+            color: #fbbf24;
+            -webkit-text-fill-color: #fbbf24;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="global-tooltip"></div>
+    <div class="progress-bar" id="progress"></div>
+    <div class="slide-counter" id="counter">1 / 24</div>
+    <div class="slides-container" id="slides">
+
+        <!-- ======================== SLIDE 1: PORTADA ======================== -->
+        <div class="slide active" id="slide-1">
+            <div class="card" style="justify-content: center; align-items: center; text-align: center; gap: 1.5rem;">
+                <div style="display: flex; gap: 1rem; margin-bottom: 0.5rem;">
+                    <span class="pill pill-cyan" style="margin-bottom:0;"><i class="fas fa-graduation-cap"></i> Maestría Profesional</span>
+                    <span class="pill pill-purple" style="margin-bottom:0;">PSWE-18</span>
+                </div>
+                <p style="color: var(--text-muted); font-size: 1rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 0;">Aplicaciones de la Inteligencia Artificial</p>
+                <h1 style="font-size: clamp(2.8rem, 5vw, 4.5rem); margin-bottom: 0.5rem;">Problemas de Satisfacción<br>de Restricciones</h1>
+                <p style="color: var(--c-cyan); font-size: 1.15rem; font-weight: 500;">Clase 10 · Modelado de problemas con restricciones</p>
+                <p style="color: var(--text-muted); font-size: 1.05rem; margin-top: 0.3rem; margin-bottom: 0;"><strong style="color: var(--c-gold);">CSP</strong> — <em>Constraint Satisfaction Problem</em></p>
+                <div class="divider" style="width: 200px; margin: 0.8rem auto;"></div>
+                <div style="display: flex; gap: 2rem; justify-content: center; color: var(--text-muted); font-size: 0.9rem;">
+                    <span><i class="fas fa-user" style="color: var(--c-cyan); margin-right: 6px;"></i> Dr. J. Ignacio Borge</span>
+                    <span><i class="fas fa-calendar" style="color: var(--c-purple); margin-right: 6px;"></i> 27 de Marzo, 2026</span>
+                    <span><i class="fas fa-university" style="color: var(--c-gold); margin-right: 6px;"></i> Universidad Cenfotec</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== SLIDE 2: GANCHO ======================== -->
+        <div class="slide" id="slide-2">
+            <div class="card">
+                <span class="pill pill-gold"><i class="fas fa-lightbulb"></i> Pregunta Gancho</span>
+                <h2><i class="fas fa-puzzle-piece" style="color: var(--c-gold);"></i> ¿Cómo resolver un Sudoku... sin adivinar?</h2>
+                <div class="grid-2">
+                    <div class="concept-box" style="border-color: rgba(244,114,182,0.2);">
+                        <h3><span class="icon-circle ic-pink"><i class="fas fa-dice"></i></span> Enfoque humano: <span class="tt">Fuerza Bruta<span class="tt-box"><span class="tt-label">Fuerza Bruta</span><span class="tt-def">Estrategia que prueba todas las combinaciones posibles hasta encontrar la correcta. Para un Sudoku 9×9 con 30 celdas vacías serían hasta 9³⁰ intentos — un número astronómico.</span></span></span></h3>
+                        <p>Prueba cada número del 1 al 9 en cada celda vacía, <strong>sin pensar</strong>. Si hay conflicto, borra y prueba el siguiente.</p>
+                        <div class="code-block">
+<span class="cmt"># Pseudocódigo: fuerza bruta</span>
+<span class="kw">for</span> <span class="var">cada_celda_vacia</span>:
+    <span class="kw">for</span> <span class="var">n</span> <span class="kw">in</span> <span class="num">1..9</span>:
+        <span class="kw">if</span> no_hay_conflicto(<span class="var">celda</span>, <span class="var">n</span>):
+            colocar(<span class="var">n</span>)
+        <span class="kw">else</span>: retroceder()
+                        </div>
+                        <div class="warning-box" style="margin-top: auto;">
+                            <p style="margin:0; font-size: 0.88rem;"><strong style="color: var(--c-pink);">Problema:</strong> 30 celdas vacías = hasta <strong>9³⁰ combinaciones</strong> (29 dígitos). Imposible en tiempo razonable.</p>
+                        </div>
+                    </div>
+                    <div class="concept-box" style="border-color: rgba(74,222,128,0.2);">
+                        <h3><span class="icon-circle ic-green"><i class="fas fa-brain"></i></span> Enfoque IA: <span class="tt">CSP<span class="tt-box"><span class="tt-label">CSP — Constraint Satisfaction Problem</span><span class="tt-def">Problema de Satisfacción de Restricciones. Un tipo de problema donde debe asignar valores a variables respetando un conjunto de reglas (restricciones). En vez de probar a ciegas, el CSP descarta opciones imposibles antes de intentar.</span></span></span></h3>
+                        <p>En vez de adivinar, <strong>definimos las reglas</strong> y dejamos que un algoritmo descarte lo imposible <em>antes</em> de probar.</p>
+                        <div class="code-block">
+<span class="cmt">% CSP: definir variables y restricciones</span>
+<span class="fact">Variables</span>: X11, X12, ... X99
+<span class="fact">Dominios</span>: cada Xij ∈ {<span class="num">1</span>..<span class="num">9</span>}
+<span class="fact">Restricciones</span>:
+  <span class="kw">all_different</span>(fila_i)
+  <span class="kw">all_different</span>(columna_j)
+  <span class="kw">all_different</span>(bloque_k)
+                        </div>
+                        <div class="example-box" style="margin-top: auto;">
+                            <p style="margin:0; font-size: 0.88rem;"><strong style="color: var(--c-green);">Resultado:</strong> solución en <strong>milisegundos</strong> gracias a la <span class="tt">propagación de restricciones<span class="tt-box"><span class="tt-label">Propagación de Restricciones</span><span class="tt-def">Técnica que, al asignar un valor a una variable, elimina automáticamente valores imposibles de las variables relacionadas. Reduce drásticamente el espacio de búsqueda.</span></span></span>.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="en-sencillo">
+                    <div class="en-sencillo-label"><i class="fas fa-seedling"></i> En sencillo</div>
+                    <p><strong>Imaginate resolver un Sudoku así:</strong> prueba el 1 en la primera celda, luego el 1 en la segunda... y si no funciona, vuelve atrás y prueba el 2. Con 30 celdas vacías, eso son miles de millones de intentos. <strong>El enfoque inteligente (CSP)</strong> dice: "si ya hay un 1 en esta fila, ni lo intento" — y así descarta millones de opciones de una vez. Hoy aprendemos ese segundo camino.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== SLIDE 3: IDEA CLAVE ======================== -->
+        <div class="slide" id="slide-3">
+            <div class="card" style="align-items: center; text-align: center; justify-content: center; gap: 1.2rem;">
+                <span class="pill pill-cyan"><i class="fas fa-star"></i> Idea central del día</span>
+                <h2 style="justify-content: center; font-size: clamp(1.6rem,2.5vw,2.2rem);">En vez de buscar soluciones a ciegas...</h2>
+                <p style="font-size: 1.15rem; max-width: 800px; color: var(--text-main);">
+                    Vamos a aprender a <strong style="color: var(--c-cyan);">modelar problemas como <span class="tt">CSP<span class="tt-box"><span class="tt-label">CSP</span><span class="tt-def">Constraint Satisfaction Problem — un problema donde asigna valores a variables cumpliendo restricciones. Las tres piezas son: variables, dominios y restricciones.</span></span></span></strong> — definir las variables, sus valores posibles y las reglas — y dejar que <strong style="color: var(--c-green);">algoritmos inteligentes hagan el trabajo pesado</strong>.
+                </p>
+                <div class="divider" style="width: 150px; margin: 0 auto;"></div>
+                <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center;">
+                    <div style="text-align: center;"><div class="icon-circle ic-cyan" style="width: 48px; height: 48px; margin: 0 auto 0.4rem;"><i class="fas fa-calendar-alt"></i></div><p style="font-size: 0.82rem; margin:0;">Horarios</p></div>
+                    <div style="text-align: center;"><div class="icon-circle ic-purple" style="width: 48px; height: 48px; margin: 0 auto 0.4rem;"><i class="fas fa-truck"></i></div><p style="font-size: 0.82rem; margin:0;">Rutas</p></div>
+                    <div style="text-align: center;"><div class="icon-circle ic-green" style="width: 48px; height: 48px; margin: 0 auto 0.4rem;"><i class="fas fa-laptop"></i></div><p style="font-size: 0.82rem; margin:0;">Configuración</p></div>
+                    <div style="text-align: center;"><div class="icon-circle ic-gold" style="width: 48px; height: 48px; margin: 0 auto 0.4rem;"><i class="fas fa-th"></i></div><p style="font-size: 0.82rem; margin:0;">Sudoku</p></div>
+                    <div style="text-align: center;"><div class="icon-circle ic-pink" style="width: 48px; height: 48px; margin: 0 auto 0.4rem;"><i class="fas fa-chess-queen"></i></div><p style="font-size: 0.82rem; margin:0;">N-Reinas</p></div>
+                </div>
+                <div class="en-sencillo" style="width: 100%; text-align: left;">
+                    <div class="en-sencillo-label"><i class="fas fa-seedling"></i> En sencillo</div>
+                    <p><strong>Lo que va a aprender hoy se resume en una habilidad:</strong> tomar un problema real (como "organizar horarios sin choques") y separarlo en tres partes: (1) <strong>¿qué decisiones hay que tomar?</strong> (qué curso va en qué franja), (2) <strong>¿cuáles son las opciones?</strong> (franjas de 8am, 10am, 1pm), y (3) <strong>¿qué reglas hay que respetar?</strong> (un profesor no puede dar dos clases a la vez). Una vez que hace esa traducción, el computador encuentra la solución solo.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== SLIDE 4: MAPA DE SESIÓN ======================== -->
+        <div class="slide" id="slide-4">
+            <div class="card">
+                <span class="pill pill-purple"><i class="fas fa-map"></i> Hoja de ruta</span>
+                <h2>Mapa de la Sesión de Hoy</h2>
+                <p style="margin-bottom: 0.8rem;">Tres horas, cuatro bloques. Hoy nos enfocamos en <strong>modelar</strong> problemas como CSP.</p>
+                <div class="grid-2">
+                    <div class="concept-box" style="border-left: 3px solid var(--c-gold);">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 0.4rem;">
+                            <span class="icon-circle ic-gold" style="width: 34px; height: 34px; min-width: 34px; font-size: 0.75rem;"><strong>A</strong></span>
+                            <h3 style="margin: 0;">Comprobación de Lectura</h3>
+                        </div>
+                        <p style="font-size: 0.9rem;">Quiz + repaso de <span class="tt">Prolog<span class="tt-box"><span class="tt-label">Prolog</span><span class="tt-def">Lenguaje de programación lógica. En vez de dar instrucciones paso a paso, define hechos y reglas, y Prolog busca automáticamente las respuestas usando backtracking.</span></span></span> (semana 9).</p>
+                        <p style="font-size: 0.78rem; color: var(--c-gold); margin: 0;">~20 min · 1% nota</p>
+                    </div>
+                    <div class="concept-box" style="border-left: 3px solid var(--c-cyan);">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 0.4rem;">
+                            <span class="icon-circle ic-cyan" style="width: 34px; height: 34px; min-width: 34px; font-size: 0.75rem;"><strong>B</strong></span>
+                            <h3 style="margin: 0;">Modelado de CSP</h3>
+                        </div>
+                        <p style="font-size: 0.9rem;">¿Qué es un CSP? Variables, dominios, restricciones. Aplicaciones reales. Coloreo de mapas.</p>
+                        <p style="font-size: 0.78rem; color: var(--c-cyan); margin: 0;">~55 min</p>
+                    </div>
+                    <div class="concept-box" style="border-left: 3px solid var(--c-green);">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 0.4rem;">
+                            <span class="icon-circle ic-green" style="width: 34px; height: 34px; min-width: 34px; font-size: 0.75rem;"><strong>C</strong></span>
+                            <h3 style="margin: 0;"><span class="tt">CLP(FD)<span class="tt-box"><span class="tt-label">CLP(FD)</span><span class="tt-def">Constraint Logic Programming over Finite Domains. Librería de SWI-Prolog que resuelve CSP automáticamente. En vez de generar y probar, propaga restricciones para reducir opciones antes de buscar.</span></span></span> en Prolog</h3>
+                        </div>
+                        <p style="font-size: 0.9rem;">Herramienta práctica: cómo expresar y resolver CSP en SWI-Prolog.</p>
+                        <p style="font-size: 0.78rem; color: var(--c-green); margin: 0;">~50 min</p>
+                    </div>
+                    <div class="concept-box" style="border-left: 3px solid var(--c-pink);">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 0.4rem;">
+                            <span class="icon-circle ic-pink" style="width: 34px; height: 34px; min-width: 34px; font-size: 0.75rem;"><strong>D</strong></span>
+                            <h3 style="margin: 0;">Ejercicios Prácticos</h3>
+                        </div>
+                        <p style="font-size: 0.9rem;">Resolver CSP reales en Prolog. Avance del proyecto de agente inteligente.</p>
+                        <p style="font-size: 0.78rem; color: var(--c-pink); margin: 0;">~45 min · avance proyecto</p>
+                    </div>
+                </div>
+                <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.8rem; text-align: center;">
+                    <i class="fas fa-book" style="color: var(--c-purple); margin-right: 4px;"></i>
+                    Referencia: Talbot, P. & Ellis, D. (2015). <em>Applications of AI for Decision-Making.</em>
+                </p>
+            </div>
+        </div>
+
+        <!-- ======================== SLIDE 5: REPASO PROLOG (CONDENSADO) ======================== -->
+        <div class="slide" id="slide-5">
+            <div class="card">
+                <span class="pill pill-gold"><i class="fas fa-clipboard-check"></i> Bloque A</span>
+                <h2>Repaso rápido: Lo que necesita de Prolog</h2>
+                <p style="margin-bottom: 0.6rem; font-size: 0.9rem;">Estos 4 conceptos de la semana 9 son la base para hoy. Si algo no te suena, repasá las notas antes de continuar.</p>
+                <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem;">
+                    <div class="concept-box" style="padding: 0.7rem; text-align: center;">
+                        <div class="icon-circle ic-cyan" style="width:32px;height:32px;margin:0 auto 0.4rem;font-size:0.75rem;"><i class="fas fa-sync-alt"></i></div>
+                        <h3 style="font-size:0.82rem; justify-content:center;"><span class="tt">Recursividad<span class="tt-box"><span class="tt-label">Recursividad</span><span class="tt-def">Técnica donde una función o predicado se llama a sí mismo para resolver un problema dividiéndolo en partes cada vez más pequeñas, hasta llegar a un caso base que se resuelve directamente.</span></span></span></h3>
+                        <p style="font-size:0.78rem; margin:0;">Un <span class="tt">predicado<span class="tt-box"><span class="tt-label">Predicado</span><span class="tt-def">En Prolog, es como una función o regla. Define una relación entre datos. Por ejemplo, padre(juan, maria) es un predicado que dice "Juan es padre de María".</span></span></span> se llama a sí mismo hasta el <span class="tt">caso base<span class="tt-box"><span class="tt-label">Caso base</span><span class="tt-def">La condición de parada de la recursividad. Sin caso base, la función se llamaría a sí misma infinitamente. Ejemplo: "la suma de una lista vacía es 0".</span></span></span>. Así "repite" sin <code>for</code>.</p>
+                    </div>
+                    <div class="concept-box" style="padding: 0.7rem; text-align: center;">
+                        <div class="icon-circle ic-purple" style="width:32px;height:32px;margin:0 auto 0.4rem;font-size:0.75rem;"><i class="fas fa-cut"></i></div>
+                        <h3 style="font-size:0.82rem; justify-content:center;"><span class="tt">Cut (!)<span class="tt-box"><span class="tt-label">Cut (!)</span><span class="tt-def">Operador de Prolog que le dice: "ya encontraste la respuesta correcta, no busque más alternativas". Elimina los puntos de backtracking para evitar respuestas duplicadas o innecesarias.</span></span></span></h3>
+                        <p style="font-size:0.78rem; margin:0;">Le dice a Prolog: "ya encontraste la respuesta, no busque más". Controla el <span class="tt">backtracking<span class="tt-box"><span class="tt-label">Backtracking</span><span class="tt-def">Mecanismo donde Prolog, al fallar en un camino, retrocede automáticamente al último punto de decisión y prueba otra alternativa. Es como volver atrás en un laberinto cuando llega a un callejón sin salida.</span></span></span>.</p>
+                    </div>
+                    <div class="concept-box" style="padding: 0.7rem; text-align: center;">
+                        <div class="icon-circle ic-green" style="width:32px;height:32px;margin:0 auto 0.4rem;font-size:0.75rem;"><i class="fas fa-calculator"></i></div>
+                        <h3 style="font-size:0.82rem; justify-content:center;"><code>=</code> vs <code>is</code></h3>
+                        <p style="font-size:0.78rem; margin:0;"><code>=</code> es <span class="tt">unificación<span class="tt-box"><span class="tt-label">Unificación</span><span class="tt-def">Operación central de Prolog. Intenta hacer que dos términos sean iguales asignando valores a variables. X = 3+4 guarda la estructura "3+4" literalmente, sin calcular.</span></span></span> (estructura). <code>is</code> evalúa la aritmética. <code>X=3+4</code> guarda "3+4"; <code>X is 3+4</code> da 7.</p>
+                    </div>
+                    <div class="concept-box" style="padding: 0.7rem; text-align: center;">
+                        <div class="icon-circle ic-pink" style="width:32px;height:32px;margin:0 auto 0.4rem;font-size:0.75rem;"><i class="fas fa-list"></i></div>
+                        <h3 style="font-size:0.82rem; justify-content:center;"><code>findall/3</code></h3>
+                        <p style="font-size:0.78rem; margin:0;">Junta todas las respuestas en una lista. Como un <em>SELECT *</em> de SQL. Útil hoy para contar soluciones de un CSP.</p>
+                    </div>
+                </div>
+                <div class="example-box" style="margin-top: 0.6rem;">
+                    <p style="margin: 0; font-size: 0.9rem;"><i class="fas fa-link" style="color: var(--c-cyan); margin-right: 6px;"></i> <strong>Conexión con hoy:</strong> El <span class="tt">backtracking<span class="tt-box"><span class="tt-label">Backtracking</span><span class="tt-def">Mecanismo donde Prolog, al fallar en un camino, retrocede automáticamente al último punto de decisión y prueba otra alternativa. Es como volver atrás en un laberinto cuando llega a un callejón sin salida.</span></span></span> automático de Prolog es la base de los algoritmos CSP. Hoy veremos cómo <strong>potenciarlo</strong> con restricciones.</p>
+                </div>
+                <div class="en-sencillo">
+                    <div class="en-sencillo-label"><i class="fas fa-seedling"></i> En sencillo</div>
+                    <p><strong>Estos 4 conceptos de Prolog son los cimientos de hoy:</strong> (1) <strong>Recursividad</strong> = cómo Prolog "repite" sin usar for/while — una función se llama a sí misma. (2) <strong>Cut (!)</strong> = cómo decirle "pará, ya encontraste la respuesta". (3) <strong>= vs is</strong> = el "=" solo compara estructuras, el "is" calcula números (X is 3+4 da 7, X = 3+4 guarda "3+4" sin calcular). (4) <strong>findall</strong> = junta todas las respuestas posibles en una lista. Hoy los vamos a combinar con restricciones para resolver problemas más complejos.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== SLIDE 6: QUÉ ES UN CSP ======================== -->
+        <div class="slide" id="slide-6">
+            <div class="card">
+                <span class="pill pill-cyan"><i class="fas fa-cube"></i> Bloque B · Definición</span>
+                <h2>¿Qué es un CSP?</h2>
+                <div class="example-box" style="margin-bottom: 0.8rem;">
+                    <p style="margin: 0; font-size: 0.95rem;"><i class="fas fa-lightbulb" style="color: var(--c-cyan); margin-right: 6px;"></i> <strong>Analogía:</strong> Organiza los asientos de una boda. Cada invitado <em>(variable)</em> debe sentarse en una mesa <em>(dominio)</em>, pero hay reglas: la tía María no con el tío Juan <em>(restricción)</em>. Un CSP es eso: <strong>asignar valores respetando reglas</strong>.</p>
+                </div>
+                <p style="font-size: 1rem; margin-bottom: 0.8rem;">Un <strong><span class="tt">CSP<span class="tt-box"><span class="tt-label">CSP — Constraint Satisfaction Problem</span><span class="tt-def">Problema de Satisfacción de Restricciones. Se define por tres componentes: (1) un conjunto de variables, (2) un dominio de valores posibles para cada variable, y (3) un conjunto de restricciones que limitan qué combinaciones son válidas. El objetivo: encontrar una asignación que satisfaga TODAS las restricciones.</span></span></span></strong> (Constraint Satisfaction Problem) es un problema matemático definido por <strong>exactamente tres cosas</strong>:</p>
+                <div class="grid-3">
+                    <div class="concept-box" style="border-top: 3px solid var(--c-cyan); text-align: center;">
+                        <div class="icon-circle ic-cyan" style="width: 46px; height: 46px; margin: 0 auto 0.6rem; font-size: 1.1rem;"><i class="fas fa-question"></i></div>
+                        <h3 style="justify-content: center;"><span class="tt">Variables<span class="tt-box"><span class="tt-label">Variable (en CSP)</span><span class="tt-def">Las incógnitas del problema — las "decisiones" que hay que tomar. Cada variable recibirá un valor del dominio. Ejemplo: en Sudoku, cada celda vacía es una variable.</span></span></span> (X)</h3>
+                        <p style="font-size: 0.88rem;">Las <strong>incógnitas</strong> a las que asignar un valor.</p>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Boda: cada invitado<br>Sudoku: cada celda<br>Horarios: cada curso</p>
+                    </div>
+                    <div class="concept-box" style="border-top: 3px solid var(--c-purple); text-align: center;">
+                        <div class="icon-circle ic-purple" style="width: 46px; height: 46px; margin: 0 auto 0.6rem; font-size: 1.1rem;"><i class="fas fa-list-ol"></i></div>
+                        <h3 style="justify-content: center;"><span class="tt">Dominios<span class="tt-box"><span class="tt-label">Dominio (en CSP)</span><span class="tt-def">El conjunto de valores posibles que puede tomar cada variable. Debe ser finito. Ejemplo: en Sudoku, el dominio de cada celda es {1,2,3,4,5,6,7,8,9}.</span></span></span> (D)</h3>
+                        <p style="font-size: 0.88rem;">Los <strong>valores posibles</strong> para cada variable.</p>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Boda: las mesas<br>Sudoku: {1..9}<br>Horarios: franjas</p>
+                    </div>
+                    <div class="concept-box" style="border-top: 3px solid var(--c-pink); text-align: center;">
+                        <div class="icon-circle ic-pink" style="width: 46px; height: 46px; margin: 0 auto 0.6rem; font-size: 1.1rem;"><i class="fas fa-ban"></i></div>
+                        <h3 style="justify-content: center;"><span class="tt">Restricciones<span class="tt-box"><span class="tt-label">Restricción (en CSP)</span><span class="tt-def">Las reglas que limitan qué combinaciones de valores son válidas. Ejemplo: "dos regiones vecinas no pueden tener el mismo color" o "un profesor no puede dar dos clases a la misma hora".</span></span></span> (C)</h3>
+                        <p style="font-size: 0.88rem;">Las <strong>reglas</strong> que limitan combinaciones válidas.</p>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Boda: "no juntos"<br>Sudoku: "no repetir"<br>Horarios: "no chocar"</p>
+                    </div>
+                </div>
+                <div class="en-sencillo">
+                    <div class="en-sencillo-label"><i class="fas fa-seedling"></i> En sencillo</div>
+                    <p><strong>Un CSP tiene exactamente 3 partes, siempre las mismas:</strong> (1) <strong>Variables</strong> = las "casillas en blanco" que hay que llenar (ejemplo: en un Sudoku, cada celda vacía). (2) <strong>Dominios</strong> = las opciones que puede poner en cada casilla (ejemplo: los números del 1 al 9). (3) <strong>Restricciones</strong> = las reglas que dicen qué combinaciones están prohibidas (ejemplo: no repetir número en la misma fila). Si encuentra valores para todas las casillas sin romper ninguna regla, resolvió el CSP.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== SLIDE 7: CSP RESUELTO ======================== -->
+        <div class="slide" id="slide-7">
+            <div class="card">
+                <span class="pill pill-cyan"><i class="fas fa-check-circle"></i> Bloque B</span>
+                <h2>¿Cuándo está resuelto un CSP?</h2>
+                <div class="grid-2" style="margin-bottom: 0.8rem;">
+                    <div class="concept-box" style="border-left: 3px solid var(--c-green);">
+                        <h3><span class="icon-circle ic-green" style="width: 30px; height: 30px; min-width: 30px;"><i class="fas fa-check"></i></span> <span class="tt">Asignación completa<span class="tt-box"><span class="tt-label">Asignación completa</span><span class="tt-def">Una asignación donde TODAS las variables del CSP tienen un valor de su dominio. Si además cumple todas las restricciones, se llama asignación consistente o solución.</span></span></span> y consistente</h3>
+                        <p style="font-size: 0.92rem;">Un CSP está <strong>resuelto</strong> cuando:</p>
+                        <p style="font-size: 0.92rem;"><span class="step-num" style="width:22px;height:22px;min-width:22px;font-size:0.65rem;">1</span> Cada variable tiene un valor de su dominio</p>
+                        <p style="font-size: 0.92rem;"><span class="step-num" style="width:22px;height:22px;min-width:22px;font-size:0.65rem;">2</span> <strong>Todas</strong> las restricciones se cumplen</p>
+                    </div>
+                    <div class="concept-box" style="border-left: 3px solid var(--c-pink);">
+                        <h3><span class="icon-circle ic-pink" style="width: 30px; height: 30px; min-width: 30px;"><i class="fas fa-times"></i></span> CSP ≠ Optimización</h3>
+                        <p style="font-size: 0.92rem;">Un CSP <strong>no</strong> busca la "mejor" solución, solo <strong>una válida</strong>. No hay puntuación ni ranking — solo "cumple todas las reglas" o "no cumple".</p>
+                    </div>
+                </div>
+                <div class="warning-box">
+                    <p style="margin: 0; font-size: 0.9rem;"><i class="fas fa-info-circle" style="color: var(--c-gold); margin-right: 5px;"></i> <strong>Vocabulario:</strong> <span class="tt">Asignación consistente<span class="tt-box"><span class="tt-label">Asignación consistente</span><span class="tt-def">Una asignación (parcial o completa) donde ninguna restricción está violada. Si es completa y consistente, es una solución del CSP.</span></span></span> = no viola ninguna restricción. <span class="tt">Asignación parcial<span class="tt-box"><span class="tt-label">Asignación parcial</span><span class="tt-def">Una asignación donde solo algunas variables tienen valor. El proceso de búsqueda va construyendo asignaciones parciales hasta completarlas.</span></span></span> = solo algunas variables tienen valor.</p>
+                </div>
+                <div class="en-sencillo">
+                    <div class="en-sencillo-label"><i class="fas fa-seedling"></i> En sencillo</div>
+                    <p><strong>¿Cuándo puede decir "resolví el CSP"?</strong> Cuando cada variable tiene un valor concreto (asignación completa) y NINGUNA restricción está rota (asignación consistente). Ojo: no se busca "la mejor" respuesta ni la "más óptima" — cualquier combinación que cumpla todas las reglas es una solución válida. Si una variable no tiene valor, está incompleto. Si alguna regla se rompe, está inconsistente. Necesita ambas cosas: completo + consistente.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== SLIDE 8: APLICACIONES ======================== -->
+        <div class="slide" id="slide-8">
+            <div class="card">
+                <span class="pill pill-green"><i class="fas fa-globe"></i> Bloque B · Aplicaciones</span>
+                <h2>CSP en el mundo real</h2>
+                <p style="margin-bottom: 0.8rem;">Cada vez que hay que <strong>asignar recursos cumpliendo reglas</strong>, hay un CSP detrás.</p>
+                <div class="grid-2">
+                    <div class="concept-box">
+                        <h3><span class="icon-circle ic-cyan"><i class="fas fa-calendar-alt"></i></span> Horarios universitarios</h3>
+                        <p style="font-size: 0.88rem;"><strong>Variables:</strong> Cada sección de curso · <strong>Dominios:</strong> (aula, franja) · <strong>Restricciones:</strong> un profesor no en dos aulas a la vez, un aula sin dos clases simultáneas...</p>
+                    </div>
+                    <div class="concept-box">
+                        <h3><span class="icon-circle ic-purple"><i class="fas fa-truck"></i></span> Rutas de transporte</h3>
+                        <p style="font-size: 0.88rem;"><strong>Variables:</strong> Cada vehículo · <strong>Dominios:</strong> Secuencias de entregas · <strong>Restricciones:</strong> Capacidad, ventanas de tiempo, distancia máxima...</p>
+                    </div>
+                    <div class="concept-box">
+                        <h3><span class="icon-circle ic-green"><i class="fas fa-laptop"></i></span> Configuración de productos</h3>
+                        <p style="font-size: 0.88rem;"><strong>Variables:</strong> Cada componente (CPU, RAM...) · <strong>Dominios:</strong> Opciones disponibles · <strong>Restricciones:</strong> Compatibilidad, presupuesto...</p>
+                    </div>
+                    <div class="concept-box">
+                        <h3><span class="icon-circle ic-gold"><i class="fas fa-th"></i></span> Sudoku y puzzles</h3>
+                        <p style="font-size: 0.88rem;"><strong>Variables:</strong> Cada celda vacía · <strong>Dominios:</strong> {1..9} · <strong>Restricciones:</strong> No repetir en fila, columna, ni bloque 3×3</p>
+                    </div>
+                </div>
+                <div class="en-sencillo">
+                    <div class="en-sencillo-label"><i class="fas fa-seedling"></i> En sencillo</div>
+                    <p><strong>CSP no es un concepto teórico abstracto — es algo que ya existe en su vida diaria.</strong> Cada vez que arma un horario de clases sin que se choquen, organiza asientos en una boda sin juntar personas que se odian, o configura un sistema sin conflictos, está resolviendo un CSP sin saberlo. La diferencia es que ahora va a saber cómo decirle a un computador que lo haga por usted, en milisegundos.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== SLIDE 9: 80/20 ======================== -->
+        <div class="slide" id="slide-9">
+            <div class="card" style="align-items: center; justify-content: center; text-align: center; gap: 1.2rem;">
+                <span class="pill pill-green"><i class="fas fa-bullseye"></i> Bloque B</span>
+                <h2 style="justify-content: center;">¿Por qué aprender CSP?</h2>
+                <p style="font-size: 1.1rem; max-width: 750px;">Si sabe modelar un problema como CSP, puede usar <strong><span class="tt">solvers<span class="tt-box"><span class="tt-label">Solver</span><span class="tt-def">Programa que resuelve un CSP automáticamente. Usted define variables, dominios y restricciones; el solver busca la solución. CLP(FD) en Prolog es un solver.</span></span></span> existentes</strong> en vez de programar la búsqueda a mano.</p>
+                <div style="display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center; max-width: 700px;">
+                    <div class="concept-box" style="flex:1; min-width: 200px; text-align: center;">
+                        <div class="big-number">80%</div>
+                        <p style="font-size: 0.88rem; margin: 0.4rem 0 0;">del trabajo es <strong>modelar bien</strong></p>
+                    </div>
+                    <div class="concept-box" style="flex:1; min-width: 200px; text-align: center;">
+                        <div class="big-number">20%</div>
+                        <p style="font-size: 0.88rem; margin: 0.4rem 0 0;">lo hace el <strong>solver</strong> solo</p>
+                    </div>
+                </div>
+                <div class="en-sencillo" style="width: 100%; text-align: left;">
+                    <div class="en-sencillo-label"><i class="fas fa-seedling"></i> En sencillo</div>
+                    <p><strong>La parte más importante (y la más difícil) no es programar — es pensar.</strong> Su trabajo real es "traducir" el problema humano a las tres piezas del CSP: ¿qué hay que decidir? ¿qué opciones hay? ¿qué reglas existen? Una vez que esa traducción está bien hecha, el computador hace todo el trabajo pesado de buscar la solución. Por eso esta semana se enfoca en MODELAR, no en algoritmos de búsqueda.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== SLIDE 10: TIPOS DE RESTRICCIONES ======================== -->
+        <div class="slide" id="slide-10">
+            <div class="card">
+                <span class="pill pill-pink"><i class="fas fa-layer-group"></i> Bloque B · Clasificación</span>
+                <h2>Tipos de Restricciones</h2>
+                <p style="margin-bottom: 0.8rem;">Se clasifican según <strong>cuántas variables afectan</strong>.</p>
+                <div class="grid-3">
+                    <div class="concept-box" style="border-top: 3px solid var(--c-green);">
+                        <h3 style="justify-content: center; color: var(--c-green);"><span class="tt">Unarias<span class="tt-box"><span class="tt-label">Restricción Unaria</span><span class="tt-def">Restringe el dominio de UNA sola variable. Ejemplo: "X ≠ rojo" elimina "rojo" del dominio de X. Son las más simples y se resuelven primero.</span></span></span></h3>
+                        <p style="text-align:center;font-size:0.82rem;color:var(--c-green);margin-bottom:0.6rem;">Afectan <strong>1 variable</strong></p>
+                        <p style="font-size: 0.88rem;"><em>"Pedro es vegetariano"</em> → solo platos sin carne.</p>
+                        <div class="code-block" style="font-size: 0.74rem;">
+<span class="var">X</span> \= rojo   <span class="cmt">% X ≠ rojo</span>
+<span class="var">T</span> > <span class="num">0</span>       <span class="cmt">% T positivo</span></div>
+                    </div>
+                    <div class="concept-box" style="border-top: 3px solid var(--c-cyan);">
+                        <h3 style="justify-content: center; color: var(--c-cyan);"><span class="tt">Binarias<span class="tt-box"><span class="tt-label">Restricción Binaria</span><span class="tt-def">Relaciona exactamente DOS variables. Ejemplo: "A ≠ B" (dos regiones vecinas deben tener colores diferentes). Son las más comunes en la práctica.</span></span></span></h3>
+                        <p style="text-align:center;font-size:0.82rem;color:var(--c-cyan);margin-bottom:0.6rem;">Relacionan <strong>2 variables</strong></p>
+                        <p style="font-size: 0.88rem;"><em>"Pedro y María no en la misma mesa."</em></p>
+                        <div class="code-block" style="font-size: 0.74rem;">
+<span class="var">A</span> \= <span class="var">B</span>      <span class="cmt">% A ≠ B</span>
+<span class="var">X</span> < <span class="var">Y</span>       <span class="cmt">% X menor que Y</span></div>
+                    </div>
+                    <div class="concept-box" style="border-top: 3px solid var(--c-purple);">
+                        <h3 style="justify-content: center; color: var(--c-purple);"><span class="tt">Globales<span class="tt-box"><span class="tt-label">Restricción Global</span><span class="tt-def">Involucra 3 o más variables simultáneamente. Ejemplo: all_different([X1,X2,X3]) exige que todas sean diferentes. Son más expresivas y los solvers tienen algoritmos especializados para ellas.</span></span></span></h3>
+                        <p style="text-align:center;font-size:0.82rem;color:var(--c-purple);margin-bottom:0.6rem;">Involucran <strong>3+ variables</strong></p>
+                        <p style="font-size: 0.88rem;"><em>"Todos en mesa 1 hablan idiomas distintos."</em></p>
+                        <div class="code-block" style="font-size: 0.74rem;">
+<span class="kw">all_different</span>([<span class="var">X1</span>,<span class="var">X2</span>,<span class="var">X3</span>])
+<span class="kw">sum</span>([<span class="var">X1</span>,<span class="var">X2</span>], #=, <span class="num">100</span>)</div>
+                    </div>
+                </div>
+                <div class="en-sencillo">
+                    <div class="en-sencillo-label"><i class="fas fa-seedling"></i> En sencillo</div>
+                    <p><strong>Las restricciones se clasifican por cuántas variables involucran:</strong> (1) <strong>Unaria</strong> = afecta a UNA sola variable. Ejemplo: "Pedro es vegetariano" solo limita el plato de Pedro. (2) <strong>Binaria</strong> = relaciona DOS variables. Ejemplo: "Mate y Física no en la misma franja" compara M con F. (3) <strong>Global</strong> = involucra TRES o más variables a la vez. Ejemplo: "todas las reinas en columnas diferentes" — all_different compara todas entre sí de una vez, y es más eficiente que escribir cada par por separado.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== SLIDE 11: METODOLOGÍA ======================== -->
+        <div class="slide" id="slide-11">
+            <div class="card">
+                <span class="pill pill-orange"><i class="fas fa-route"></i> Bloque B · Metodología</span>
+                <h2>Cómo modelar un problema como CSP</h2>
+                <p style="margin-bottom: 0.8rem;">Seguí estos 4 pasos para convertir cualquier problema en un CSP formal.</p>
+                <div style="display: flex; flex-direction: column; gap: 0.7rem;">
+                    <div style="display: flex; gap: 0.8rem; align-items: flex-start;">
+                        <span class="step-num">1</span>
+                        <div><h3 style="margin-bottom: 0.2rem;">Identificar las variables</h3><p style="font-size: 0.9rem; margin:0;">Pregúntese: <strong>¿qué decisiones debo tomar?</strong> Cada decisión es una variable.</p></div>
+                    </div>
+                    <div style="display: flex; gap: 0.8rem; align-items: flex-start;">
+                        <span class="step-num">2</span>
+                        <div><h3 style="margin-bottom: 0.2rem;">Definir los dominios</h3><p style="font-size: 0.9rem; margin:0;">Pregúntese: <strong>¿qué opciones tiene cada variable?</strong> Cada variable necesita un conjunto finito de valores posibles.</p></div>
+                    </div>
+                    <div style="display: flex; gap: 0.8rem; align-items: flex-start;">
+                        <span class="step-num">3</span>
+                        <div><h3 style="margin-bottom: 0.2rem;">Expresar las restricciones</h3><p style="font-size: 0.9rem; margin:0;">Pregúntese: <strong>¿qué combinaciones están prohibidas?</strong> Traducí las reglas del problema a relaciones entre variables.</p></div>
+                    </div>
+                    <div style="display: flex; gap: 0.8rem; align-items: flex-start;">
+                        <span class="step-num">4</span>
+                        <div><h3 style="margin-bottom: 0.2rem;">Verificar completitud</h3><p style="font-size: 0.9rem; margin:0;">Pregúntese: <strong>¿capturé todas las reglas?</strong> Una restricción faltante puede dar soluciones inválidas.</p></div>
+                    </div>
+                </div>
+                <div class="example-box" style="margin-top: 0.6rem;">
+                    <p style="margin: 0; font-size: 0.88rem;"><i class="fas fa-lightbulb" style="color: var(--c-cyan); margin-right: 5px;"></i> <strong>Truco:</strong> Describa el problema en una oración: "Necesito asignar <em>[qué]</em> a <em>[dónde]</em> sin que <em>[qué pase]</em>". Esas tres partes son sus variables, dominios y restricciones.</p>
+                </div>
+                <div class="en-sencillo">
+                    <div class="en-sencillo-label"><i class="fas fa-seedling"></i> En sencillo</div>
+                    <p><strong>Para modelar cualquier problema como CSP, seguí estos 4 pasos:</strong> (1) <strong>Identifique las variables</strong> — pregúntese "¿qué cosas hay que decidir?" (ejemplo: en qué franja va cada curso). (2) <strong>Defina los dominios</strong> — "¿qué opciones tiene cada variable?" (ejemplo: franjas 1, 2 o 3). (3) <strong>Escriba las restricciones</strong> — "¿qué reglas debe cumplir la solución?" (ejemplo: Mate y Física no juntas). (4) <strong>Verifique que no falte nada</strong> — el error más común es olvidar una restricción, lo que da soluciones que "cumplen" en el código pero violan una regla del problema real.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== SLIDE 12: COLOREO DE MAPAS ======================== -->
+        <div class="slide" id="slide-12">
+            <div class="card">
+                <span class="pill pill-cyan"><i class="fas fa-palette"></i> Bloque B · Ejemplo</span>
+                <h2>Coloreo de Mapas: modelar paso a paso</h2>
+                <p style="font-size: 0.92rem; margin-bottom: 0.5rem;">5 regiones, 3 colores. Regiones vecinas <strong>no pueden tener el mismo color</strong>.</p>
+                <div class="grid-2">
+                    <div>
+                        <h3><i class="fas fa-map" style="color: var(--c-cyan);"></i> El mapa y su modelado CSP</h3>
+                        <div class="graph-container" style="padding: 0.5rem;">
+                            <svg width="260" height="180" viewBox="0 0 260 180">
+                                <!-- Region A (top center) -->
+                                <path d="M80,10 L180,10 L190,55 L70,55 Z" fill="rgba(244,114,182,0.25)" stroke="#f472b6" stroke-width="2" rx="4"/>
+                                <text x="130" y="38" text-anchor="middle" fill="#f472b6" font-weight="800" font-size="14">A</text>
+                                <!-- Region B (left) -->
+                                <path d="M10,58 L125,58 L115,115 L10,115 Z" fill="rgba(34,211,238,0.25)" stroke="#22d3ee" stroke-width="2"/>
+                                <text x="65" y="92" text-anchor="middle" fill="#22d3ee" font-weight="800" font-size="14">B</text>
+                                <!-- Region C (right) -->
+                                <path d="M128,58 L250,58 L250,115 L118,115 Z" fill="rgba(74,222,128,0.25)" stroke="#4ade80" stroke-width="2"/>
+                                <text x="185" y="92" text-anchor="middle" fill="#4ade80" font-weight="800" font-size="14">C</text>
+                                <!-- Region D (bottom-left) -->
+                                <path d="M10,118 L125,118 L115,170 L10,170 Z" fill="rgba(250,204,21,0.25)" stroke="#facc15" stroke-width="2"/>
+                                <text x="65" y="150" text-anchor="middle" fill="#facc15" font-weight="800" font-size="14">D</text>
+                                <!-- Region E (bottom-right) -->
+                                <path d="M128,118 L250,118 L250,170 L118,170 Z" fill="rgba(216,180,254,0.25)" stroke="#d8b4fe" stroke-width="2"/>
+                                <text x="185" y="150" text-anchor="middle" fill="#d8b4fe" font-weight="800" font-size="14">E</text>
+                            </svg>
+                        </div>
+                        <table style="margin-top: 0.3rem; font-size: 0.82rem;">
+                            <tr><th>CSP</th><th>Mapa</th></tr>
+                            <tr><td><strong>Variables</strong></td><td>{A, B, C, D, E}</td></tr>
+                            <tr><td><strong>Dominios</strong></td><td>{rojo, verde, azul}</td></tr>
+                            <tr><td><strong>Restricciones</strong></td><td>Vecinos → distinto color</td></tr>
+                        </table>
+                    </div>
+                    <div>
+                        <h3><i class="fas fa-project-diagram" style="color: var(--c-green);"></i> <span class="tt">Grafo de restricciones<span class="tt-box"><span class="tt-label">Grafo de Restricciones</span><span class="tt-def">Representación visual donde los nodos son las variables y las líneas (aristas) son las restricciones entre pares de variables. Permite ver la estructura del problema de un vistazo.</span></span></span></h3>
+                        <div class="graph-container" style="padding: 0.5rem;">
+                            <svg width="240" height="180" viewBox="0 0 240 180">
+                                <!-- Edges -->
+                                <line x1="120" y1="22" x2="40" y2="80" stroke="rgba(148,163,184,0.3)" stroke-width="2"/>
+                                <line x1="120" y1="22" x2="200" y2="80" stroke="rgba(148,163,184,0.3)" stroke-width="2"/>
+                                <line x1="40" y1="80" x2="200" y2="80" stroke="rgba(148,163,184,0.3)" stroke-width="2"/>
+                                <line x1="40" y1="80" x2="80" y2="160" stroke="rgba(148,163,184,0.3)" stroke-width="2"/>
+                                <line x1="200" y1="80" x2="160" y2="160" stroke="rgba(148,163,184,0.3)" stroke-width="2"/>
+                                <line x1="80" y1="160" x2="160" y2="160" stroke="rgba(148,163,184,0.3)" stroke-width="2"/>
+                                <!-- Nodes -->
+                                <circle cx="120" cy="22" r="18" fill="rgba(244,114,182,0.2)" stroke="#f472b6" stroke-width="2"/>
+                                <text x="120" y="28" text-anchor="middle" fill="#f472b6" font-weight="700" font-size="13">A</text>
+                                <circle cx="40" cy="80" r="18" fill="rgba(34,211,238,0.2)" stroke="#22d3ee" stroke-width="2"/>
+                                <text x="40" y="86" text-anchor="middle" fill="#22d3ee" font-weight="700" font-size="13">B</text>
+                                <circle cx="200" cy="80" r="18" fill="rgba(74,222,128,0.2)" stroke="#4ade80" stroke-width="2"/>
+                                <text x="200" y="86" text-anchor="middle" fill="#4ade80" font-weight="700" font-size="13">C</text>
+                                <circle cx="80" cy="160" r="18" fill="rgba(250,204,21,0.2)" stroke="#facc15" stroke-width="2"/>
+                                <text x="80" y="166" text-anchor="middle" fill="#facc15" font-weight="700" font-size="13">D</text>
+                                <circle cx="160" cy="160" r="18" fill="rgba(216,180,254,0.2)" stroke="#d8b4fe" stroke-width="2"/>
+                                <text x="160" y="166" text-anchor="middle" fill="#d8b4fe" font-weight="700" font-size="13">E</text>
+                            </svg>
+                        </div>
+                        <p style="font-size: 0.78rem; text-align: center; margin: 0;">Mismo color en mapa ↔ mismo nodo en grafo<br>Línea = restricción "≠" (deben ser distintos)</p>
+                        <div class="example-box" style="margin-top: 0.4rem;">
+                            <p style="margin:0;font-size:0.82rem;"><strong>Nota:</strong> B y E no están conectados → pueden tener el mismo color. Solo los pares con línea deben diferir.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="en-sencillo">
+                    <div class="en-sencillo-label"><i class="fas fa-seedling"></i> En sencillo</div>
+                    <p><strong>Colorear un mapa es el ejemplo clásico de CSP.</strong> Imagine un mapa de Costa Rica dividido en provincias. Tiene 3 colores (rojo, verde, azul) y quiere pintar cada provincia sin que dos provincias vecinas tengan el mismo color. <strong>En CSP:</strong> cada provincia es una variable, los 3 colores son el dominio, y "provincias vecinas deben tener distinto color" son las restricciones. El grafo de la derecha le muestra quién es vecino de quién: si hay línea, deben ser diferentes; si no hay línea (como B y E), pueden compartir color sin problema.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== SLIDE 13: COLOREO — CÓDIGO ======================== -->
+        <div class="slide" id="slide-13">
+            <div class="card">
+                <span class="pill pill-cyan"><i class="fas fa-code"></i> Bloque B · Código</span>
+                <h2>Coloreo de Mapas en Prolog</h2>
+                <div class="grid-2">
+                    <div>
+                        <h3>Enfoque <span class="tt">generate-and-test<span class="tt-box"><span class="tt-label">Generate-and-Test</span><span class="tt-def">Estrategia "ingenua" donde primero se generan TODAS las combinaciones posibles y luego se prueban contra las restricciones. Con 5 variables y 3 colores son 3⁵=243 combinaciones. Para problemas grandes es inaceptablemente lento.</span></span></span></h3>
+                        <div class="code-block">
+<span class="cmt">% Dominio</span>
+<span class="fact">color</span>(rojo). <span class="fact">color</span>(verde). <span class="fact">color</span>(azul).
+<span class="cmt">% Asignar y verificar</span>
+<span class="fact">colorear</span>(<span class="var">A</span>,<span class="var">B</span>,<span class="var">C</span>,<span class="var">D</span>,<span class="var">E</span>) :-
+    <span class="fact">color</span>(<span class="var">A</span>), <span class="fact">color</span>(<span class="var">B</span>), <span class="fact">color</span>(<span class="var">C</span>),
+    <span class="fact">color</span>(<span class="var">D</span>), <span class="fact">color</span>(<span class="var">E</span>),
+    <span class="var">A</span> \= <span class="var">B</span>, <span class="var">A</span> \= <span class="var">C</span>,
+    <span class="var">B</span> \= <span class="var">C</span>, <span class="var">B</span> \= <span class="var">D</span>,
+    <span class="var">C</span> \= <span class="var">D</span>, <span class="var">C</span> \= <span class="var">E</span>,
+    <span class="var">D</span> \= <span class="var">E</span>.
+                        </div>
+                    </div>
+                    <div>
+                        <h3>¿Qué pasa internamente?</h3>
+                        <p style="font-size: 0.9rem;">Prolog genera todas las asignaciones y luego verifica. Con 5 vars × 3 colores = <strong>243 combinaciones</strong>.</p>
+                        <div class="warning-box">
+                            <p style="margin:0;font-size:0.88rem;"><strong style="color: var(--c-gold);">Problema:</strong> Con 50 variables serían 3⁵⁰ combinaciones (24 dígitos). Necesitamos <strong>CLP(FD)</strong> (Bloque C).</p>
+                        </div>
+                        <div class="example-box" style="margin-top: 0.5rem;">
+                            <p style="margin:0;font-size:0.88rem;"><strong>¿B y C pueden ser iguales?</strong> Sí, si <strong>no son vecinos</strong> (no hay restricción entre ellos). Solo los pares con línea en el grafo deben ser diferentes.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="reading-guide">
+                    <div class="reading-guide-label"><i class="fas fa-glasses"></i> Cómo se lee este código</div>
+                    <div class="rg-line"><span class="rg-code">color(rojo).</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"Rojo es un color válido."</strong> Estos hechos definen el dominio (las opciones posibles).</span></div>
+                    <div class="rg-line"><span class="rg-code">color(A)</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"Asigná algún color a A."</strong> Prolog prueba rojo, verde y azul por backtracking.</span></div>
+                    <div class="rg-line"><span class="rg-code">A \= B</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"A debe ser diferente de B."</strong> Ojo: este <code>\=</code> es Prolog puro (sin <code>#</code>). Verifica <em>ahora mismo</em> — si A y B ya tienen el mismo color, falla y Prolog retrocede.</span></div>
+                    <div class="rg-line"><span class="rg-text"><strong>Diferencia clave:</strong> <code>\=</code> (Prolog puro) verifica al instante. <code>#\=</code> (CLP(FD)) guarda la restricción para después. Por eso CLP(FD) es más inteligente: no necesita adivinar primero.</span></div>
+                </div>
+                <div class="en-sencillo">
+                    <div class="en-sencillo-label"><i class="fas fa-seedling"></i> En sencillo</div>
+                    <p><strong>Este código funciona pero es "tonto":</strong> primero le da un color a cada región (color(A), color(B)...) y DESPUÉS verifica si no hay conflictos (A \= B). Si hay conflicto, vuelve atrás y prueba otro. Con 5 regiones y 3 colores son 3×3×3×3×3 = 243 combinaciones que revisar. <strong>¿El problema?</strong> Con 50 regiones serían 3⁵⁰ combinaciones — un número con 24 dígitos. Por eso este enfoque ("generate-and-test") solo sirve para problemas pequeños, y necesitamos CLP(FD) para problemas reales.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== SLIDE 14: GRAFO FORMAL ======================== -->
+        <div class="slide" id="slide-14">
+            <div class="card">
+                <span class="pill pill-purple"><i class="fas fa-project-diagram"></i> Bloque B</span>
+                <h2>El Grafo de Restricciones: ver el problema</h2>
+                <div class="grid-2">
+                    <div>
+                        <h3>Ejemplo: 4 regiones con solución</h3>
+                        <div class="graph-container">
+                            <svg width="220" height="180" viewBox="0 0 220 180">
+                                <line x1="55" y1="35" x2="165" y2="35" stroke="rgba(148,163,184,0.3)" stroke-width="2"/>
+                                <line x1="55" y1="35" x2="55" y2="145" stroke="rgba(148,163,184,0.3)" stroke-width="2"/>
+                                <line x1="165" y1="35" x2="165" y2="145" stroke="rgba(148,163,184,0.3)" stroke-width="2"/>
+                                <line x1="55" y1="145" x2="165" y2="145" stroke="rgba(148,163,184,0.3)" stroke-width="2"/>
+                                <line x1="55" y1="35" x2="165" y2="145" stroke="rgba(148,163,184,0.15)" stroke-width="1.5" stroke-dasharray="5,4"/>
+                                <circle cx="55" cy="35" r="22" fill="rgba(244,114,182,0.2)" stroke="#f472b6" stroke-width="2"/>
+                                <text x="55" y="33" text-anchor="middle" fill="#f472b6" font-weight="800" font-size="13">A</text>
+                                <text x="55" y="47" text-anchor="middle" fill="#f472b6" font-size="8" font-weight="600">Rojo</text>
+                                <circle cx="165" cy="35" r="22" fill="rgba(74,222,128,0.2)" stroke="#4ade80" stroke-width="2"/>
+                                <text x="165" y="33" text-anchor="middle" fill="#4ade80" font-weight="800" font-size="13">B</text>
+                                <text x="165" y="47" text-anchor="middle" fill="#4ade80" font-size="8" font-weight="600">Verde</text>
+                                <circle cx="55" cy="145" r="22" fill="rgba(74,222,128,0.2)" stroke="#4ade80" stroke-width="2"/>
+                                <text x="55" y="143" text-anchor="middle" fill="#4ade80" font-weight="800" font-size="13">C</text>
+                                <text x="55" y="157" text-anchor="middle" fill="#4ade80" font-size="8" font-weight="600">Verde</text>
+                                <circle cx="165" cy="145" r="22" fill="rgba(34,211,238,0.2)" stroke="#22d3ee" stroke-width="2"/>
+                                <text x="165" y="143" text-anchor="middle" fill="#22d3ee" font-weight="800" font-size="13">D</text>
+                                <text x="165" y="157" text-anchor="middle" fill="#22d3ee" font-size="8" font-weight="600">Azul</text>
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>Formalización completa</h3>
+                        <table>
+                            <tr><th>Componente</th><th>Valor</th></tr>
+                            <tr><td><strong>Variables</strong></td><td>{A, B, C, D}</td></tr>
+                            <tr><td><strong>Dominios</strong></td><td>{Rojo, Verde, Azul}</td></tr>
+                            <tr><td><strong>Restricciones</strong></td><td>A≠B, A≠C, A≠D, B≠D, C≠D</td></tr>
+                            <tr><td><strong>Arcos</strong></td><td>5 (líneas en el grafo)</td></tr>
+                        </table>
+                        <div class="example-box" style="margin-top: 0.5rem;">
+                            <p style="margin:0;font-size:0.85rem;"><strong>Verificación:</strong> A≠B(R≠V) <span class="result-ok">✓</span> A≠C(R≠V) <span class="result-ok">✓</span> A≠D(R≠Az) <span class="result-ok">✓</span> B≠D(V≠Az) <span class="result-ok">✓</span> C≠D(V≠Az) <span class="result-ok">✓</span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="en-sencillo">
+                    <div class="en-sencillo-label"><i class="fas fa-seedling"></i> En sencillo</div>
+                    <p><strong>El grafo de restricciones es como un "mapa" de las reglas del problema.</strong> Cada círculo (nodo) es una variable, y cada línea (arista) entre dos círculos significa "estos dos deben ser diferentes". Si dos nodos NO están conectados por una línea, no hay restricción entre ellos — pueden tener el mismo valor sin problema. <strong>Consejo práctico:</strong> antes de escribir código, dibuje el grafo en papel. Le va a ayudar a descubrir restricciones que se le olvidaron y a verificar que la solución es correcta.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== SLIDE 15: INTRO CLP(FD) ======================== -->
+        <div class="slide" id="slide-15">
+            <div class="card">
+                <span class="pill pill-green"><i class="fas fa-bolt"></i> Bloque C</span>
+                <h2><span class="tt">CLP(FD)<span class="tt-box"><span class="tt-label">CLP(FD)</span><span class="tt-def">Constraint Logic Programming over Finite Domains. Librería de SWI-Prolog que resuelve CSP automáticamente combinando propagación de restricciones + búsqueda inteligente. Mucho más rápido que generate-and-test.</span></span></span>: su solver de restricciones</h2>
+                <div class="example-box" style="margin-bottom: 0.8rem;">
+                    <p style="margin:0;font-size:0.95rem;"><i class="fas fa-rocket" style="color: var(--c-cyan); margin-right: 5px;"></i> <strong>¿Por qué?</strong> El generate-and-test es lento. CLP(FD) <strong>propaga restricciones automáticamente</strong> — reduce las opciones antes de buscar. Es dramáticamente más eficiente.</p>
+                </div>
+                <div class="grid-2">
+                    <div class="concept-box" style="border-top: 3px solid var(--c-pink);">
+                        <h3 style="color: var(--c-pink);"><i class="fas fa-snail" style="margin-right: 5px;"></i> ANTES</h3>
+                        <div class="code-block">
+<span class="fact">viejo</span>(<span class="var">A</span>, <span class="var">B</span>, <span class="var">C</span>) :-
+    <span class="fact">member</span>(<span class="var">A</span>, [<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>]),
+    <span class="fact">member</span>(<span class="var">B</span>, [<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>]),
+    <span class="fact">member</span>(<span class="var">C</span>, [<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>]),
+    <span class="var">A</span> \= <span class="var">B</span>, <span class="var">A</span> \= <span class="var">C</span>, <span class="var">B</span> \= <span class="var">C</span>.
+                        </div>
+                        <p style="font-size:0.82rem;color:var(--c-pink);margin:0;">Genera todo, luego verifica.</p>
+                    </div>
+                    <div class="concept-box" style="border-top: 3px solid var(--c-green);">
+                        <h3 style="color: var(--c-green);"><i class="fas fa-bolt" style="margin-right: 5px;"></i> AHORA</h3>
+                        <div class="code-block">
+:- <span class="kw">use_module</span>(library(clpfd)).
+<span class="fact">nuevo</span>(<span class="var">A</span>, <span class="var">B</span>, <span class="var">C</span>) :-
+    [<span class="var">A</span>,<span class="var">B</span>,<span class="var">C</span>] <span class="kw">ins</span> <span class="num">1</span>..<span class="num">3</span>,
+    <span class="kw">all_different</span>([<span class="var">A</span>,<span class="var">B</span>,<span class="var">C</span>]),
+    <span class="kw">label</span>([<span class="var">A</span>,<span class="var">B</span>,<span class="var">C</span>]).
+                        </div>
+                        <p style="font-size:0.82rem;color:var(--c-green);margin:0;">Propaga restricciones, luego busca.</p>
+                    </div>
+                </div>
+                <div class="reading-guide">
+                    <div class="reading-guide-label"><i class="fas fa-glasses"></i> Cómo se lee el código "AHORA" — línea por línea</div>
+                    <div class="rg-line"><span class="rg-code">:- use_module(library(clpfd)).</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"Cargue la librería CLP(FD)".</strong> Sin esta línea, nada de lo de abajo funciona. Es como un <code>import</code>.</span></div>
+                    <div class="rg-line"><span class="rg-code">[A,B,C] ins 1..3</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"A, B y C pueden valer 1, 2 o 3".</strong> <code>ins</code> = "pertenecen al rango". <code>1..3</code> = "del 1 al 3". Esto define los <em>dominios</em>.</span></div>
+                    <div class="rg-line"><span class="rg-code">all_different([A,B,C])</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"Todas deben ser diferentes entre sí".</strong> Es la restricción. En vez de escribir A≠B, A≠C, B≠C por separado, esta sola línea lo dice todo.</span></div>
+                    <div class="rg-line"><span class="rg-code">label([A,B,C])</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"Dale, buscá los valores".</strong> Es el "botón de inicio" del solver. Sin <code>label</code>, Prolog solo reduce opciones pero no da una respuesta concreta.</span></div>
+                </div>
+                <div class="en-sencillo">
+                    <div class="en-sencillo-label"><i class="fas fa-seedling"></i> En sencillo</div>
+                    <p><strong>CLP(FD) es un "motor inteligente" que se agrega a Prolog.</strong> Sin CLP(FD), Prolog resuelve CSP de forma bruta: genera todas las combinaciones y prueba una por una. Con CLP(FD), Prolog primero analiza las restricciones y <strong>descarta automáticamente</strong> las opciones que nunca podrían funcionar (por ejemplo: "si A=rojo, entonces B no puede ser rojo"). Así reduce miles de combinaciones a unas pocas, y encuentra la solución en milisegundos en vez de horas. El código además es más corto y legible.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== SLIDE 16: OPERADORES ======================== -->
+        <div class="slide" id="slide-16">
+            <div class="card">
+                <span class="pill pill-green"><i class="fas fa-keyboard"></i> Bloque C · Referencia</span>
+                <h2>Operadores CLP(FD)</h2>
+                <p style="margin-bottom: 0.5rem;">Todos llevan <code>#</code> — eso activa el solver en vez del backtracking simple.</p>
+                <table>
+                    <tr><th>Operador</th><th>¿Qué hace?</th><th>Ejemplo</th></tr>
+                    <tr><td><strong><code>X in L..H</code></strong></td><td>Define <span class="tt">dominio<span class="tt-box"><span class="tt-label">Dominio</span><span class="tt-def">Rango de valores posibles para una variable. "X in 1..9" significa que X puede ser cualquier entero del 1 al 9.</span></span></span> de X</td><td><code>X in 1..9</code></td></tr>
+                    <tr><td><strong><code>Vars ins L..H</code></strong></td><td>Dominio para lista</td><td><code>[X,Y] ins 1..9</code></td></tr>
+                    <tr><td><strong><code>X #= Y</code></strong></td><td>X igual a Y</td><td><code>X #= Y + 1</code></td></tr>
+                    <tr><td><strong><code>X #\= Y</code></strong></td><td>X diferente de Y</td><td><code>X #\= Y</code></td></tr>
+                    <tr><td><strong><code>X #< Y</code></strong></td><td>X menor que Y</td><td><code>X #< 10</code></td></tr>
+                    <tr><td><strong><code>X #> Y</code></strong></td><td>X mayor que Y</td><td><code>X #> 0</code></td></tr>
+                    <tr><td><strong><code><span class="tt">all_different<span class="tt-box"><span class="tt-label">all_different/1</span><span class="tt-def">Restricción global de CLP(FD) que exige que todas las variables de la lista tengan valores distintos entre sí. Es más eficiente que poner X≠Y para cada par.</span></span></span>(L)</code></strong></td><td>Todos distintos</td><td><code>all_different([X,Y,Z])</code></td></tr>
+                    <tr><td><strong><code><span class="tt">label<span class="tt-box"><span class="tt-label">label/1</span><span class="tt-def">El "botón de inicio" del solver. Primero define variables, dominios y restricciones; CLP(FD) propaga y reduce dominios. Luego label busca una asignación concreta. Sin label, solo ve dominios, no valores.</span></span></span>(Vars)</code></strong></td><td>Buscar solución</td><td><code>label([X,Y,Z])</code></td></tr>
+                </table>
+                <div class="reading-guide">
+                    <div class="reading-guide-label"><i class="fas fa-glasses"></i> ¿Por qué llevan # todos los operadores?</div>
+                    <div class="rg-line"><span class="rg-text">El <span class="rg-code">#</span> le dice a Prolog: <strong>"esto es una restricción CLP(FD), no una comparación normal".</strong> Prolog tiene su propio <code>=</code>, <code>\=</code>, <code><</code>, <code>></code>, pero esos se evalúan <em>inmediatamente</em>. Los que llevan <code>#</code> se <em>guardan como restricciones</em> y el solver las usa después para podar opciones.</span></div>
+                    <div style="margin-top: 6px; display:grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                        <div class="rg-line" style="margin:0;"><span class="rg-code">#=</span> <span class="rg-arrow">→</span> <span class="rg-text">se lee <strong>"debe ser igual a"</strong></span></div>
+                        <div class="rg-line" style="margin:0;"><span class="rg-code">#\=</span> <span class="rg-arrow">→</span> <span class="rg-text">se lee <strong>"debe ser diferente de"</strong> (el <code>\</code> niega)</span></div>
+                        <div class="rg-line" style="margin:0;"><span class="rg-code">#<</span> <span class="rg-arrow">→</span> <span class="rg-text">se lee <strong>"debe ser menor que"</strong></span></div>
+                        <div class="rg-line" style="margin:0;"><span class="rg-code">#></span> <span class="rg-arrow">→</span> <span class="rg-text">se lee <strong>"debe ser mayor que"</strong></span></div>
+                    </div>
+                    <div class="rg-line" style="margin-top: 6px;"><span class="rg-text"><strong>Regla de oro:</strong> si está usando CLP(FD), siempre use los operadores con <code>#</code>. Si usa los normales (<code>=</code>, <code>\=</code>), Prolog no va a propagar restricciones y todo será más lento o fallará.</span></div>
+                </div>
+                <div class="en-sencillo">
+                    <div class="en-sencillo-label"><i class="fas fa-seedling"></i> En sencillo</div>
+                    <p><strong>Todos los programas CLP(FD) siguen el mismo patrón de 3 pasos:</strong> (1) <strong>Dominios:</strong> usa <code>ins</code> para decir "estas variables van del 1 al 9" (o el rango que sea). (2) <strong>Restricciones:</strong> usa operadores con <code>#</code> para poner las reglas — por ejemplo, <code>#\=</code> significa "debe ser diferente de" y <code>all_different</code> significa "todos distintos entre sí". (3) <strong>Resolver:</strong> llama a <code>label</code> para que el solver busque valores concretos. <strong>¡Importante!</strong> Sin <code>label</code>, Prolog solo le dice "X está entre 1 y 3" pero no le da un número concreto.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== SLIDE 17: SEND+MORE=MONEY ======================== -->
+        <div class="slide" id="slide-17">
+            <div class="card">
+                <span class="pill pill-green"><i class="fas fa-puzzle-piece"></i> Bloque C · En acción</span>
+                <h2>SEND + MORE = MONEY</h2>
+                <p style="margin-bottom: 0.6rem;">Puzzle <span class="tt">criptaritmético<span class="tt-box"><span class="tt-label">Criptaritmética</span><span class="tt-def">Tipo de puzzle donde letras representan dígitos y forman una ecuación aritmética. Cada letra es un dígito diferente (0-9). El reto: descubrir qué dígito corresponde a cada letra.</span></span></span>: cada letra = un dígito diferente (0-9). A mano tomaría horas; con CLP(FD), milisegundos.</p>
+                <div class="grid-2">
+                    <div>
+                        <div class="code-block" style="font-size: 0.74rem;">
+:- <span class="kw">use_module</span>(library(clpfd)).
+<span class="fact">sendmore</span>(<span class="var">Digits</span>) :-
+    <span class="var">Digits</span> = [<span class="var">S</span>,<span class="var">E</span>,<span class="var">N</span>,<span class="var">D</span>,<span class="var">M</span>,<span class="var">O</span>,<span class="var">R</span>,<span class="var">Y</span>],
+    <span class="var">Digits</span> <span class="kw">ins</span> <span class="num">0</span>..<span class="num">9</span>,
+    <span class="kw">all_different</span>(<span class="var">Digits</span>),
+    <span class="var">S</span> #\= <span class="num">0</span>,  <span class="var">M</span> #\= <span class="num">0</span>,
+              <span class="num">1000</span>*<span class="var">S</span> + <span class="num">100</span>*<span class="var">E</span> + <span class="num">10</span>*<span class="var">N</span> + <span class="var">D</span>
+    +         <span class="num">1000</span>*<span class="var">M</span> + <span class="num">100</span>*<span class="var">O</span> + <span class="num">10</span>*<span class="var">R</span> + <span class="var">E</span>
+    #= <span class="num">10000</span>*<span class="var">M</span> + <span class="num">1000</span>*<span class="var">O</span> + <span class="num">100</span>*<span class="var">N</span> + <span class="num">10</span>*<span class="var">E</span> + <span class="var">Y</span>,
+    <span class="kw">label</span>(<span class="var">Digits</span>).
+                        </div>
+                    </div>
+                    <div>
+                        <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                            <div class="concept-box" style="padding: 0.6rem;"><p style="font-size:0.82rem;margin:0;"><span class="step-num" style="width:20px;height:20px;min-width:20px;font-size:0.6rem;">1</span> Dominios: Todas {0..9}</p></div>
+                            <div class="concept-box" style="padding: 0.6rem;"><p style="font-size:0.82rem;margin:0;"><span class="step-num" style="width:20px;height:20px;min-width:20px;font-size:0.6rem;">2</span> Unarias: S≠0, M≠0 → D(S)=D(M)={1..9}</p></div>
+                            <div class="concept-box" style="padding: 0.6rem;"><p style="font-size:0.82rem;margin:0;"><span class="step-num" style="width:20px;height:20px;min-width:20px;font-size:0.6rem;">3</span> Propagación: SEND+MORE ≤ 19999 → M=1</p></div>
+                            <div class="concept-box" style="padding: 0.6rem;"><p style="font-size:0.82rem;margin:0;"><span class="step-num" style="width:20px;height:20px;min-width:20px;font-size:0.6rem;">4</span> S=9, E=5, N=6, D=7, M=1, O=0, R=8, Y=2</p></div>
+                        </div>
+                        <div style="text-align:center;margin-top:0.6rem;padding:0.6rem;background:rgba(74,222,128,0.08);border-radius:12px;border:1px solid rgba(74,222,128,0.2);">
+                            <p style="font-family:'JetBrains Mono',monospace;font-size:1.2rem;margin:0;color:var(--c-green);font-weight:700;">9567 + 1085 = 10652 <span class="result-ok">✓</span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="reading-guide">
+                    <div class="reading-guide-label"><i class="fas fa-glasses"></i> Cómo se lee este código — línea por línea</div>
+                    <div class="rg-line"><span class="rg-code">Digits ins 0..9</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"Cada letra puede ser un dígito del 0 al 9."</strong> Así definimos los dominios.</span></div>
+                    <div class="rg-line"><span class="rg-code">all_different(Digits)</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"Todas las letras deben tener dígitos diferentes."</strong> No puede haber dos letras con el mismo número.</span></div>
+                    <div class="rg-line"><span class="rg-code">S #\= 0, M #\= 0</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"S debe ser diferente de 0 y M debe ser diferente de 0."</strong> Porque un número no empieza con cero (SEND no puede ser 0567).</span></div>
+                    <div class="rg-line"><span class="rg-code">1000*S + 100*E + ... #= ...</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"La suma de SEND + MORE debe ser igual a MONEY."</strong> Traducimos las palabras a números: SEND = 1000×S + 100×E + 10×N + D.</span></div>
+                    <div class="rg-line"><span class="rg-code">label(Digits)</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"Buscá la solución."</strong> El solver ya tiene las reglas; ahora que encuentre los dígitos concretos.</span></div>
+                </div>
+                <div class="en-sencillo">
+                    <div class="en-sencillo-label"><i class="fas fa-seedling"></i> En sencillo</div>
+                    <p><strong>SEND+MORE=MONEY es un puzzle criptaritmético:</strong> cada letra representa un dígito (0-9) y hay que descubrir cuál es cuál para que la suma sea correcta. A mano, tendrías que probar 10×9×8×7×6×5×4×3 = más de 1.8 millones de combinaciones. <strong>Con CLP(FD), le dice las reglas</strong> (todos los dígitos diferentes, S y M no son cero, la suma debe dar bien) <strong>y el solver lo resuelve en milisegundos</strong>: S=9, E=5, N=6, D=7, M=1, O=0, R=8, Y=2 → 9567 + 1085 = 10652.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== SLIDE 18: N-REINAS ======================== -->
+        <div class="slide" id="slide-18">
+            <div class="card">
+                <span class="pill pill-purple"><i class="fas fa-chess-queen"></i> Bloque C · Otro ejemplo</span>
+                <h2><span class="tt">N-Reinas<span class="tt-box"><span class="tt-label">Problema de las N-Reinas</span><span class="tt-def">Colocar N reinas de ajedrez en un tablero N×N sin que ninguna ataque a otra (no compartir fila, columna ni diagonal). Es un CSP clásico. Para N=8 hay 92 soluciones.</span></span></span>: otro CSP clásico</h2>
+                <p style="margin-bottom: 0.6rem;">Coloque N reinas en un tablero N×N sin que <strong>ninguna ataque a otra</strong>.</p>
+                <div class="grid-2">
+                    <div>
+                        <h3>Modelado como CSP</h3>
+                        <table>
+                            <tr><th>Componente</th><th>Valor</th></tr>
+                            <tr><td><strong>Variables</strong></td><td>Q1..QN (una por fila)</td></tr>
+                            <tr><td><strong>Dominios</strong></td><td>Qi ∈ {1..N} (columna)</td></tr>
+                            <tr><td><strong>Restricciones</strong></td><td>≠ columna, ≠ diagonal</td></tr>
+                        </table>
+                        <div class="warning-box" style="margin-top: 0.5rem;">
+                            <p style="margin:0;font-size:0.85rem;"><i class="fas fa-lightbulb" style="color:var(--c-gold);margin-right:4px;"></i> <strong>Truco:</strong> Al poner una reina por fila (Qi = columna), eliminamos el conflicto de filas automáticamente.</p>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>Código CLP(FD)</h3>
+                        <div class="code-block" style="font-size: 0.74rem;">
+:- <span class="kw">use_module</span>(library(clpfd)).
+<span class="fact">reinas</span>(<span class="var">N</span>, <span class="var">Qs</span>) :-
+    <span class="kw">length</span>(<span class="var">Qs</span>, <span class="var">N</span>),
+    <span class="var">Qs</span> <span class="kw">ins</span> <span class="num">1</span>..<span class="var">N</span>,
+    <span class="kw">all_different</span>(<span class="var">Qs</span>),
+    <span class="fact">safe</span>(<span class="var">Qs</span>),
+    <span class="kw">label</span>(<span class="var">Qs</span>).
+<span class="fact">safe</span>([]).
+<span class="fact">safe</span>([<span class="var">Q</span>|<span class="var">Qs</span>]) :-
+    <span class="fact">no_ataca</span>(<span class="var">Q</span>, <span class="var">Qs</span>, <span class="num">1</span>), <span class="fact">safe</span>(<span class="var">Qs</span>).
+<span class="fact">no_ataca</span>(_, [], _).
+<span class="fact">no_ataca</span>(<span class="var">Q</span>, [<span class="var">Q1</span>|<span class="var">Qs</span>], <span class="var">D</span>) :-
+    <span class="var">Q</span> #\= <span class="var">Q1</span>+<span class="var">D</span>, <span class="var">Q</span> #\= <span class="var">Q1</span>-<span class="var">D</span>,
+    <span class="var">D1</span> #= <span class="var">D</span>+<span class="num">1</span>,
+    <span class="fact">no_ataca</span>(<span class="var">Q</span>, <span class="var">Qs</span>, <span class="var">D1</span>).
+                        </div>
+                        <p style="font-size:0.8rem;color:var(--text-muted);"><code>?- reinas(4, Qs).</code> → <code>Qs = [2,4,1,3]</code></p>
+                    </div>
+                </div>
+                <div class="reading-guide">
+                    <div class="reading-guide-label"><i class="fas fa-glasses"></i> Cómo se lee este código — las partes clave</div>
+                    <div class="rg-line"><span class="rg-code">Qs ins 1..N</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"Cada reina puede ir en columna 1 hasta N."</strong></span></div>
+                    <div class="rg-line"><span class="rg-code">all_different(Qs)</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"Ninguna reina comparte columna."</strong> Como ya hay una por fila, esto resuelve columnas.</span></div>
+                    <div class="rg-line"><span class="rg-code">Q #\= Q1+D</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"La reina Q NO puede estar en la columna Q1+D."</strong> Si Q1 está en columna 3 y D=1 (una fila abajo), entonces Q no puede estar en 4 (diagonal ↘). El <code>#\=</code> se lee "debe ser diferente de".</span></div>
+                    <div class="rg-line"><span class="rg-code">Q #\= Q1-D</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"Tampoco puede estar en Q1−D."</strong> Esto cubre la otra diagonal (↙). Así entre <code>+D</code> y <code>-D</code> se cubren las dos diagonales.</span></div>
+                    <div class="rg-line"><span class="rg-code">D1 #= D+1</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"Avanzá a la siguiente fila"</strong> (la distancia D aumenta). Esto se repite recursivamente.</span></div>
+                </div>
+                <div class="en-sencillo">
+                    <div class="en-sencillo-label"><i class="fas fa-seedling"></i> En sencillo</div>
+                    <p><strong>¿Qué es el problema de N-Reinas?</strong> En ajedrez, la reina puede atacar en cualquier dirección: horizontal, vertical y diagonal. El reto es colocar N reinas en un tablero de N×N casillas sin que ninguna pueda atacar a otra — es decir, ninguna reina comparte fila, columna o diagonal con otra. <strong>¿Por qué es un CSP?</strong> Ponemos una reina por fila (así ya no hay conflicto de filas), y la <strong>variable</strong> de cada fila es "¿en qué columna va la reina?". El <strong>dominio</strong> son las N columnas posibles. Las <strong>restricciones</strong> dicen: (1) columnas diferentes (<code>all_different</code>) y (2) diagonales diferentes (que se verifica con <code>Q #\= Q1+D</code> y <code>Q #\= Q1-D</code>, donde D es la distancia entre filas). Para un tablero de 4×4, una solución es [2,4,1,3]: reina en fila 1→columna 2, fila 2→columna 4, fila 3→columna 1, fila 4→columna 3.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== SLIDE 19: EJERCICIO ======================== -->
+        <div class="slide" id="slide-19">
+            <div class="card">
+                <span class="pill pill-pink"><i class="fas fa-laptop-code"></i> Bloque D · 45 min</span>
+                <h2>Ejercicio: Asignación de Horarios</h2>
+                <p style="margin-bottom: 0.6rem;"><strong>Objetivo:</strong> Asignar 4 cursos a franjas horarias sin conflictos usando CLP(FD).</p>
+                <div class="grid-2">
+                    <div>
+                        <h3><i class="fas fa-database" style="color: var(--c-cyan);"></i> Los datos</h3>
+                        <table>
+                            <tr><th colspan="2">Cursos (= variables)</th></tr>
+                            <tr><td colspan="2">Matemáticas (M), Física (F), Química (Q), Informática (I)</td></tr>
+                            <tr><th colspan="2">Franjas (= dominio)</th></tr>
+                            <tr><td><strong>1</strong></td><td>8:00 – 10:00</td></tr>
+                            <tr><td><strong>2</strong></td><td>10:00 – 12:00</td></tr>
+                            <tr><td><strong>3</strong></td><td>13:00 – 15:00</td></tr>
+                        </table>
+                    </div>
+                    <div>
+                        <h3><i class="fas fa-ban" style="color: var(--c-pink);"></i> Restricciones</h3>
+                        <div style="display:flex;flex-direction:column;gap:0.5rem;">
+                            <div class="concept-box" style="padding:0.7rem;border-left:3px solid var(--c-cyan);">
+                                <p style="font-size:0.88rem;margin:0;"><strong>Binaria:</strong> M y F no en la misma franja → <code>M #\= F</code></p>
+                            </div>
+                            <div class="concept-box" style="padding:0.7rem;border-left:3px solid var(--c-purple);">
+                                <p style="font-size:0.88rem;margin:0;"><strong>Binaria:</strong> Q e I no en la misma franja → <code>Q #\= I</code></p>
+                            </div>
+                            <div class="concept-box" style="padding:0.7rem;border-left:3px solid var(--c-gold);">
+                                <p style="font-size:0.88rem;margin:0;"><strong>Unaria:</strong> M en la mañana → <code>M in 1..2</code></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="reading-guide">
+                    <div class="reading-guide-label"><i class="fas fa-glasses"></i> Cómo se lee la notación de las restricciones</div>
+                    <div class="rg-line"><span class="rg-code">M #\= F</span> <span class="rg-arrow">→</span> <span class="rg-text">Se lee: <strong>"M debe ser diferente de F".</strong> El <code>#</code> indica restricción CLP(FD). La <code>\</code> es la negación. Entonces <code>#\=</code> = "no igual" = "diferente".</span></div>
+                    <div class="rg-line"><span class="rg-code">M in 1..2</span> <span class="rg-arrow">→</span> <span class="rg-text">Se lee: <strong>"M solo puede ser 1 o 2".</strong> Es decir, M está limitada a las franjas de la mañana (8am o 10am). Esto es una restricción <em>unaria</em> (afecta a una sola variable).</span></div>
+                    <div class="rg-line"><span class="rg-text"><strong>Tip:</strong> Para traducir un requisito a código, piense: ¿qué variable(s) involucra? ¿qué relación tienen? Use <code>#\=</code> para "diferente", <code>#=</code> para "igual", y <code>in</code> para limitar opciones.</span></div>
+                </div>
+                <div class="en-sencillo">
+                    <div class="en-sencillo-label"><i class="fas fa-seedling"></i> En sencillo</div>
+                    <p><strong>Su tarea:</strong> Tiene 4 cursos (Mate, Física, Química, Informática) y 3 franjas horarias (8am, 10am, 1pm). Hay que asignar cada curso a una franja cumpliendo 3 reglas. <strong>¿Cómo?</strong> En CLP(FD) sigue siempre el mismo patrón: (1) carga la librería con <code>use_module</code>, (2) crea las 4 variables y les dice que van del 1 al 3 con <code>ins 1..3</code>, (3) pone las restricciones con <code>#\=</code> e <code>in</code>, y (4) llama a <code>label</code> para que el solver encuentre la solución automáticamente.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== SLIDE 20: SOLUCIÓN ======================== -->
+        <div class="slide" id="slide-20">
+            <div class="card">
+                <span class="pill pill-green"><i class="fas fa-check-double"></i> Bloque D · Solución</span>
+                <h2>Solución: Horario con CLP(FD)</h2>
+                <div class="grid-2">
+                    <div>
+                        <div class="code-block" style="font-size: 0.76rem;">
+:- <span class="kw">use_module</span>(library(clpfd)).
+<span class="fact">horario</span>(<span class="var">M</span>, <span class="var">F</span>, <span class="var">Q</span>, <span class="var">I</span>) :-
+    <span class="var">Vars</span> = [<span class="var">M</span>, <span class="var">F</span>, <span class="var">Q</span>, <span class="var">I</span>],
+    <span class="var">Vars</span> <span class="kw">ins</span> <span class="num">1</span>..<span class="num">3</span>,
+    <span class="var">M</span> #\= <span class="var">F</span>,   <span class="cmt">% mismo profesor</span>
+    <span class="var">Q</span> #\= <span class="var">I</span>,   <span class="cmt">% mismos alumnos</span>
+    <span class="var">M</span> <span class="kw">in</span> <span class="num">1</span>..<span class="num">2</span>, <span class="cmt">% mañana</span>
+    <span class="kw">label</span>(<span class="var">Vars</span>).
+                        </div>
+                        <div class="code-block" style="font-size: 0.76rem;">
+?- <span class="fact">horario</span>(<span class="var">M</span>,<span class="var">F</span>,<span class="var">Q</span>,<span class="var">I</span>).
+<span class="cmt">% M=1, F=2, Q=1, I=2</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>Verificación</h3>
+                        <p style="font-size:0.9rem;">
+                            M=1(8am), F=2(10am) → M≠F <span class="result-ok">✓</span><br>
+                            Q=1(8am), I=2(10am) → Q≠I <span class="result-ok">✓</span><br>
+                            M=1 → M ∈ {1,2} <span class="result-ok">✓</span>
+                        </p>
+                        <div class="warning-box">
+                            <p style="margin:0;font-size:0.85rem;"><strong>Reto:</strong> Agregue <code>F #\= Q</code>. ¿Cuántas soluciones quedan? Use <code>findall</code> para contarlas.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="reading-guide">
+                    <div class="reading-guide-label"><i class="fas fa-glasses"></i> Cómo se lee el código — línea por línea</div>
+                    <div class="rg-line"><span class="rg-code">Vars = [M, F, Q, I]</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"Creamos una lista con las 4 variables"</strong> (M=Mate, F=Física, Q=Química, I=Informática).</span></div>
+                    <div class="rg-line"><span class="rg-code">Vars ins 1..3</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"Todas pueden tomar los valores 1, 2 o 3"</strong> (las 3 franjas horarias). <code>ins</code> = "in" para listas.</span></div>
+                    <div class="rg-line"><span class="rg-code">M #\= F</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"Mate debe ir en franja diferente a Física"</strong> (mismo profe). <code>#\=</code> = "no es igual".</span></div>
+                    <div class="rg-line"><span class="rg-code">M in 1..2</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"Mate solo puede ir en franja 1 o 2"</strong> (mañana). Esto <em>reduce</em> el dominio de M.</span></div>
+                    <div class="rg-line"><span class="rg-code">label(Vars)</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"Solver: encontrá una asignación concreta."</strong> Sin esto, Prolog solo dice los rangos posibles.</span></div>
+                </div>
+                <div class="en-sencillo">
+                    <div class="en-sencillo-label"><i class="fas fa-seedling"></i> En sencillo</div>
+                    <p><strong>El programa completo tiene solo 7 líneas útiles</strong> y sigue el patrón: variables → dominios → restricciones → label. La solución M=1, F=2, Q=1, I=2 significa: Mate a las 8am, Física a las 10am, Química a las 8am, Informática a las 10am. <strong>¿Está bien?</strong> Verificamos: Mate(1) ≠ Física(2) ✓, Química(1) ≠ Informática(2) ✓, Mate(1) está en {1,2} (mañana) ✓. Todas las reglas se cumplen — es una solución válida. <strong>Nota:</strong> Mate y Química comparten franja, ¡y está bien! No hay restricción que lo prohíba.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== SLIDE 21: SUDOKU 4×4 ======================== -->
+        <div class="slide" id="slide-21">
+            <div class="card">
+                <span class="pill pill-pink"><i class="fas fa-th"></i> Bloque D · Ejercicio 2</span>
+                <h2>Mini-Sudoku 4×4: cerrando el círculo</h2>
+                <p style="margin-bottom: 0.5rem; font-size: 0.9rem;">¿Recuerdan el Sudoku del inicio? Ahora <strong>ustedes</strong> lo modelan como CSP. Empezamos con uno de 4×4.</p>
+                <div class="grid-2">
+                    <div>
+                        <h3><i class="fas fa-puzzle-piece" style="color: var(--c-gold);"></i> El tablero</h3>
+                        <div style="display:grid; grid-template-columns: repeat(4,42px); gap:2px; margin: 0.4rem auto; width: fit-content; border: 2px solid var(--c-cyan); border-radius: 8px; overflow: hidden;">
+                            <div style="background:rgba(34,211,238,0.15); padding:8px; text-align:center; font-weight:700; font-size:1.1rem; color:var(--c-cyan); border-right:2px solid rgba(34,211,238,0.3);">1</div>
+                            <div style="background:rgba(255,255,255,0.03); padding:8px; text-align:center; font-weight:700; font-size:1.1rem; color:var(--text-muted); border-right:2px solid rgba(255,255,255,0.1);">?</div>
+                            <div style="background:rgba(34,211,238,0.15); padding:8px; text-align:center; font-weight:700; font-size:1.1rem; color:var(--c-cyan); border-right:2px solid rgba(34,211,238,0.3);">3</div>
+                            <div style="background:rgba(255,255,255,0.03); padding:8px; text-align:center; font-weight:700; font-size:1.1rem; color:var(--text-muted);">?</div>
+                            <div style="background:rgba(255,255,255,0.03); padding:8px; text-align:center; font-weight:700; font-size:1.1rem; color:var(--text-muted); border-right:2px solid rgba(255,255,255,0.1);">?</div>
+                            <div style="background:rgba(34,211,238,0.15); padding:8px; text-align:center; font-weight:700; font-size:1.1rem; color:var(--c-cyan); border-right:2px solid rgba(34,211,238,0.3);">3</div>
+                            <div style="background:rgba(255,255,255,0.03); padding:8px; text-align:center; font-weight:700; font-size:1.1rem; color:var(--text-muted); border-right:2px solid rgba(255,255,255,0.1);">?</div>
+                            <div style="background:rgba(34,211,238,0.15); padding:8px; text-align:center; font-weight:700; font-size:1.1rem; color:var(--c-cyan);">1</div>
+                            <div style="background:rgba(34,211,238,0.15); padding:8px; text-align:center; font-weight:700; font-size:1.1rem; color:var(--c-cyan); border-right:2px solid rgba(34,211,238,0.3);">3</div>
+                            <div style="background:rgba(255,255,255,0.03); padding:8px; text-align:center; font-weight:700; font-size:1.1rem; color:var(--text-muted); border-right:2px solid rgba(255,255,255,0.1);">?</div>
+                            <div style="background:rgba(34,211,238,0.15); padding:8px; text-align:center; font-weight:700; font-size:1.1rem; color:var(--c-cyan); border-right:2px solid rgba(34,211,238,0.3);">2</div>
+                            <div style="background:rgba(255,255,255,0.03); padding:8px; text-align:center; font-weight:700; font-size:1.1rem; color:var(--text-muted);">?</div>
+                            <div style="background:rgba(255,255,255,0.03); padding:8px; text-align:center; font-weight:700; font-size:1.1rem; color:var(--text-muted); border-right:2px solid rgba(255,255,255,0.1);">?</div>
+                            <div style="background:rgba(34,211,238,0.15); padding:8px; text-align:center; font-weight:700; font-size:1.1rem; color:var(--c-cyan); border-right:2px solid rgba(34,211,238,0.3);">1</div>
+                            <div style="background:rgba(255,255,255,0.03); padding:8px; text-align:center; font-weight:700; font-size:1.1rem; color:var(--text-muted); border-right:2px solid rgba(255,255,255,0.1);">?</div>
+                            <div style="background:rgba(34,211,238,0.15); padding:8px; text-align:center; font-weight:700; font-size:1.1rem; color:var(--c-cyan);">2</div>
+                        </div>
+                        <p style="font-size: 0.8rem; text-align:center; color:var(--text-muted); margin-top:0.3rem;">Celdas <span style="color:var(--c-cyan);">cyan</span> = pistas · <span style="color:var(--text-muted);">?</span> = variables</p>
+                        <table style="margin-top: 0.5rem; font-size: 0.82rem;">
+                            <tr><th>CSP</th><th>Sudoku 4×4</th></tr>
+                            <tr><td><strong>Variables</strong></td><td>Las 8 celdas con "?"</td></tr>
+                            <tr><td><strong>Dominios</strong></td><td>Cada var ∈ {1, 2, 3, 4}</td></tr>
+                            <tr><td><strong>Restricciones</strong></td><td>all_different por fila, columna y bloque 2×2</td></tr>
+                        </table>
+                    </div>
+                    <div>
+                        <h3><i class="fas fa-code" style="color: var(--c-green);"></i> Solución CLP(FD)</h3>
+                        <div class="code-block" style="font-size: 0.72rem;">
+:- <span class="kw">use_module</span>(library(clpfd)).
+<span class="fact">sudoku4</span>(<span class="var">Rows</span>) :-
+    <span class="var">Rows</span> = [[<span class="var">A1</span>,<span class="var">A2</span>,<span class="var">A3</span>,<span class="var">A4</span>],
+            [<span class="var">B1</span>,<span class="var">B2</span>,<span class="var">B3</span>,<span class="var">B4</span>],
+            [<span class="var">C1</span>,<span class="var">C2</span>,<span class="var">C3</span>,<span class="var">C4</span>],
+            [<span class="var">D1</span>,<span class="var">D2</span>,<span class="var">D3</span>,<span class="var">D4</span>]],
+    <span class="kw">append</span>(<span class="var">Rows</span>, <span class="var">Vs</span>), <span class="var">Vs</span> <span class="kw">ins</span> <span class="num">1</span>..<span class="num">4</span>,
+    <span class="cmt">% Filas: cada fila tiene valores distintos</span>
+    <span class="kw">maplist</span>(all_different, <span class="var">Rows</span>),
+    <span class="cmt">% Columnas</span>
+    <span class="kw">transpose</span>(<span class="var">Rows</span>, <span class="var">Cols</span>),
+    <span class="kw">maplist</span>(all_different, <span class="var">Cols</span>),
+    <span class="cmt">% Bloques 2×2</span>
+    <span class="kw">all_different</span>([<span class="var">A1</span>,<span class="var">A2</span>,<span class="var">B1</span>,<span class="var">B2</span>]),
+    <span class="kw">all_different</span>([<span class="var">A3</span>,<span class="var">A4</span>,<span class="var">B3</span>,<span class="var">B4</span>]),
+    <span class="kw">all_different</span>([<span class="var">C1</span>,<span class="var">C2</span>,<span class="var">D1</span>,<span class="var">D2</span>]),
+    <span class="kw">all_different</span>([<span class="var">C3</span>,<span class="var">C4</span>,<span class="var">D3</span>,<span class="var">D4</span>]),
+    <span class="cmt">% Pistas del tablero</span>
+    <span class="var">A1</span> #= <span class="num">1</span>, <span class="var">A3</span> #= <span class="num">3</span>,
+    <span class="var">B2</span> #= <span class="num">3</span>, <span class="var">B4</span> #= <span class="num">1</span>,
+    <span class="var">C1</span> #= <span class="num">3</span>, <span class="var">C3</span> #= <span class="num">2</span>,
+    <span class="var">D2</span> #= <span class="num">1</span>, <span class="var">D4</span> #= <span class="num">2</span>,
+    <span class="kw">maplist</span>(label, <span class="var">Rows</span>).
+                        </div>
+                        <div class="example-box" style="margin-top:0.4rem;">
+                            <p style="margin:0;font-size:0.82rem;"><strong>Patrón:</strong> dominio → filas → columnas → bloques → pistas → label. ¡Este mismo patrón escala a 9×9!</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="reading-guide">
+                    <div class="reading-guide-label"><i class="fas fa-glasses"></i> Cómo se lee este código — las partes nuevas</div>
+                    <div class="rg-line"><span class="rg-code">append(Rows, Vs)</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"Aplaná la lista de listas en una sola lista."</strong> Convierte [[A1,A2,...],[B1,...]] en [A1,A2,...,B1,...] para poder aplicar <code>ins</code> a todas juntas.</span></div>
+                    <div class="rg-line"><span class="rg-code">Vs ins 1..4</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"Todas las celdas valen entre 1 y 4."</strong> Define los dominios de las 16 variables de un solo golpe.</span></div>
+                    <div class="rg-line"><span class="rg-code">maplist(all_different, Rows)</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"Aplicá all_different a cada fila."</strong> <code>maplist</code> ejecuta la misma función sobre cada elemento de la lista. Es como un <code>for</code> que dice "en cada fila, todos diferentes".</span></div>
+                    <div class="rg-line"><span class="rg-code">transpose(Rows, Cols)</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"Convertí filas en columnas."</strong> Así podemos decir <code>all_different</code> sobre las columnas con el mismo truco.</span></div>
+                    <div class="rg-line"><span class="rg-code">A1 #= 1</span> <span class="rg-arrow">→</span> <span class="rg-text"><strong>"La celda A1 debe ser igual a 1."</strong> Estas son las pistas del tablero. <code>#=</code> = "debe ser igual".</span></div>
+                </div>
+                <div class="en-sencillo">
+                    <div class="en-sencillo-label"><i class="fas fa-seedling"></i> En sencillo</div>
+                    <p><strong>El Sudoku es el ejemplo perfecto de CSP</strong> porque las tres partes se ven claramente: las <strong>variables</strong> son las celdas vacías (los "?"), el <strong>dominio</strong> de cada una es {1,2,3,4}, y las <strong>restricciones</strong> son tres: no repetir número en la misma fila, ni en la misma columna, ni en el mismo bloque 2×2. El código sigue exactamente el mismo patrón de 3 pasos que usamos en horarios (dominios → restricciones → label), solo que aquí hay más variables y más restricciones. <strong>Lo poderoso:</strong> este mismo código escala a un Sudoku 9×9 real solo cambiando <code>1..4</code> por <code>1..9</code> y agregando los bloques 3×3.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== SLIDE 22: BUENAS PRÁCTICAS ======================== -->
+        <div class="slide" id="slide-22">
+            <div class="card">
+                <span class="pill pill-orange"><i class="fas fa-tools"></i> Bloque D</span>
+                <h2>Modelar es una habilidad</h2>
+                <div class="grid-2">
+                    <div class="concept-box" style="border-left: 3px solid var(--c-pink);">
+                        <h3 style="color: var(--c-pink);"><i class="fas fa-times-circle" style="margin-right: 5px;"></i> Errores comunes</h3>
+                        <p style="font-size:0.88rem;"><strong>Olvidar restricciones:</strong> el solver da soluciones que violan reglas del problema real.</p>
+                        <p style="font-size:0.88rem;"><strong>Dominio enorme:</strong> incluir valores que nunca serán válidos hace todo más lento.</p>
+                        <p style="font-size:0.88rem;margin:0;"><strong>Variables innecesarias:</strong> a veces un modelado más inteligente elimina variables (como en N-Reinas).</p>
+                    </div>
+                    <div class="concept-box" style="border-left: 3px solid var(--c-green);">
+                        <h3 style="color: var(--c-green);"><i class="fas fa-check-circle" style="margin-right: 5px;"></i> Buenas prácticas</h3>
+                        <p style="font-size:0.88rem;"><strong>Empiece con unarias:</strong> reducen dominios antes de que el solver busque.</p>
+                        <p style="font-size:0.88rem;"><strong>Use restricciones globales:</strong> <code>all_different</code> es más eficiente que N pares X≠Y.</p>
+                        <p style="font-size:0.88rem;margin:0;"><strong>Dibuje el grafo:</strong> visualizar restricciones le ayuda a no olvidar ninguna.</p>
+                    </div>
+                </div>
+                <div class="en-sencillo">
+                    <div class="en-sencillo-label"><i class="fas fa-seedling"></i> En sencillo</div>
+                    <p><strong>Los 3 errores más comunes al modelar CSP (y cómo evitarlos):</strong> (1) <strong>Olvidar restricciones:</strong> si le falta una regla, el solver da una solución que "funciona" en el código pero viola una regla del mundo real — por ejemplo, dos cursos a la misma hora con el mismo profesor. Solución: dibuje el grafo y verifique cada par. (2) <strong>Dominio demasiado grande:</strong> si dice <code>ins 1..100</code> cuando en realidad solo hay 3 opciones, el solver pierde tiempo explorando valores imposibles. (3) <strong>Variables innecesarias:</strong> a veces un modelado más listo elimina variables (como en N-Reinas, donde una variable por fila ya elimina conflictos de fila automáticamente).</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== SLIDE 23: ENTREGA ======================== -->
+        <div class="slide" id="slide-23">
+            <div class="card">
+                <span class="pill pill-gold"><i class="fas fa-file-upload"></i> Entrega del día</span>
+                <h2>Avance: Proyecto de Agente Inteligente</h2>
+                <p style="margin-bottom: 0.8rem;">Al finalizar la clase, entregue el avance para <strong>retroalimentación</strong>. Si su problema se puede modelar como CSP, ¡intégralo!</p>
+                <div class="grid-2">
+                    <div class="concept-box">
+                        <h3><i class="fas fa-list-check" style="color: var(--c-cyan); margin-right: 6px;"></i> ¿Qué incluir?</h3>
+                        <p style="font-size:0.9rem;"><strong style="color:var(--c-cyan);">Base de conocimiento ampliada:</strong> hechos y reglas del dominio.</p>
+                        <p style="font-size:0.9rem;"><strong style="color:var(--c-purple);">Reglas recursivas:</strong> al menos una que procese listas.</p>
+                        <p style="font-size:0.9rem;"><strong style="color:var(--c-green);">Restricciones (si aplica):</strong> parte del problema como CSP con CLP(FD).</p>
+                        <p style="font-size:0.9rem;margin:0;"><strong style="color:var(--c-gold);">Consultas de prueba:</strong> mínimo 5 consultas demostrativas.</p>
+                    </div>
+                    <div class="concept-box">
+                        <h3><i class="fas fa-star" style="color: var(--c-gold); margin-right: 6px;"></i> Criterios</h3>
+                        <p style="font-size:0.9rem;">Claridad del código, uso correcto de restricciones, calidad de la base de conocimiento, aplicación de conceptos.</p>
+                        <div class="warning-box" style="margin-top: 0.6rem;">
+                            <p style="margin:0;font-size:0.9rem;"><i class="fas fa-exclamation-triangle" style="color:var(--c-gold);margin-right:4px;"></i> Este avance es parte del proyecto final (<strong>30% de la nota</strong>).</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="en-sencillo">
+                    <div class="en-sencillo-label"><i class="fas fa-seedling"></i> En sencillo</div>
+                    <p><strong>¿Qué tiene que entregar hoy?</strong> Un archivo .pl (Prolog) con: (1) hechos que describan su dominio (por ejemplo: <code>curso(mate). profesor(juan).</code>), (2) al menos una regla recursiva que procese listas, (3) si su problema se puede modelar como CSP, incluya restricciones con CLP(FD), y (4) mínimo 5 consultas de prueba que demuestren que funciona. <strong>¿Por qué importa?</strong> Este avance vale puntos del proyecto final (30% de la nota) y es su oportunidad de recibir feedback antes de la entrega definitiva.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================== SLIDE 24: CIERRE ======================== -->
+        <div class="slide" id="slide-24">
+            <div class="card" style="justify-content: center;">
+                <span class="pill pill-purple"><i class="fas fa-flag-checkered"></i> Cierre</span>
+                <h2>Las 3 ideas que debe llevarse hoy</h2>
+                <div class="grid-3" style="margin-bottom: 1rem;">
+                    <div class="concept-box" style="border-top: 3px solid var(--c-cyan); text-align: center;">
+                        <div class="icon-circle ic-cyan" style="width:44px;height:44px;margin:0 auto 0.6rem;font-size:1rem;"><i class="fas fa-drafting-compass"></i></div>
+                        <h3 style="justify-content: center;">Modelar primero</h3>
+                        <p style="font-size:0.88rem;">Variables + dominios + restricciones. Eso es el 80% del trabajo.</p>
+                    </div>
+                    <div class="concept-box" style="border-top: 3px solid var(--c-green); text-align: center;">
+                        <div class="icon-circle ic-green" style="width:44px;height:44px;margin:0 auto 0.6rem;font-size:1rem;"><i class="fas fa-bolt"></i></div>
+                        <h3 style="justify-content: center;">CLP(FD) resuelve</h3>
+                        <p style="font-size:0.88rem;"><code>ins</code>, <code>#\=</code>, <code>all_different</code>, <code>label</code> — solver completo en pocas líneas.</p>
+                    </div>
+                    <div class="concept-box" style="border-top: 3px solid var(--c-purple); text-align: center;">
+                        <div class="icon-circle ic-purple" style="width:44px;height:44px;margin:0 auto 0.6rem;font-size:1rem;"><i class="fas fa-layer-group"></i></div>
+                        <h3 style="justify-content: center;">Patrón universal</h3>
+                        <p style="font-size:0.88rem;">Horarios, rutas, puzzles, configuraciones — CSP aplica en casi cualquier dominio.</p>
+                    </div>
+                </div>
+                <div class="divider"></div>
+                <div style="display: flex; gap: 1.2rem; flex-wrap: wrap; margin-top: 0.8rem;">
+                    <div class="concept-box" style="flex:1;min-width:260px;">
+                        <h3><i class="fas fa-book" style="color:var(--c-gold);margin-right:6px;"></i> Semana 11</h3>
+                        <p style="font-size:0.88rem;margin:0;">Leer Talbot et al. sobre <strong>técnicas de consistencia</strong> (consistencia de arco, AC-3, forward checking).</p>
+                    </div>
+                    <div class="concept-box" style="flex:1;min-width:260px;">
+                        <h3><i class="fas fa-code" style="color:var(--c-cyan);margin-right:6px;"></i> Práctica</h3>
+                        <p style="font-size:0.88rem;margin:0;">Resolver: Sudoku 4×4, N-Reinas (N=8), coloreo de mapas con más regiones.</p>
+                    </div>
+                </div>
+                <p style="text-align:center;margin-top:1rem;font-style:italic;color:var(--c-cyan);font-size:1rem;">
+                    "No busques la solución — <strong>defina las restricciones</strong> y dejá que la máquina la encuentre."
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const progress = document.getElementById('progress');
+        const counter = document.getElementById('counter');
+        let current = 0;
+        const total = slides.length;
+        function updateSlide() {
+            slides.forEach((s, i) => s.classList.toggle('active', i === current));
+            progress.style.width = ((current + 1) / total * 100) + '%';
+            counter.textContent = `${current + 1} / ${total}`;
+        }
+        document.addEventListener('keydown', e => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+                e.preventDefault(); if (current < total - 1) { current++; updateSlide(); }
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                e.preventDefault(); if (current > 0) { current--; updateSlide(); }
+            } else if (e.key === 'Home') { e.preventDefault(); current = 0; updateSlide(); }
+            else if (e.key === 'End') { e.preventDefault(); current = total - 1; updateSlide(); }
+        });
+        let touchStartX = 0;
+        document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
+        document.addEventListener('touchend', e => {
+            const diff = touchStartX - e.changedTouches[0].screenX;
+            if (Math.abs(diff) > 50) {
+                if (diff > 0 && current < total - 1) { current++; updateSlide(); }
+                else if (diff < 0 && current > 0) { current--; updateSlide(); }
+            }
+        });
+        updateSlide();
+
+        // Global tooltip — robust approach using mousemove
+        const gtt = document.getElementById('global-tooltip');
+        let activeTT = null;
+
+        function showTooltip(tt) {
+            if (activeTT === tt) return; // already showing this one
+            activeTT = tt;
+            const src = tt.querySelector('.tt-box');
+            if (!src) { hideTooltip(); return; }
+            gtt.innerHTML = src.innerHTML;
+            gtt.style.top = '-9999px';
+            gtt.style.left = '-9999px';
+            gtt.classList.add('visible');
+            const bh = gtt.offsetHeight;
+            const bw = 320;
+            const rect = tt.getBoundingClientRect();
+            let top = rect.top - bh - 10;
+            let left = rect.left + rect.width / 2 - bw / 2;
+            if (top < 8) top = rect.bottom + 10;
+            if (left < 8) left = 8;
+            if (left + bw > window.innerWidth - 8) left = window.innerWidth - bw - 8;
+            gtt.style.top = top + 'px';
+            gtt.style.left = left + 'px';
+        }
+
+        function hideTooltip() {
+            activeTT = null;
+            gtt.classList.remove('visible');
+            gtt.style.top = '-9999px';
+            gtt.style.left = '-9999px';
+        }
+
+        // Use mousemove — fires continuously and reliably on all elements
+        document.addEventListener('mousemove', e => {
+            const tt = e.target.closest('.tt');
+            if (tt) {
+                showTooltip(tt);
+            } else if (activeTT) {
+                hideTooltip();
+            }
+        });
+
+        // Also hide when mouse leaves the window entirely
+        document.addEventListener('mouseleave', hideTooltip);
+    </script>
+</body>
+</html>
