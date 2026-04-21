@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SINT-648 · Semana 2 · Principios de Prompt Engineering</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-deep: #0a0f1a;
+    --bg-card: #111827;
+    --bg-card-alt: #1e293b;
+    --border-subtle: rgba(56, 189, 248, 0.08);
+    --border-accent: rgba(56, 189, 248, 0.2);
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --cyan: #38bdf8;
+    --purple: #a78bfa;
+    --green: #34d399;
+    --amber: #fbbf24;
+    --red: #f87171;
+    --pink: #f472b6;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; }
+
+body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ─── SLIDE ENGINE ─── */
+.deck { width: 100%; height: 100vh; position: relative; overflow: hidden; }
+
+.slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 52px 90px 48px;
+    overflow-y: auto;
+    opacity: 0;
+    transform: translateX(50px);
+    pointer-events: none;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(56,189,248,0.12) transparent;
+}
+
+.slide::-webkit-scrollbar { width: 5px; }
+.slide::-webkit-scrollbar-thumb { background: rgba(56,189,248,0.12); border-radius: 3px; }
+.slide.active { opacity: 1; transform: translateX(0); pointer-events: auto; z-index: 2; }
+.slide.prev { opacity: 0; transform: translateX(-50px); }
+
+/* ─── HERO GLASSMORPHISM ─── */
+.hero-glass {
+    background: linear-gradient(160deg, rgba(17,24,39,0.7), rgba(30,41,59,0.5));
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 24px;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    padding: 60px 72px 48px;
+    max-width: 920px;
+    width: 100%;
+    box-shadow: 0 8px 60px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.hero-divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    margin: 32px 0 28px;
+}
+
+.hero-meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.hero-meta-item {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+.hero-meta-icon {
+    width: 42px; height: 42px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+}
+
+.hero-meta-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    margin-bottom: 3px; display: block;
+}
+
+.hero-meta-value {
+    font-size: 1.05rem; font-weight: 600; color: var(--text-primary);
+    line-height: 1.3;
+}
+
+.hero-meta-sub {
+    font-size: 0.92rem; color: var(--text-muted); font-style: italic;
+}
+
+/* ─── PRESENTATION TYPOGRAPHY ─── */
+.slide-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem; font-weight: 700; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px;
+}
+
+.slide-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 5px 14px; border-radius: 6px; display: inline-block; margin-bottom: 16px;
+}
+
+h1.hero-title {
+    font-size: 4rem; font-weight: 700; line-height: 1.08; letter-spacing: -0.03em; margin-bottom: 24px;
+}
+
+h2.section-title {
+    font-size: 2.8rem; font-weight: 700; line-height: 1.15; letter-spacing: -0.025em; margin-bottom: 24px;
+}
+
+h3.sub-title {
+    font-size: 1.6rem; font-weight: 700; line-height: 1.25; margin-bottom: 14px;
+}
+
+p.lead {
+    font-size: 1.45rem; color: var(--text-secondary); line-height: 1.65; max-width: 1000px;
+}
+
+p.body {
+    font-size: 1.3rem; color: var(--text-secondary); line-height: 1.65; max-width: 1000px; margin-bottom: 16px;
+}
+
+p.note {
+    font-size: 1.1rem; color: var(--text-muted); line-height: 1.55; max-width: 900px;
+}
+
+/* ─── COMPONENTS (presentation-sized) ─── */
+.tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88rem; font-weight: 600; padding: 5px 12px; border-radius: 6px;
+    display: inline-block; margin: 3px 4px 3px 0;
+}
+
+.card-grid {
+    display: grid; gap: 16px; margin-top: 20px;
+}
+
+.card {
+    background: linear-gradient(160deg, var(--bg-card), var(--bg-card-alt));
+    border-radius: 14px; padding: 24px 28px; border: 1px solid var(--border-subtle);
+    transition: border-color 0.3s;
+}
+.card:hover { border-color: var(--border-accent); }
+.card h4 { font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; }
+.card p { font-size: 1.1rem; color: var(--text-secondary); line-height: 1.55; }
+
+.callout {
+    border-left: 3px solid; padding: 20px 24px; border-radius: 0 12px 12px 0; margin: 18px 0;
+}
+.callout.info { border-color: var(--cyan); background: rgba(56,189,248,0.05); }
+.callout.warning { border-color: var(--amber); background: rgba(251,191,36,0.05); }
+.callout.idea { border-color: var(--purple); background: rgba(167,139,250,0.05); }
+.callout.success { border-color: var(--green); background: rgba(52,211,153,0.05); }
+
+.callout-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; margin-bottom: 6px; display: block;
+}
+.callout p { font-size: 1.15rem; color: var(--text-secondary); line-height: 1.55; margin: 0; }
+
+.analogy-box {
+    display: flex; gap: 20px; align-items: flex-start;
+    background: linear-gradient(160deg, var(--bg-card), var(--bg-card-alt));
+    border-radius: 14px; padding: 24px 28px; border: 1px solid var(--border-subtle); margin: 18px 0;
+}
+.analogy-emoji { font-size: 2.4rem; flex-shrink: 0; line-height: 1; margin-top: 2px; }
+.analogy-box p { font-size: 1.15rem; color: var(--text-secondary); line-height: 1.6; margin: 0; }
+.analogy-box strong { color: var(--text-primary); }
+
+.prompt-box {
+    background: var(--bg-deep); border-radius: 10px; padding: 20px 24px;
+    font-family: 'JetBrains Mono', monospace; font-size: 1rem; line-height: 1.7;
+    border: 1px solid var(--border-subtle); margin: 14px 0; color: var(--text-secondary);
+    white-space: pre-wrap; word-break: break-word;
+}
+.prompt-box .label {
+    font-size: 0.76rem; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; margin-bottom: 10px; display: block;
+}
+
+.before-after { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+.ba-box { border-radius: 12px; padding: 22px 24px; border: 1px solid; }
+.ba-box.bad { background: rgba(248,113,113,0.04); border-color: rgba(248,113,113,0.15); }
+.ba-box.good { background: rgba(52,211,153,0.04); border-color: rgba(52,211,153,0.15); }
+.ba-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; display: block;
+}
+
+.flow-diagram {
+    display: flex; align-items: center; gap: 0; flex-wrap: wrap; margin: 24px 0; justify-content: center;
+}
+.flow-step {
+    background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px;
+    padding: 16px 22px; text-align: center; min-width: 130px;
+}
+.flow-step .step-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; display: block; margin-bottom: 4px;
+}
+.flow-step .step-text { font-size: 1.15rem; font-weight: 600; color: var(--text-primary); }
+.flow-arrow { font-size: 1.3rem; color: var(--text-muted); padding: 0 8px; }
+
+.comparison-table {
+    width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 16px;
+    border-radius: 12px; overflow: hidden; border: 1px solid var(--border-subtle);
+}
+.comparison-table th {
+    background: var(--bg-card); font-family: 'JetBrains Mono', monospace;
+    font-size: 0.84rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-muted); padding: 14px 18px; text-align: left; border-bottom: 1px solid var(--border-subtle);
+}
+.comparison-table td {
+    padding: 13px 18px; font-size: 1.08rem; color: var(--text-secondary);
+    border-bottom: 1px solid rgba(255,255,255,0.03); background: var(--bg-deep);
+}
+.comparison-table tr:last-child td { border-bottom: none; }
+.comparison-table td:first-child { font-weight: 600; color: var(--text-primary); }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+
+.cheat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 16px 0; }
+.cheat-item {
+    background: linear-gradient(160deg, var(--bg-card), var(--bg-card-alt));
+    border-radius: 12px; padding: 20px 22px; border: 1px solid var(--border-subtle);
+}
+.cheat-item h4 { font-size: 1.2rem; font-weight: 700; margin-bottom: 6px; }
+.cheat-item p { font-size: 1.05rem; color: var(--text-muted); line-height: 1.45; }
+.cheat-temp {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.84rem; font-weight: 600;
+    padding: 3px 9px; border-radius: 5px; display: inline-block; margin-top: 6px;
+}
+
+.challenge-card {
+    background: linear-gradient(160deg, rgba(167,139,250,0.08), rgba(56,189,248,0.05));
+    border: 1px solid rgba(167,139,250,0.2); border-radius: 14px; padding: 28px 32px; margin: 16px 0;
+}
+
+@media (max-width: 800px) {
+    .slide { padding: 40px 28px 36px; }
+    .hero-glass { padding: 36px 28px 32px; }
+    .hero-meta { grid-template-columns: 1fr; gap: 14px; }
+    h1.hero-title { font-size: 2.4rem; }
+    h2.section-title { font-size: 1.8rem; }
+    p.lead, p.body { font-size: 1.1rem; }
+    .two-col, .before-after, .cheat-grid { grid-template-columns: 1fr; }
+    .card-grid { grid-template-columns: 1fr !important; }
+    .flow-diagram { flex-direction: column; }
+    .flow-arrow { transform: rotate(90deg); }
+}
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+<!-- ══════════ SLIDE 0: HERO ══════════ -->
+<section class="slide" style="align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 30%, rgba(30,41,59,0.6), var(--bg-deep) 70%);">
+    <div class="hero-glass" style="text-align:center;">
+        <span class="slide-label" style="color:var(--cyan);background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.2);">Fundamentos de IA Generativa &amp; Prompt Engineering</span>
+        <h1 class="hero-title" style="margin-top:8px;">
+            Principios de<br><span style="color:var(--purple);">Prompt Engineering</span>
+        </h1>
+        <p class="lead" style="margin:0 auto;max-width:700px;">
+            Diseñando instrucciones que transforman modelos de IA en herramientas precisas.
+        </p>
+
+        <div class="hero-divider"></div>
+
+        <div class="hero-meta">
+            <div class="hero-meta-item">
+                <div class="hero-meta-icon" style="background:rgba(56,189,248,0.12);color:var(--cyan);">👤</div>
+                <div>
+                    <span class="hero-meta-label" style="color:var(--cyan);">Profesor</span>
+                    <div class="hero-meta-value">Dr. J. Ignacio Borge</div>
+                    <div class="hero-meta-sub">Científico computacional</div>
+                </div>
+            </div>
+            <div class="hero-meta-item">
+                <div class="hero-meta-icon" style="background:rgba(248,113,113,0.12);color:var(--red);">📅</div>
+                <div>
+                    <span class="hero-meta-label" style="color:var(--red);">Fecha</span>
+                    <div class="hero-meta-value">Miércoles 15 de Abril</div>
+                    <div class="hero-meta-sub">2026</div>
+                </div>
+            </div>
+            <div class="hero-meta-item">
+                <div class="hero-meta-icon" style="background:rgba(52,211,153,0.12);color:var(--green);">🏛️</div>
+                <div>
+                    <span class="hero-meta-label" style="color:var(--green);">Institución</span>
+                    <div class="hero-meta-value">Universidad CENFOTEC</div>
+                    <div class="hero-meta-sub">Escuela de Sistemas Inteligentes</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 1: IMPACTO ══════════ -->
+<section class="slide">
+    <span class="slide-number">01 / 19</span>
+    <h2 class="section-title">¿Por qué esto cambia todo?</h2>
+    <p class="body">
+        Mismo modelo. Mismo momento. La <strong style="color:var(--text-primary)">única diferencia</strong> es el prompt.
+    </p>
+    <div class="before-after" style="margin-top:20px;">
+        <div class="ba-box bad">
+            <span class="ba-label" style="color:var(--red);">Prompt débil</span>
+            <div class="prompt-box" style="margin:0;font-size:0.95rem;">
+<span style="color:var(--text-primary)">"Ayudame con una app de inventario."</span></div>
+            <p style="font-size:1.1rem;color:var(--text-secondary);margin-top:14px;line-height:1.5;">
+                <strong style="color:var(--red)">Resultado:</strong> Explicación genérica de 800 palabras. Menciona 6 lenguajes, 4 bases de datos. Termina preguntando "¿qué tecnología preferís?". Nada concreto. Hay que iterar 5+ veces.
+            </p>
+        </div>
+        <div class="ba-box good">
+            <span class="ba-label" style="color:var(--green);">Prompt estratégico</span>
+            <div class="prompt-box" style="margin:0;font-size:0.95rem;">
+<span style="color:var(--text-primary)">"Sos un desarrollador senior. Necesito una app de inventario para una PYME tica de repuestos. React + Node + PostgreSQL, máximo 3 tablas, CRUD con búsqueda. Generá el modelo de datos en SQL."</span></div>
+            <p style="font-size:1.1rem;color:var(--text-secondary);margin-top:14px;line-height:1.5;">
+                <strong style="color:var(--green)">Resultado:</strong> Diagrama de 3 tablas, schema SQL completo, estructura de carpetas. En 1 intento, algo funcional para empezar a construir.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 2: QUÉ ES ══════════ -->
+<section class="slide">
+    <span class="slide-number">02 / 19</span>
+    <h2 class="section-title">¿Qué es Prompt Engineering?</h2>
+    <p class="body">
+        Un <strong style="color:var(--text-primary)">prompt</strong> es cualquier texto que le enviás a un modelo de IA como instrucción. <strong style="color:var(--purple)">Prompt Engineering</strong> es diseñar esos prompts de manera estratégica para obtener respuestas precisas y de alta calidad.
+    </p>
+    <div class="analogy-box">
+        <div class="analogy-emoji">🎯</div>
+        <div>
+            <p><strong>Analogía:</strong> Contratás a un asistente brillante que no sabe nada de tu contexto. Si le decís "hacé algo con los datos", improvisa. Si le decís "tomá las ventas del Q1, calculá el crecimiento mensual y presentalo en una tabla", te da exactamente lo que querés. El modelo es ese asistente.</p>
+        </div>
+    </div>
+    <div class="callout info">
+        <span class="callout-label" style="color:var(--cyan)">Concepto fundamental</span>
+        <p>Prompt Engineering <strong>no es programación</strong>. Es comunicación efectiva: saber qué decir, cómo decirlo y qué contexto dar. Las mismas técnicas aplican en chat o desde la API.</p>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 3: POR QUÉ IMPORTA ══════════ -->
+<section class="slide">
+    <span class="slide-number">03 / 19</span>
+    <h2 class="section-title">¿Por qué importa tanto?</h2>
+    <div class="card-grid" style="grid-template-columns:repeat(3,1fr);">
+        <div class="card">
+            <h4 style="color:var(--cyan)">💰 Mismo modelo, resultados diferentes</h4>
+            <p>Dos personas usando Claude obtienen resultados radicalmente diferentes según su prompt. La calidad del prompt pesa más que la elección del modelo.</p>
+        </div>
+        <div class="card">
+            <h4 style="color:var(--purple)">⏱️ Eficiencia</h4>
+            <p>Un buen prompt obtiene lo que necesitás en 1 intento. Uno malo requiere 5-10 iteraciones. En la API, cada llamada cobra por tokens procesados.</p>
+        </div>
+        <div class="card">
+            <h4 style="color:var(--green)">🔓 Capacidades ocultas</h4>
+            <p>Los modelos pueden resolver lógica compleja si les pedís razonar paso a paso, pero fallan si solo pedís la respuesta directa. El prompt desbloquea eso.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 4: LOS 5 COMPONENTES ══════════ -->
+<section class="slide">
+    <span class="slide-number">04 / 19</span>
+    <h2 class="section-title">Los 5 componentes de un buen prompt</h2>
+    <p class="body" style="margin-bottom:8px;">Piezas de LEGO: combinás según la complejidad de la tarea.</p>
+    <div class="flow-diagram">
+        <div class="flow-step" style="border-color:rgba(167,139,250,0.3);">
+            <span class="step-label" style="color:var(--purple)">1</span>
+            <span class="step-text">Rol</span>
+        </div>
+        <div class="flow-arrow">+</div>
+        <div class="flow-step" style="border-color:rgba(56,189,248,0.3);">
+            <span class="step-label" style="color:var(--cyan)">2</span>
+            <span class="step-text">Contexto</span>
+        </div>
+        <div class="flow-arrow">+</div>
+        <div class="flow-step" style="border-color:rgba(52,211,153,0.3);">
+            <span class="step-label" style="color:var(--green)">3</span>
+            <span class="step-text">Instrucción</span>
+        </div>
+        <div class="flow-arrow">+</div>
+        <div class="flow-step" style="border-color:rgba(251,191,36,0.3);">
+            <span class="step-label" style="color:var(--amber)">4</span>
+            <span class="step-text">Formato</span>
+        </div>
+        <div class="flow-arrow">+</div>
+        <div class="flow-step" style="border-color:rgba(248,113,113,0.3);">
+            <span class="step-label" style="color:var(--red)">5</span>
+            <span class="step-text">Restricciones</span>
+        </div>
+    </div>
+    <div class="callout idea" style="margin-top:16px;">
+        <span class="callout-label" style="color:var(--purple)">Regla de oro</span>
+        <p>No siempre necesitás los 5. Para "¿Capital de Francia?" basta la instrucción. Pero <strong>a mayor complejidad, más componentes necesitás.</strong></p>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 5: ROL ══════════ -->
+<section class="slide">
+    <span class="slide-number">05 / 19</span>
+    <h2 class="section-title"><span style="color:var(--purple)">1.</span> Rol (Role Prompting)</h2>
+    <p class="body">
+        Le decís al modelo <strong style="color:var(--text-primary)">quién es</strong>. Cuando le decís "sos un médico", prioriza patrones de lenguaje médico. Cuando le decís "sos un poeta", prioriza patrones literarios. El rol <em>filtra y enfoca</em> la generación.
+    </p>
+    <div class="before-after">
+        <div class="ba-box bad">
+            <span class="ba-label" style="color:var(--red)">Sin rol</span>
+            <p style="font-size:1.15rem;color:var(--text-secondary);line-height:1.5;">"Explicame qué es la hipertensión."</p>
+            <p class="note" style="margin-top:8px;">→ Respuesta genérica, tono enciclopédico.</p>
+        </div>
+        <div class="ba-box good">
+            <span class="ba-label" style="color:var(--green)">Con rol</span>
+            <p style="font-size:1.15rem;color:var(--text-secondary);line-height:1.5;">"Sos un cardiólogo explicándole a un paciente de 65 años sin formación médica qué es la hipertensión."</p>
+            <p class="note" style="margin-top:8px;">→ Lenguaje sencillo, empático, accionable.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 6: CONTEXTO + INSTRUCCIÓN ══════════ -->
+<section class="slide">
+    <span class="slide-number">06 / 19</span>
+    <h2 class="section-title"><span style="color:var(--cyan)">2.</span> Contexto &nbsp;&amp;&nbsp; <span style="color:var(--green)">3.</span> Instrucción</h2>
+    <div class="two-col" style="margin-top:8px;">
+        <div class="card" style="border-color:rgba(56,189,248,0.15);">
+            <h4 style="color:var(--cyan)">Contexto</h4>
+            <p>La información de fondo: quién sos, para quién es, qué pasó antes, qué datos tenés. El modelo no sabe nada de tu situación a menos que se lo digás.</p>
+            <p style="margin-top:10px;color:var(--text-muted);font-size:1rem;">Mientras más contexto <em>relevante</em>, mejor. Pero contexto relevante, no ruido.</p>
+        </div>
+        <div class="card" style="border-color:rgba(52,211,153,0.15);">
+            <h4 style="color:var(--green)">Instrucción</h4>
+            <p>El <strong style="color:var(--text-primary)">qué querés que haga</strong>. La mayoría de prompts malos fallan aquí: instrucción vaga o demasiado amplia.</p>
+            <p style="margin-top:10px;color:var(--text-muted);font-size:1rem;">Usá verbos claros: "listá", "compará", "generá", "explicá las diferencias entre X e Y".</p>
+        </div>
+    </div>
+    <div class="before-after" style="margin-top:14px;">
+        <div class="ba-box bad">
+            <span class="ba-label" style="color:var(--red)">Vago</span>
+            <p style="font-size:1.15rem;color:var(--text-secondary);">"Decime algo sobre machine learning."</p>
+        </div>
+        <div class="ba-box good">
+            <span class="ba-label" style="color:var(--green)">Específico</span>
+            <p style="font-size:1.15rem;color:var(--text-secondary);">"Explicá 3 diferencias entre aprendizaje supervisado y no supervisado, con un ejemplo práctico cada una."</p>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 7: FORMATO + RESTRICCIONES ══════════ -->
+<section class="slide">
+    <span class="slide-number">07 / 19</span>
+    <h2 class="section-title"><span style="color:var(--amber)">4.</span> Formato &nbsp;&amp;&nbsp; <span style="color:var(--red)">5.</span> Restricciones</h2>
+    <div class="two-col" style="margin-top:8px;">
+        <div>
+            <div class="card" style="border-color:rgba(251,191,36,0.15);">
+                <h4 style="color:var(--amber)">Formato de salida</h4>
+                <p><strong style="color:var(--text-primary)">Cómo querés que se vea:</strong> tabla, JSON, bullets, Markdown, email, código. Sin formato explícito, el modelo usa prosa por defecto.</p>
+            </div>
+            <div class="prompt-box" style="font-size:0.92rem;margin-top:10px;">
+<span style="color:var(--text-primary)">"Listá los 5 lenguajes más populares.
+
+Formato: tabla Markdown con columnas
+| Lenguaje | Uso principal | Tendencia |"</span></div>
+        </div>
+        <div>
+            <div class="card" style="border-color:rgba(248,113,113,0.15);">
+                <h4 style="color:var(--red)">Restricciones</h4>
+                <p><strong style="color:var(--text-primary)">Límites y reglas:</strong> máximo de palabras, qué no hacer, tono, idioma. Sin restricciones, el modelo tiende a "irse por las ramas".</p>
+            </div>
+            <div class="prompt-box" style="font-size:0.92rem;margin-top:10px;">
+<span style="color:var(--text-primary)">"Restricciones:
+- Máximo 200 palabras
+- No uses jerga técnica
+- Tono conversacional
+- Incluí al menos una analogía"</span></div>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 8: ZERO-SHOT ══════════ -->
+<section class="slide">
+    <span class="slide-number">08 / 19</span>
+    <h2 class="section-title">Técnica 1: Zero-Shot</h2>
+    <p class="body">
+        Le pedís al modelo que haga algo <strong style="color:var(--text-primary)">sin darle ningún ejemplo</strong>. Solo la instrucción. Funciona para tareas comunes: traducir, resumir, clasificar.
+    </p>
+    <div class="prompt-box" style="font-size:0.95rem;">
+<span class="label" style="color:var(--cyan)">Ejemplo: clasificar reseña de hotel en Guanacaste</span>
+<span style="color:var(--cyan);font-weight:600;">Prompt:</span> <span style="color:var(--text-primary)">"Clasificá esta reseña como Positiva, Negativa o Neutra:
+
+'La playa era hermosa pero el aire acondicionado no funcionó en toda la noche y nadie en recepción hablaba español.'
+
+Respondé solo con la clasificación."</span>
+
+<span style="color:var(--green);font-weight:600;">→ Negativa</span></div>
+    <div class="callout info" style="margin-top:14px;">
+        <span class="callout-label" style="color:var(--cyan)">Cuándo usarlo</span>
+        <p>Tareas bien definidas donde el modelo ya tiene suficiente conocimiento: traducir, resumir, clasificar sentimiento, responder preguntas factuales. Es la técnica más simple y funciona sorprendentemente bien.</p>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 9: FEW-SHOT ══════════ -->
+<section class="slide">
+    <span class="slide-number">09 / 19</span>
+    <h2 class="section-title">Técnica 2: Few-Shot</h2>
+    <p class="body">
+        Le dás <strong style="color:var(--text-primary)">2-5 ejemplos resueltos</strong> antes de pedirle la tarea. El modelo aprende el patrón y lo replica. Es <em>in-context learning</em>: no se re-entrena, usa los ejemplos como guía temporal.
+    </p>
+    <div class="prompt-box" style="font-size:0.92rem;">
+<span class="label" style="color:var(--purple)">Ejemplo: extracción de datos de productos ticos</span>
+<span style="color:var(--text-primary)">"Extraé producto y precio:
+
+'Gallo Pinto pre-cocido, ₡2,850 en AutoMercado'
+→ Producto: Gallo Pinto pre-cocido | Precio: ₡2,850
+
+'Café Britt Espresso 500g, ₡6,200 en AM PM'
+→ Producto: Café Britt Espresso 500g | Precio: ₡6,200
+
+'Salsa Lizano 700ml, ₡3,150 en Walmart CR'"</span>
+
+<span style="color:var(--green);font-weight:600;">→ Producto: Salsa Lizano 700ml | Precio: ₡3,150</span></div>
+    <p class="note" style="margin-top:14px;">
+        <strong style="color:var(--text-secondary)">Tip:</strong> Incluí ejemplos que cubran "casos borde". Si clasificás sentimiento, poné uno positivo, uno negativo y uno ambiguo.
+    </p>
+</section>
+
+<!-- ══════════ SLIDE 10: CHAIN-OF-THOUGHT ══════════ -->
+<section class="slide">
+    <span class="slide-number">10 / 19</span>
+    <h2 class="section-title">Técnica 3: Chain-of-Thought</h2>
+    <p class="body">
+        Le pedís que <strong style="color:var(--text-primary)">razone paso a paso</strong> antes de dar la respuesta final. Cada paso intermedio se convierte en contexto para el siguiente.
+    </p>
+    <div class="before-after">
+        <div class="ba-box bad">
+            <span class="ba-label" style="color:var(--red)">Sin CoT</span>
+            <div class="prompt-box" style="margin:0;font-size:0.88rem;">
+<span style="color:var(--text-primary)">"Una soda en Heredia vende casados a ₡4,500. 35 clientes/día entre semana, 60% más los fines de semana. ¿Cuánto factura en una semana?"</span>
+
+<span style="color:var(--red);font-weight:600;">→ ₡189,000</span> <span style="color:var(--text-muted)">(incorrecto)</span></div>
+        </div>
+        <div class="ba-box good">
+            <span class="ba-label" style="color:var(--green)">Con CoT</span>
+            <div class="prompt-box" style="margin:0;font-size:0.88rem;">
+<span style="color:var(--text-primary)">"...misma pregunta...
+Pensá paso a paso."</span>
+
+<span style="color:var(--green);">L-V:</span> 5 × 35 = 175 clientes
+<span style="color:var(--green);">S-D:</span> 35 × 1.6 = 56 → 2 × 56 = 112
+<span style="color:var(--green);">Total:</span> 287 × ₡4,500 = <strong style="color:var(--green)">₡1,291,500</strong></div>
+        </div>
+    </div>
+    <div class="callout success" style="margin-top:14px;">
+        <span class="callout-label" style="color:var(--green)">Dato clave</span>
+        <p>Basta agregar <strong>"pensá paso a paso"</strong> al final. Google demostró en su paper (Wei et al., 2022) que esta frase sola mejora significativamente el razonamiento. Usalo en lógica, matemáticas y análisis.</p>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 11: SYSTEM PROMPTS ══════════ -->
+<section class="slide">
+    <span class="slide-number">11 / 19</span>
+    <h2 class="section-title">Técnica 4: System Prompts</h2>
+    <p class="body">
+        Una instrucción permanente que configura el <strong style="color:var(--text-primary)">comportamiento general</strong> del modelo para toda la conversación. Se procesa antes de cualquier mensaje del usuario.
+    </p>
+    <div class="prompt-box" style="font-size:0.92rem;">
+<span class="label" style="color:var(--amber)">Ejemplo: soporte de facturación electrónica</span>
+<span style="color:var(--purple);font-weight:600;">System:</span> <span style="color:var(--text-primary)">"Sos un asistente de soporte para una app de facturación electrónica en Costa Rica. Español formal. Si no sabés algo, decí 'Contactá soporte@app.co.cr'. Nunca inventés funcionalidades. Máximo 3 párrafos."</span>
+
+<span style="color:var(--cyan);font-weight:600;">Usuario:</span> <span style="color:var(--text-primary)">"¿Cómo genero la clave criptográfica para Hacienda?"</span>
+
+<span style="color:var(--green);font-weight:600;">→</span> <span style="color:var(--text-secondary)">Respuesta precisa, formal, enfocada en facturación CR, concisa.</span></div>
+    <p class="note" style="margin-top:14px;">
+        Es como darle instrucciones de director a un actor antes de improvisar: define tono, límites y personaje de toda la interacción.
+    </p>
+</section>
+
+<!-- ══════════ SLIDE 12: TÉCNICAS AVANZADAS ══════════ -->
+<section class="slide">
+    <span class="slide-number">12 / 19</span>
+    <h2 class="section-title">Técnicas avanzadas</h2>
+    <div class="card-grid" style="grid-template-columns:repeat(2,1fr);">
+        <div class="card" style="border-color:rgba(56,189,248,0.15);">
+            <h4 style="color:var(--cyan)">🏗️ Mega-Prompts</h4>
+            <p>Combinan <strong>todos los componentes</strong> + ejemplos en un solo bloque. Un brief completo que produce resultados de alta calidad sin iteraciones.</p>
+        </div>
+        <div class="card" style="border-color:rgba(167,139,250,0.15);">
+            <h4 style="color:var(--purple)">🔲 Delimitadores</h4>
+            <p>Caracteres que separan secciones: <code style="color:var(--purple);background:rgba(167,139,250,0.1);padding:2px 6px;border-radius:3px;">[ROL]</code>, <code style="color:var(--purple);background:rgba(167,139,250,0.1);padding:2px 6px;border-radius:3px;">"""texto"""</code>, <code style="color:var(--purple);background:rgba(167,139,250,0.1);padding:2px 6px;border-radius:3px;">---</code>. Eliminan ambigüedad.</p>
+        </div>
+        <div class="card" style="border-color:rgba(52,211,153,0.15);">
+            <h4 style="color:var(--green)">🔁 Self-Consistency</h4>
+            <p>Pedirle múltiples respuestas al mismo problema y quedarte con el consenso. Como consultar varios expertos.</p>
+        </div>
+        <div class="card" style="border-color:rgba(251,191,36,0.15);">
+            <h4 style="color:var(--amber)">⛓️ Prompt Chaining</h4>
+            <p>Dividir la tarea en pasos: la salida de un prompt es la entrada del siguiente. Cada paso es simple y verificable.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 13: MEGA-PROMPT EJEMPLO ══════════ -->
+<section class="slide">
+    <span class="slide-number">13 / 19</span>
+    <h2 class="section-title">Ejemplo: Mega-prompt</h2>
+    <p class="body" style="margin-bottom:8px;">Todos los componentes + delimitadores para una startup tica:</p>
+    <div class="prompt-box" style="font-size:0.9rem;">
+<span style="color:var(--purple);font-weight:600;">[ROL]</span> <span style="color:var(--text-primary)">Analista de marketing digital, 10 años en e-commerce LATAM.</span>
+
+<span style="color:var(--cyan);font-weight:600;">[CONTEXTO]</span> <span style="color:var(--text-primary)">Tienda online de ropa deportiva (San José, CR), marzo 2026:
+- Visitas: 45,000 (↓12%)  ·  Conversión: 2.1% (↓0.4%)
+- Ticket promedio: ₡38,500 (↑₡2,800)  ·  Abandono carrito: 73%
+- Canal principal: Instagram Ads (58% del tráfico)</span>
+
+<span style="color:var(--green);font-weight:600;">[TAREA]</span> <span style="color:var(--text-primary)">Identificá 3 causas de la caída en ventas. Para cada una, proponé una acción para abril.</span>
+
+<span style="color:var(--amber);font-weight:600;">[FORMATO]</span> <span style="color:var(--text-primary)">**Causa N:** [nombre]  ·  Evidencia: [dato]  ·  Acción: [qué hacer]  ·  Impacto: [resultado]</span>
+
+<span style="color:var(--red);font-weight:600;">[RESTRICCIONES]</span> <span style="color:var(--text-primary)">Solo datos proporcionados. Presupuesto: $2,000. Pensá paso a paso.</span></div>
+    <div class="callout info" style="margin-top:12px;">
+        <span class="callout-label" style="color:var(--cyan)">¿Por qué funciona?</span>
+        <p>Cada sección tiene propósito claro. Los delimitadores eliminan ambigüedad. Combina rol + contexto + instrucción + formato + restricciones + CoT. El modelo no adivina nada.</p>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 14: TEMPERATURA ══════════ -->
+<section class="slide">
+    <span class="slide-number">14 / 19</span>
+    <h2 class="section-title">Parámetros: Temperatura</h2>
+    <p class="body">
+        Controla <strong style="color:var(--text-primary)">cuánta aleatoriedad</strong> hay en la selección de cada token. Es el parámetro más importante.
+    </p>
+    <div class="card-grid" style="grid-template-columns:repeat(3,1fr);margin-top:16px;">
+        <div class="card" style="border-color:rgba(56,189,248,0.25);">
+            <h4 style="color:var(--cyan);font-size:1.5rem;">0</h4>
+            <p><strong style="color:var(--text-primary)">Determinista.</strong> Siempre elige la palabra más probable. Misma entrada → misma salida.</p>
+            <p style="margin-top:10px;color:var(--text-muted);">Código, datos, clasificación, extracción.</p>
+        </div>
+        <div class="card" style="border-color:rgba(52,211,153,0.25);">
+            <h4 style="color:var(--green);font-size:1.5rem;">0.5 – 0.7</h4>
+            <p><strong style="color:var(--text-primary)">Equilibrado.</strong> Variación controlada. Buen balance creatividad/coherencia.</p>
+            <p style="margin-top:10px;color:var(--text-muted);">Conversación, emails, explicaciones.</p>
+        </div>
+        <div class="card" style="border-color:rgba(248,113,113,0.25);">
+            <h4 style="color:var(--red);font-size:1.5rem;">1.0 – 1.5+</h4>
+            <p><strong style="color:var(--text-primary)">Creativo.</strong> Palabras menos probables tienen más chance. Máxima originalidad.</p>
+            <p style="margin-top:10px;color:var(--text-muted);">Escritura creativa, brainstorming, poesía.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 15: TOP-P Y OTROS ══════════ -->
+<section class="slide">
+    <span class="slide-number">15 / 19</span>
+    <h2 class="section-title">Otros parámetros clave</h2>
+    <div class="analogy-box">
+        <div class="analogy-emoji">🎰</div>
+        <div>
+            <p><strong>Top-p (Nucleus Sampling):</strong> En lugar de escalar probabilidades, <strong>limita el grupo de candidatas</strong>. Top-p = 0.9 significa "solo considerá palabras que sumen 90% de probabilidad". Imaginá una ruleta: temperatura cambia los tamaños de las casillas; top-p elimina las más chiquitas.</p>
+        </div>
+    </div>
+    <div class="comparison-table" style="margin-top:16px;">
+        <table class="comparison-table">
+            <thead><tr><th>Parámetro</th><th>Rango</th><th>Efecto</th><th>Recomendado</th></tr></thead>
+            <tbody>
+                <tr><td>Temperature</td><td>0 – 2.0</td><td>Aleatoriedad / creatividad</td><td><span class="tag" style="color:var(--green);background:rgba(52,211,153,0.1);">0.7</span></td></tr>
+                <tr><td>Top-p</td><td>0 – 1.0</td><td>Filtra candidatas por prob. acumulada</td><td><span class="tag" style="color:var(--green);background:rgba(52,211,153,0.1);">0.9</span> (default)</td></tr>
+                <tr><td>Max tokens</td><td>1 – 128K+</td><td>Longitud máxima de respuesta</td><td>256 – 4,096</td></tr>
+                <tr><td>Freq. penalty</td><td>0 – 2.0</td><td>Penaliza repetición</td><td><span class="tag" style="color:var(--green);background:rgba(52,211,153,0.1);">0 – 0.5</span></td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="callout warning" style="margin-top:14px;">
+        <span class="callout-label" style="color:var(--amber)">Regla práctica</span>
+        <p>Ajustá <strong>solo uno</strong>: temperatura o top-p, no ambos. Modificar los dos hace impredecible el resultado.</p>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 16: ERRORES 1-3 ══════════ -->
+<section class="slide">
+    <span class="slide-number">16 / 19</span>
+    <h2 class="section-title">Errores comunes (1/2)</h2>
+    <div class="card-grid" style="grid-template-columns:1fr;">
+        <div class="card" style="border-color:rgba(248,113,113,0.15);">
+            <h4 style="color:var(--red);font-size:1.25rem;">1. Prompts demasiado vagos</h4>
+            <p><span style="color:var(--red)">✗</span> "Ayudame con mi tarea de programación." &nbsp;→&nbsp; <span style="color:var(--green)">✓</span> "Escribí una función Python que reciba una lista de notas (0-100) y retorne el promedio ponderado con validación de inputs."</p>
+        </div>
+        <div class="card" style="border-color:rgba(251,191,36,0.15);">
+            <h4 style="color:var(--amber);font-size:1.25rem;">2. Sobrecargar el prompt</h4>
+            <p><span style="color:var(--red)">✗</span> "Analizá, resumí, traducí, y hacé un gráfico." &nbsp;→&nbsp; <span style="color:var(--green)">✓</span> Usá Prompt Chaining: una tarea por prompt, encadenar la salida.</p>
+        </div>
+        <div class="card" style="border-color:rgba(167,139,250,0.15);">
+            <h4 style="color:var(--purple);font-size:1.25rem;">3. No dar contexto</h4>
+            <p><span style="color:var(--red)">✗</span> "Escribí un email de seguimiento." &nbsp;→&nbsp; <span style="color:var(--green)">✓</span> "Escribí un email de seguimiento a un cliente en CR al que le enviamos cotización de servicios cloud hace 5 días."</p>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 17: ERRORES 4-6 ══════════ -->
+<section class="slide">
+    <span class="slide-number">17 / 19</span>
+    <h2 class="section-title">Errores comunes (2/2)</h2>
+    <div class="card-grid" style="grid-template-columns:1fr;">
+        <div class="card" style="border-color:rgba(56,189,248,0.15);">
+            <h4 style="color:var(--cyan);font-size:1.25rem;">4. No especificar formato</h4>
+            <p><span style="color:var(--red)">✗</span> "Dame los lenguajes más populares." &nbsp;→&nbsp; <span style="color:var(--green)">✓</span> "Listá los 5 más populares en tabla Markdown: Lenguaje | Uso principal | Tendencia."</p>
+        </div>
+        <div class="card" style="border-color:rgba(52,211,153,0.15);">
+            <h4 style="color:var(--green);font-size:1.25rem;">5. Confiar ciegamente</h4>
+            <p>Los modelos alucinan: generan info falsa con total confianza. <span style="color:var(--green)">✓</span> Siempre verificá claims factuales. Pedí fuentes y confirmalas. Usá CoT para ver el razonamiento.</p>
+        </div>
+        <div class="card" style="border-color:rgba(244,114,182,0.15);">
+            <h4 style="color:var(--pink);font-size:1.25rem;">6. No iterar</h4>
+            <p>El primer prompt es un borrador. <span style="color:var(--green)">✓</span> Prompt Engineering es iterativo. Refiná: "Muy bien, pero más conciso", "Ahora enfocate en lo financiero".</p>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 18: RETO ══════════ -->
+<section class="slide">
+    <span class="slide-number">18 / 19</span>
+    <h2 class="section-title">Reto: mejorá este prompt</h2>
+    <div class="challenge-card">
+        <h3 class="sub-title" style="color:var(--red);margin-bottom:14px;">El prompt débil:</h3>
+        <div class="prompt-box" style="font-size:1.1rem;border-color:rgba(248,113,113,0.2);">
+<span style="color:var(--text-primary)">"Haceme un plan de negocios para una app."</span></div>
+        <h3 class="sub-title" style="color:var(--purple);margin-top:24px;margin-bottom:12px;">Preguntate:</h3>
+        <div class="card-grid" style="grid-template-columns:repeat(3,1fr);margin-top:0;">
+            <div style="background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.12);border-radius:10px;padding:16px 18px;">
+                <p style="font-size:1.1rem;color:var(--text-secondary);margin:0;"><strong style="color:var(--purple)">Rol:</strong> ¿Consultor de startups? ¿MBA en tech?</p>
+            </div>
+            <div style="background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.12);border-radius:10px;padding:16px 18px;">
+                <p style="font-size:1.1rem;color:var(--text-secondary);margin:0;"><strong style="color:var(--cyan)">Contexto:</strong> ¿Qué tipo de app? ¿Mercado? ¿Presupuesto?</p>
+            </div>
+            <div style="background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.12);border-radius:10px;padding:16px 18px;">
+                <p style="font-size:1.1rem;color:var(--text-secondary);margin:0;"><strong style="color:var(--green)">Formato:</strong> ¿Qué secciones? ¿Modelo de ingresos?</p>
+            </div>
+        </div>
+    </div>
+    <div class="callout idea" style="margin-top:12px;">
+        <span class="callout-label" style="color:var(--purple)">Ejercicio</span>
+        <p>Abrí Claude o ChatGPT, probá el prompt débil y luego tu versión mejorada. Compará vos mismo. La diferencia queda grabada mejor que cualquier explicación teórica.</p>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 19: CHEAT SHEET ══════════ -->
+<section class="slide">
+    <span class="slide-number">19 / 19</span>
+    <h2 class="section-title">Cheat Sheet &amp; Resumen</h2>
+    <p class="note" style="margin-bottom:12px;">Capturá screenshot de esta slide. Tu guía de bolsillo:</p>
+    <div class="cheat-grid">
+        <div class="cheat-item" style="border-color:rgba(56,189,248,0.15);">
+            <h4 style="color:var(--cyan)">Zero-Shot</h4>
+            <p>Sin ejemplos. Tareas comunes.</p>
+            <span class="cheat-temp" style="color:var(--cyan);background:rgba(56,189,248,0.1);">Temp: 0 – 0.3</span>
+        </div>
+        <div class="cheat-item" style="border-color:rgba(167,139,250,0.15);">
+            <h4 style="color:var(--purple)">Few-Shot</h4>
+            <p>2-5 ejemplos antes de la tarea.</p>
+            <span class="cheat-temp" style="color:var(--purple);background:rgba(167,139,250,0.1);">Temp: 0 – 0.5</span>
+        </div>
+        <div class="cheat-item" style="border-color:rgba(52,211,153,0.15);">
+            <h4 style="color:var(--green)">Chain-of-Thought</h4>
+            <p>"Pensá paso a paso."</p>
+            <span class="cheat-temp" style="color:var(--green);background:rgba(52,211,153,0.1);">Temp: 0 – 0.5</span>
+        </div>
+        <div class="cheat-item" style="border-color:rgba(251,191,36,0.15);">
+            <h4 style="color:var(--amber)">Mega-Prompt</h4>
+            <p>Todos los componentes + delimitadores.</p>
+            <span class="cheat-temp" style="color:var(--amber);background:rgba(251,191,36,0.1);">Temp: varía</span>
+        </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:18px;">
+        <div style="display:flex;gap:12px;align-items:center;padding:10px 16px;background:linear-gradient(160deg,var(--bg-card),var(--bg-card-alt));border-radius:10px;border:1px solid var(--border-subtle);">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:700;color:var(--cyan);">01</span>
+            <p style="font-size:1.1rem;color:var(--text-secondary);margin:0;"><strong style="color:var(--text-primary)">Prompt Engineering = comunicación estratégica</strong></p>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;padding:10px 16px;background:linear-gradient(160deg,var(--bg-card),var(--bg-card-alt));border-radius:10px;border:1px solid var(--border-subtle);">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:700;color:var(--purple);">02</span>
+            <p style="font-size:1.1rem;color:var(--text-secondary);margin:0;"><strong style="color:var(--text-primary)">5 componentes:</strong> Rol, Contexto, Instrucción, Formato, Restricciones</p>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;padding:10px 16px;background:linear-gradient(160deg,var(--bg-card),var(--bg-card-alt));border-radius:10px;border:1px solid var(--border-subtle);">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:700;color:var(--green);">03</span>
+            <p style="font-size:1.1rem;color:var(--text-secondary);margin:0;"><strong style="color:var(--text-primary)">4 técnicas:</strong> Zero-shot, Few-shot, CoT, System Prompts</p>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;padding:10px 16px;background:linear-gradient(160deg,var(--bg-card),var(--bg-card-alt));border-radius:10px;border:1px solid var(--border-subtle);">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:700;color:var(--amber);">04</span>
+            <p style="font-size:1.1rem;color:var(--text-secondary);margin:0;"><strong style="color:var(--text-primary)">Temperatura</strong> = tu control fino. Baja → preciso. Alta → creativo.</p>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;padding:10px 16px;background:linear-gradient(160deg,var(--bg-card),var(--bg-card-alt));border-radius:10px;border:1px solid var(--border-subtle);">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:700;color:var(--red);">05</span>
+            <p style="font-size:1.1rem;color:var(--text-secondary);margin:0;"><strong style="color:var(--text-primary)">Es iterativo.</strong> El primer prompt es borrador. Refiná y colaborá.</p>
+        </div>
+    </div>
+    <div class="callout info" style="margin-top:14px;">
+        <span class="callout-label" style="color:var(--cyan)">Semana 3</span>
+        <p><strong>Aplicaciones prácticas de la IA Generativa</strong> — casos reales, ejercicios de generación y arranque del proyecto.</p>
+    </div>
+</section>
+
+</div><!-- end deck -->
+
+<script>
+const slides = document.querySelectorAll('.slide');
+let cur = 0;
+
+function ui() {
+    slides.forEach((s, i) => {
+        s.classList.remove('active', 'prev');
+        if (i === cur) s.classList.add('active');
+        else if (i < cur) s.classList.add('prev');
+    });
+    slides[cur].scrollTop = 0;
+}
+
+function next() { if (cur < slides.length - 1) { cur++; ui(); } }
+function prev() { if (cur > 0) { cur--; ui(); } }
+function go(n) { cur = n; ui(); }
+
+document.addEventListener('keydown', e => {
+    if (['ArrowRight', 'ArrowDown', ' '].includes(e.key)) { e.preventDefault(); next(); }
+    if (['ArrowLeft', 'ArrowUp'].includes(e.key)) { e.preventDefault(); prev(); }
+    if (e.key === 'Home') { e.preventDefault(); go(0); }
+    if (e.key === 'End') { e.preventDefault(); go(slides.length - 1); }
+    if (e.key === 'F2') { e.preventDefault(); toggleFullscreen(); }
+});
+
+let tx = 0;
+document.addEventListener('touchstart', e => { tx = e.changedTouches[0].screenX; }, { passive: true });
+document.addEventListener('touchend', e => { const d = e.changedTouches[0].screenX - tx; if (Math.abs(d) > 50) { d < 0 ? next() : prev(); } }, { passive: true });
+
+function toggleFullscreen() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+    else document.exitFullscreen().catch(() => {});
+}
+
+ui();
+</script>
+</body>
+</html>
