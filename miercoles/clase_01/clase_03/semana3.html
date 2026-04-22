@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SINT-648 · Semana 3 · Aplicaciones Prácticas de IA Generativa</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-deep: #0a0f1a;
+    --bg-card: #111827;
+    --bg-card-alt: #1e293b;
+    --border-subtle: rgba(56, 189, 248, 0.08);
+    --border-accent: rgba(56, 189, 248, 0.2);
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --cyan: #38bdf8;
+    --purple: #a78bfa;
+    --green: #34d399;
+    --amber: #fbbf24;
+    --red: #f87171;
+    --pink: #f472b6;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; }
+
+body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ─── SLIDE ENGINE ─── */
+.deck { width: 100%; height: 100vh; position: relative; overflow: hidden; }
+
+.slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 52px 90px 48px;
+    overflow-y: auto;
+    opacity: 0;
+    transform: translateX(50px);
+    pointer-events: none;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(56,189,248,0.12) transparent;
+}
+
+.slide::-webkit-scrollbar { width: 5px; }
+.slide::-webkit-scrollbar-thumb { background: rgba(56,189,248,0.12); border-radius: 3px; }
+.slide.active { opacity: 1; transform: translateX(0); pointer-events: auto; z-index: 2; }
+.slide.prev { opacity: 0; transform: translateX(-50px); }
+
+/* ─── HERO GLASSMORPHISM ─── */
+.hero-glass {
+    background: linear-gradient(160deg, rgba(17,24,39,0.7), rgba(30,41,59,0.5));
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 24px;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    padding: 60px 72px 48px;
+    max-width: 920px;
+    width: 100%;
+    box-shadow: 0 8px 60px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.hero-divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    margin: 32px 0 28px;
+}
+
+.hero-meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.hero-meta-item {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+.hero-meta-icon {
+    width: 42px; height: 42px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+}
+
+.hero-meta-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    margin-bottom: 3px; display: block;
+}
+
+.hero-meta-value {
+    font-size: 1.05rem; font-weight: 600; color: var(--text-primary);
+    line-height: 1.3;
+}
+
+.hero-meta-sub {
+    font-size: 0.92rem; color: var(--text-muted); font-style: italic;
+}
+
+/* ─── PRESENTATION TYPOGRAPHY ─── */
+.slide-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem; font-weight: 700; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px;
+}
+
+.slide-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 5px 14px; border-radius: 6px; display: inline-block; margin-bottom: 16px;
+}
+
+h1.hero-title {
+    font-size: 4rem; font-weight: 700; line-height: 1.08; letter-spacing: -0.03em; margin-bottom: 24px;
+}
+
+h2.section-title {
+    font-size: 2.8rem; font-weight: 700; line-height: 1.15; letter-spacing: -0.025em; margin-bottom: 24px;
+}
+
+h3.sub-title {
+    font-size: 1.6rem; font-weight: 700; line-height: 1.25; margin-bottom: 14px;
+}
+
+p.lead {
+    font-size: 1.45rem; color: var(--text-secondary); line-height: 1.65; max-width: 1000px;
+}
+
+p.body {
+    font-size: 1.3rem; color: var(--text-secondary); line-height: 1.65; max-width: 1000px; margin-bottom: 16px;
+}
+
+p.note {
+    font-size: 1.1rem; color: var(--text-muted); line-height: 1.55; max-width: 900px;
+}
+
+/* ─── COMPONENTS (presentation-sized) ─── */
+.tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88rem; font-weight: 600; padding: 5px 12px; border-radius: 6px;
+    display: inline-block; margin: 3px 4px 3px 0;
+}
+
+.card-grid {
+    display: grid; gap: 16px; margin-top: 20px;
+}
+
+.card {
+    background: linear-gradient(160deg, var(--bg-card), var(--bg-card-alt));
+    border-radius: 14px; padding: 24px 28px; border: 1px solid var(--border-subtle);
+    transition: border-color 0.3s;
+}
+.card:hover { border-color: var(--border-accent); }
+.card h4 { font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; }
+.card p { font-size: 1.1rem; color: var(--text-secondary); line-height: 1.55; }
+
+.callout {
+    border-left: 3px solid; padding: 20px 24px; border-radius: 0 12px 12px 0; margin: 18px 0;
+}
+.callout.info { border-color: var(--cyan); background: rgba(56,189,248,0.05); }
+.callout.warning { border-color: var(--amber); background: rgba(251,191,36,0.05); }
+.callout.idea { border-color: var(--purple); background: rgba(167,139,250,0.05); }
+.callout.success { border-color: var(--green); background: rgba(52,211,153,0.05); }
+
+.callout-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; margin-bottom: 6px; display: block;
+}
+.callout p { font-size: 1.15rem; color: var(--text-secondary); line-height: 1.55; margin: 0; }
+
+.analogy-box {
+    display: flex; gap: 20px; align-items: flex-start;
+    background: linear-gradient(160deg, var(--bg-card), var(--bg-card-alt));
+    border-radius: 14px; padding: 24px 28px; border: 1px solid var(--border-subtle); margin: 18px 0;
+}
+.analogy-emoji { font-size: 2.4rem; flex-shrink: 0; line-height: 1; margin-top: 2px; }
+.analogy-box p { font-size: 1.15rem; color: var(--text-secondary); line-height: 1.6; margin: 0; }
+.analogy-box strong { color: var(--text-primary); }
+
+.prompt-box {
+    background: var(--bg-deep); border-radius: 10px; padding: 20px 24px;
+    font-family: 'JetBrains Mono', monospace; font-size: 1rem; line-height: 1.7;
+    border: 1px solid var(--border-subtle); margin: 14px 0; color: var(--text-secondary);
+    white-space: pre-wrap; word-break: break-word;
+}
+.prompt-box .label {
+    font-size: 0.76rem; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; margin-bottom: 10px; display: block;
+}
+
+.before-after { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+.ba-box { border-radius: 12px; padding: 22px 24px; border: 1px solid; }
+.ba-box.bad { background: rgba(248,113,113,0.04); border-color: rgba(248,113,113,0.15); }
+.ba-box.good { background: rgba(52,211,153,0.04); border-color: rgba(52,211,153,0.15); }
+.ba-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; display: block;
+}
+
+.flow-diagram {
+    display: flex; align-items: center; gap: 0; flex-wrap: wrap; margin: 24px 0; justify-content: center;
+}
+.flow-step {
+    background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px;
+    padding: 16px 22px; text-align: center; min-width: 130px;
+}
+.flow-step .step-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; display: block; margin-bottom: 4px;
+}
+.flow-step .step-text { font-size: 1.15rem; font-weight: 600; color: var(--text-primary); }
+.flow-arrow { font-size: 1.3rem; color: var(--text-muted); padding: 0 8px; }
+
+.comparison-table {
+    width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 16px;
+    border-radius: 12px; overflow: hidden; border: 1px solid var(--border-subtle);
+}
+.comparison-table th {
+    background: var(--bg-card); font-family: 'JetBrains Mono', monospace;
+    font-size: 0.84rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-muted); padding: 14px 18px; text-align: left; border-bottom: 1px solid var(--border-subtle);
+}
+.comparison-table td {
+    padding: 13px 18px; font-size: 1.08rem; color: var(--text-secondary);
+    border-bottom: 1px solid rgba(255,255,255,0.03); background: var(--bg-deep);
+}
+.comparison-table tr:last-child td { border-bottom: none; }
+.comparison-table td:first-child { font-weight: 600; color: var(--text-primary); }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+
+.cheat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 16px 0; }
+.cheat-item {
+    background: linear-gradient(160deg, var(--bg-card), var(--bg-card-alt));
+    border-radius: 12px; padding: 20px 22px; border: 1px solid var(--border-subtle);
+}
+.cheat-item h4 { font-size: 1.2rem; font-weight: 700; margin-bottom: 6px; }
+.cheat-item p { font-size: 1.05rem; color: var(--text-muted); line-height: 1.45; }
+.cheat-temp {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.84rem; font-weight: 600;
+    padding: 3px 9px; border-radius: 5px; display: inline-block; margin-top: 6px;
+}
+
+.challenge-card {
+    background: linear-gradient(160deg, rgba(167,139,250,0.08), rgba(56,189,248,0.05));
+    border: 1px solid rgba(167,139,250,0.2); border-radius: 14px; padding: 28px 32px; margin: 16px 0;
+}
+
+@media (max-width: 800px) {
+    .slide { padding: 40px 28px 36px; }
+    .hero-glass { padding: 36px 28px 32px; }
+    .hero-meta { grid-template-columns: 1fr; gap: 14px; }
+    h1.hero-title { font-size: 2.4rem; }
+    h2.section-title { font-size: 1.8rem; }
+    p.lead, p.body { font-size: 1.1rem; }
+    .two-col, .before-after, .cheat-grid { grid-template-columns: 1fr; }
+    .card-grid { grid-template-columns: 1fr !important; }
+    .flow-diagram { flex-direction: column; }
+    .flow-arrow { transform: rotate(90deg); }
+}
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+<!-- ══════════ SLIDE 0: HERO ══════════ -->
+<section class="slide" style="align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 30%, rgba(30,41,59,0.6), var(--bg-deep) 70%);">
+    <div class="hero-glass" style="text-align:center;">
+        <span class="slide-label" style="color:var(--cyan);background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.2);">Fundamentos de IA Generativa &amp; Prompt Engineering</span>
+        <h1 class="hero-title" style="margin-top:8px;">
+            Aplicaciones Prácticas de<br><span style="color:var(--green);">IA Generativa</span>
+        </h1>
+        <p class="lead" style="margin:0 auto;max-width:700px;">
+            De la teoría a la acción: cómo se usa la IA Generativa en el mundo real para crear imágenes, texto, código, productos e investigación.
+        </p>
+
+        <div class="hero-divider"></div>
+
+        <div class="hero-meta">
+            <div class="hero-meta-item">
+                <div class="hero-meta-icon" style="background:rgba(56,189,248,0.12);color:var(--cyan);">📚</div>
+                <div>
+                    <span class="hero-meta-label" style="color:var(--cyan);">Semana</span>
+                    <div class="hero-meta-value">3 de 4</div>
+                    <div class="hero-meta-sub">Tema 3 del programa</div>
+                </div>
+            </div>
+            <div class="hero-meta-item">
+                <div class="hero-meta-icon" style="background:rgba(248,113,113,0.12);color:var(--red);">📅</div>
+                <div>
+                    <span class="hero-meta-label" style="color:var(--red);">Fecha</span>
+                    <div class="hero-meta-value">Miércoles 22 de Abril</div>
+                    <div class="hero-meta-sub">2026</div>
+                </div>
+            </div>
+            <div class="hero-meta-item">
+                <div class="hero-meta-icon" style="background:rgba(52,211,153,0.12);color:var(--green);">🏛️</div>
+                <div>
+                    <span class="hero-meta-label" style="color:var(--green);">Institución</span>
+                    <div class="hero-meta-value">Universidad CENFOTEC</div>
+                    <div class="hero-meta-sub">Escuela de Sistemas Inteligentes</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 1: CONTEXTO RÁPIDO ══════════ -->
+<section class="slide">
+    <span class="slide-number">01 / 24</span>
+    <h2 class="section-title">Antes de empezar: ¿Qué es la IA Generativa?</h2>
+    <p class="body">
+        Si estás estudiando solo, necesitás este contexto. La <strong style="color:var(--text-primary)">IA Generativa</strong> es un tipo de inteligencia artificial que no solo analiza datos, sino que <strong style="color:var(--green)">crea contenido nuevo</strong>: texto, imágenes, música, código, video y más.
+    </p>
+    <div class="analogy-box">
+        <div class="analogy-emoji">🧠</div>
+        <div>
+            <p><strong>Analogía:</strong> Pensá en un estudiante que leyó miles de libros, vio millones de imágenes y escuchó millones de canciones. No memoriza todo textualmente, sino que aprende <strong>patrones</strong>: cómo se estructuran las oraciones, cómo se componen las imágenes, cómo fluyen las melodías. Cuando le pedís algo nuevo, <strong>genera</strong> contenido original basándose en esos patrones. Eso es un modelo generativo.</p>
+        </div>
+    </div>
+    <div class="callout info">
+        <span class="callout-label" style="color:var(--cyan)">Recapitulación rápida</span>
+        <p>En las semanas anteriores vimos qué es la IA Generativa (Semana 1) y cómo escribir instrucciones efectivas con Prompt Engineering (Semana 2). Esta semana toca lo más emocionante: <strong>ver qué se puede HACER con todo eso en la práctica</strong>.</p>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 2: MAPA DE APLICACIONES ══════════ -->
+<section class="slide">
+    <span class="slide-number">02 / 24</span>
+    <h2 class="section-title">Mapa de aplicaciones</h2>
+    <p class="body" style="margin-bottom:8px;">
+        La IA Generativa se aplica en cinco grandes áreas. Cada una transforma industrias enteras:
+    </p>
+    <div class="flow-diagram">
+        <div class="flow-step" style="border-color:rgba(167,139,250,0.3);">
+            <span class="step-label" style="color:var(--purple)">Área 1</span>
+            <span class="step-text">Multimedia</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" style="border-color:rgba(56,189,248,0.3);">
+            <span class="step-label" style="color:var(--cyan)">Área 2</span>
+            <span class="step-text">Texto</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" style="border-color:rgba(52,211,153,0.3);">
+            <span class="step-label" style="color:var(--green)">Área 3</span>
+            <span class="step-text">Código</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" style="border-color:rgba(251,191,36,0.3);">
+            <span class="step-label" style="color:var(--amber)">Área 4</span>
+            <span class="step-text">Productos</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" style="border-color:rgba(248,113,113,0.3);">
+            <span class="step-label" style="color:var(--red)">Área 5</span>
+            <span class="step-text">Ciencia</span>
+        </div>
+    </div>
+    <div class="callout idea" style="margin-top:16px;">
+        <span class="callout-label" style="color:var(--purple)">Lo que vamos a cubrir</span>
+        <p>Vamos a explorar cada área con <strong>ejemplos concretos, herramientas reales y prompts que podés probar hoy mismo</strong>. Al final, vas a tener una visión clara de cómo usar IA Generativa en tu trabajo o proyectos.</p>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 3: IMÁGENES ══════════ -->
+<section class="slide">
+    <span class="slide-number">03 / 24</span>
+    <span class="slide-label" style="color:var(--purple);background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.2);">Área 1: Multimedia</span>
+    <h2 class="section-title">Generación de imágenes</h2>
+    <p class="body">
+        Modelos como <strong style="color:var(--text-primary)">DALL-E 3</strong>, <strong style="color:var(--text-primary)">Midjourney</strong> y <strong style="color:var(--text-primary)">Stable Diffusion</strong> generan imágenes a partir de descripciones en texto. No buscan imágenes existentes: las <em>crean desde cero</em>, píxel a píxel.
+    </p>
+    <div class="before-after" style="margin-top:16px;">
+        <div class="ba-box bad">
+            <span class="ba-label" style="color:var(--red)">Prompt vago</span>
+            <div class="prompt-box" style="margin:0;font-size:0.92rem;">
+<span style="color:var(--text-primary)">"Un perro bonito."</span></div>
+            <p style="font-size:1.05rem;color:var(--text-secondary);margin-top:12px;line-height:1.5;">
+                <strong style="color:var(--red)">Resultado:</strong> Imagen genérica de un perro cualquiera. Sin estilo definido, sin contexto, sin utilidad profesional.
+            </p>
+        </div>
+        <div class="ba-box good">
+            <span class="ba-label" style="color:var(--green)">Prompt descriptivo</span>
+            <div class="prompt-box" style="margin:0;font-size:0.92rem;">
+<span style="color:var(--text-primary)">"Golden retriever corriendo en una playa tropical al atardecer, estilo fotografía profesional con lente 85mm, bokeh suave, colores cálidos, resolución 4K."</span></div>
+            <p style="font-size:1.05rem;color:var(--text-secondary);margin-top:12px;line-height:1.5;">
+                <strong style="color:var(--green)">Resultado:</strong> Imagen precisa con estilo fotográfico, iluminación y composición controladas. Útil para marketing, redes sociales o diseño.
+            </p>
+        </div>
+    </div>
+    <div class="callout info" style="margin-top:10px;">
+        <span class="callout-label" style="color:var(--cyan)">¿Cómo funciona por dentro?</span>
+        <p>Estos modelos usan una técnica llamada <strong>difusión</strong>: parten de ruido aleatorio (como la estática de una TV) y lo van "limpiando" paso a paso hasta formar la imagen que describiste. Tu prompt le dice <em>hacia dónde</em> limpiar.</p>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 4: VIDEO Y MÚSICA ══════════ -->
+<section class="slide">
+    <span class="slide-number">04 / 24</span>
+    <h2 class="section-title">Video, música y audio</h2>
+    <p class="body">
+        La IA Generativa no se limita a imágenes estáticas. Ya puede crear <strong style="color:var(--text-primary)">videos, música, efectos de sonido y voces</strong> a partir de descripciones textuales.
+    </p>
+    <div class="card-grid" style="grid-template-columns:repeat(3,1fr);">
+        <div class="card" style="border-color:rgba(167,139,250,0.15);">
+            <h4 style="color:var(--purple)">🎬 Video</h4>
+            <p><strong>Sora (OpenAI), Runway, Pika:</strong> Generan clips de video a partir de texto. Ejemplo: "Un dron sobrevolando el volcán Arenal al amanecer con niebla" produce un video realista de segundos.</p>
+        </div>
+        <div class="card" style="border-color:rgba(56,189,248,0.15);">
+            <h4 style="color:var(--cyan)">🎵 Música</h4>
+            <p><strong>Suno, Udio, MusicLM:</strong> Componen canciones completas con letra, melodía e instrumentos. Ejemplo: "Canción de cumbia costarricense alegre sobre el café, con guitarra y marimba" genera una pista lista para escuchar.</p>
+        </div>
+        <div class="card" style="border-color:rgba(52,211,153,0.15);">
+            <h4 style="color:var(--green)">🎙️ Voz y audio</h4>
+            <p><strong>ElevenLabs, Bark, OpenAI TTS:</strong> Generan voces humanas realistas, narración, doblaje, y hasta clonan voces con pocos segundos de muestra. Se usan en podcasts, videojuegos y accesibilidad.</p>
+        </div>
+    </div>
+    <div class="analogy-box" style="margin-top:14px;">
+        <div class="analogy-emoji">🎬</div>
+        <div>
+            <p><strong>Ejemplo real:</strong> Una PYME en Costa Rica que vende tours puede crear un video promocional del volcán Poás con IA, agregarle música generada y una narración en español e inglés, todo sin contratar equipo de producción. Costo tradicional: $3,000+. Con IA: prácticamente $0 (más el tiempo de promptear).</p>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 5: CASOS MULTIMEDIA ══════════ -->
+<section class="slide">
+    <span class="slide-number">05 / 24</span>
+    <h2 class="section-title">Multimedia: casos de uso reales</h2>
+    <div class="card-grid" style="grid-template-columns:repeat(2,1fr);">
+        <div class="card" style="border-color:rgba(167,139,250,0.15);">
+            <h4 style="color:var(--purple)">🎨 Diseño gráfico y marketing</h4>
+            <p>Crear posts para redes sociales, banners publicitarios, logos conceptuales, mockups de productos. Una tienda online puede generar 20 variantes de un anuncio en minutos en lugar de días.</p>
+        </div>
+        <div class="card" style="border-color:rgba(56,189,248,0.15);">
+            <h4 style="color:var(--cyan)">📸 Fotografía de producto</h4>
+            <p>Colocar un producto real en fondos generados por IA: playa, montaña, estudio profesional. Ejemplo: "Mi botella de café sobre una mesa de madera rústica con granos de café alrededor, iluminación suave lateral."</p>
+        </div>
+        <div class="card" style="border-color:rgba(52,211,153,0.15);">
+            <h4 style="color:var(--green)">🏠 Arquitectura e interiores</h4>
+            <p>Generar renders de espacios antes de construirlos. "Sala de estar minimalista, paredes blancas, ventanal con vista a montañas tropicales, muebles de madera clara, estilo escandinavo."</p>
+        </div>
+        <div class="card" style="border-color:rgba(251,191,36,0.15);">
+            <h4 style="color:var(--amber)">🎮 Videojuegos e ilustración</h4>
+            <p>Concept art para personajes, escenarios, items. Un desarrollador indie puede crear todo el arte visual de su juego sin ser ilustrador, acelerando el prototipado.</p>
+        </div>
+    </div>
+    <div class="callout warning" style="margin-top:10px;">
+        <span class="callout-label" style="color:var(--amber)">Importante</span>
+        <p>Las imágenes generadas por IA pueden tener problemas legales de derechos de autor. Algunos modelos fueron entrenados con imágenes de artistas sin permiso. Siempre verificá los términos de uso de la herramienta y si podés usar las imágenes comercialmente.</p>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 6: PROMPT PARA IMÁGENES ══════════ -->
+<section class="slide">
+    <span class="slide-number">06 / 24</span>
+    <h2 class="section-title">Anatomía de un prompt para imágenes</h2>
+    <p class="body">
+        Los prompts para generar imágenes tienen una estructura diferente a los de texto. Acá te mostramos los <strong style="color:var(--text-primary)">6 elementos clave</strong>:
+    </p>
+    <div class="prompt-box" style="font-size:0.95rem;">
+<span class="label" style="color:var(--purple)">Fórmula del prompt visual perfecto</span>
+<span style="color:var(--purple);font-weight:600;">[SUJETO]</span> <span style="color:var(--text-primary)">Un tucán colorido posado en una rama</span>
+<span style="color:var(--cyan);font-weight:600;">[ACCIÓN]</span> <span style="color:var(--text-primary)">mirando hacia la cámara con las alas extendidas</span>
+<span style="color:var(--green);font-weight:600;">[AMBIENTE]</span> <span style="color:var(--text-primary)">en un bosque nuboso de Monteverde, con niebla suave</span>
+<span style="color:var(--amber);font-weight:600;">[ESTILO]</span> <span style="color:var(--text-primary)">estilo National Geographic, fotografía macro</span>
+<span style="color:var(--red);font-weight:600;">[ILUMINACIÓN]</span> <span style="color:var(--text-primary)">luz natural filtrada entre los árboles, hora dorada</span>
+<span style="color:var(--pink);font-weight:600;">[TÉCNICO]</span> <span style="color:var(--text-primary)">resolución 4K, profundidad de campo superficial, bokeh</span></div>
+    <div class="callout success" style="margin-top:10px;">
+        <span class="callout-label" style="color:var(--green)">Tip profesional</span>
+        <p>No necesitás usar los 6 elementos siempre. Pero mientras más específico seas, más control tenés sobre el resultado. <strong>La especificidad es tu mejor herramienta.</strong></p>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 7: GENERACIÓN DE TEXTO ══════════ -->
+<section class="slide">
+    <span class="slide-number">07 / 24</span>
+    <span class="slide-label" style="color:var(--cyan);background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.2);">Área 2: Texto</span>
+    <h2 class="section-title">Generación de texto</h2>
+    <p class="body">
+        Es la aplicación más madura de la IA Generativa. Modelos como <strong style="color:var(--text-primary)">Claude, ChatGPT y Gemini</strong> pueden generar prácticamente cualquier tipo de texto: artículos, poemas, guiones, emails, ensayos, traducciones y mucho más.
+    </p>
+    <div class="analogy-box">
+        <div class="analogy-emoji">✍️</div>
+        <div>
+            <p><strong>¿Cómo genera texto?</strong> El modelo predice <strong>una palabra a la vez</strong>, eligiendo la más probable dado todo el contexto anterior. Es como autocompletado extremadamente sofisticado: no "entiende" como un humano, pero produce texto coherente porque aprendió patrones de billones de palabras. Cada palabra generada se convierte en contexto para la siguiente.</p>
+        </div>
+    </div>
+    <div class="card-grid" style="grid-template-columns:repeat(2,1fr);margin-top:10px;">
+        <div class="card" style="border-color:rgba(56,189,248,0.15);">
+            <h4 style="color:var(--cyan)">📝 Contenido escrito</h4>
+            <p>Artículos de blog, newsletters, descripciones de productos, posts para redes, comunicados de prensa, reportes ejecutivos.</p>
+        </div>
+        <div class="card" style="border-color:rgba(167,139,250,0.15);">
+            <h4 style="color:var(--purple)">🎭 Escritura creativa</h4>
+            <p>Poemas, cuentos, guiones de teatro, letras de canciones, diálogos para videojuegos, worldbuilding para novelas.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 8: EJEMPLOS DE TEXTO ══════════ -->
+<section class="slide">
+    <span class="slide-number">08 / 24</span>
+    <h2 class="section-title">Texto: ejemplos prácticos</h2>
+    <p class="body" style="margin-bottom:8px;">Veamos cómo el mismo modelo produce resultados muy diferentes según el prompt:</p>
+    <div class="prompt-box" style="font-size:0.92rem;">
+<span class="label" style="color:var(--cyan)">Ejemplo 1: artículo de blog</span>
+<span style="color:var(--cyan);font-weight:600;">Prompt:</span> <span style="color:var(--text-primary)">"Sos un redactor de contenido digital especializado en turismo en Centroamérica. Escribí un artículo de 300 palabras para el blog de una agencia de viajes sobre '5 razones para visitar el Parque Nacional Manuel Antonio'. Tono: entusiasta pero informativo. Incluí datos específicos (especies, tamaño del parque). Formato: introducción + 5 secciones cortas + cierre con call to action."</span></div>
+    <div class="prompt-box" style="font-size:0.92rem;">
+<span class="label" style="color:var(--purple)">Ejemplo 2: poema</span>
+<span style="color:var(--purple);font-weight:600;">Prompt:</span> <span style="color:var(--text-primary)">"Escribí un poema de 12 versos en español sobre la lluvia en San José de Costa Rica en octubre. Estilo: Pablo Neruda. Usá imágenes sensoriales (sonidos, olores, texturas). Métrica libre pero con ritmo. Incluí al menos una referencia al café y una al Valle Central."</span></div>
+    <div class="callout idea" style="margin-top:8px;">
+        <span class="callout-label" style="color:var(--purple)">Observá</span>
+        <p>Ambos prompts usan los 5 componentes de la semana pasada: <strong>Rol + Contexto + Instrucción + Formato + Restricciones</strong>. El Prompt Engineering que aprendiste aplica directamente en todas estas aplicaciones prácticas.</p>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 9: TRADUCCIÓN Y ADAPTACIÓN ══════════ -->
+<section class="slide">
+    <span class="slide-number">09 / 24</span>
+    <h2 class="section-title">Texto: traducción y adaptación cultural</h2>
+    <p class="body">
+        La IA no solo traduce palabras: puede <strong style="color:var(--text-primary)">adaptar culturalmente</strong> el contenido. Esto es mucho más poderoso que una traducción literal.
+    </p>
+    <div class="before-after" style="margin-top:16px;">
+        <div class="ba-box bad">
+            <span class="ba-label" style="color:var(--red)">Traducción literal</span>
+            <div class="prompt-box" style="margin:0;font-size:0.88rem;">
+<span style="color:var(--text-primary)">"Traducí esto al español:
+'Grab a coffee and let's touch base about Q3 targets.'"</span>
+
+<span style="color:var(--red);font-weight:600;">→</span> "Agarra un café y toquemos base sobre los objetivos del Q3."</div>
+            <p class="note" style="margin-top:8px;">Literal, antinatural, nadie habla así en Costa Rica.</p>
+        </div>
+        <div class="ba-box good">
+            <span class="ba-label" style="color:var(--green)">Adaptación cultural</span>
+            <div class="prompt-box" style="margin:0;font-size:0.88rem;">
+<span style="color:var(--text-primary)">"Traducí y adaptá al español de Costa Rica (voseo, modismos ticos):
+'Grab a coffee and let's touch base about Q3 targets.'"</span>
+
+<span style="color:var(--green);font-weight:600;">→</span> "Nos tomamos un cafecito y hablamos sobre las metas del tercer trimestre, ¿va?"</div>
+            <p class="note" style="margin-top:8px;">Natural, culturalmente apropiado, profesional pero cercano.</p>
+        </div>
+    </div>
+    <div class="callout success" style="margin-top:10px;">
+        <span class="callout-label" style="color:var(--green)">Aplicación real</span>
+        <p>Empresas que operan en múltiples países usan IA para adaptar su comunicación a cada mercado. No es solo idioma: es tono, referencias culturales, formatos de fecha, moneda y más.</p>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 10: PROGRAMACIÓN ASISTIDA INTRO ══════════ -->
+<section class="slide">
+    <span class="slide-number">10 / 24</span>
+    <span class="slide-label" style="color:var(--green);background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.2);">Área 3: Código</span>
+    <h2 class="section-title">Programación asistida con IA</h2>
+    <p class="body">
+        La IA Generativa puede <strong style="color:var(--text-primary)">escribir, explicar, depurar y optimizar código</strong> en prácticamente cualquier lenguaje de programación. No reemplaza al programador, pero lo hace significativamente más productivo.
+    </p>
+    <div class="analogy-box">
+        <div class="analogy-emoji">👨‍💻</div>
+        <div>
+            <p><strong>Analogía:</strong> Imaginá que tenés un compañero de trabajo que sabe todos los lenguajes de programación, conoce todas las librerías populares, y puede escribir código al instante. Pero no conoce <em>tu</em> proyecto específico ni <em>tus</em> reglas de negocio. Vos ponés la dirección y el contexto; la IA pone la velocidad de ejecución.</p>
+        </div>
+    </div>
+    <div class="card-grid" style="grid-template-columns:repeat(3,1fr);">
+        <div class="card" style="border-color:rgba(52,211,153,0.15);">
+            <h4 style="color:var(--green)">🛠️ Generar código</h4>
+            <p>Escribir funciones, clases, APIs, queries SQL, scripts de automatización desde una descripción en lenguaje natural.</p>
+        </div>
+        <div class="card" style="border-color:rgba(56,189,248,0.15);">
+            <h4 style="color:var(--cyan)">🐛 Depurar</h4>
+            <p>Pegás un error y la IA te explica qué pasó, por qué, y cómo corregirlo. Incluso detecta bugs sutiles que no generan errores visibles.</p>
+        </div>
+        <div class="card" style="border-color:rgba(167,139,250,0.15);">
+            <h4 style="color:var(--purple)">📖 Explicar</h4>
+            <p>Le pasás código que no entendés y te lo explica línea por línea, como un tutor paciente que nunca se cansa.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 11: EJEMPLO CÓDIGO ══════════ -->
+<section class="slide">
+    <span class="slide-number">11 / 24</span>
+    <h2 class="section-title">Código: ejemplo práctico</h2>
+    <p class="body" style="margin-bottom:8px;">Veamos cómo un prompt bien estructurado genera código funcional:</p>
+    <div class="prompt-box" style="font-size:0.88rem;">
+<span class="label" style="color:var(--green)">Prompt para generar una API</span>
+<span style="color:var(--green);font-weight:600;">Prompt:</span> <span style="color:var(--text-primary)">"Sos un desarrollador backend senior especializado en Python.
+
+Creá una API REST con FastAPI que maneje un inventario de productos para una tienda en Costa Rica.
+
+Requisitos:
+- Endpoints: GET /productos, POST /productos, PUT /productos/{id}, DELETE /productos/{id}
+- Cada producto tiene: id, nombre, precio_colones, cantidad, categoría
+- Validación con Pydantic
+- Almacenamiento en memoria (lista de diccionarios)
+- Comentarios en español explicando cada sección
+
+Restricciones: solo Python 3.11+, no bases de datos externas, código production-ready."</span></div>
+    <div class="callout success">
+        <span class="callout-label" style="color:var(--green)">Resultado</span>
+        <p>La IA genera un archivo Python completo, funcional, con validaciones, documentación y hasta ejemplos de uso. Un desarrollador puede tener un prototipo corriendo en minutos en lugar de horas.</p>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 12: HERRAMIENTAS DE CÓDIGO ══════════ -->
+<section class="slide">
+    <span class="slide-number">12 / 24</span>
+    <h2 class="section-title">Herramientas para programación con IA</h2>
+    <p class="body">
+        Existen herramientas especializadas que integran IA directamente en tu flujo de desarrollo:
+    </p>
+    <table class="comparison-table" style="margin-top:16px;">
+        <thead><tr><th>Herramienta</th><th>Tipo</th><th>¿Qué hace?</th><th>Ideal para</th></tr></thead>
+        <tbody>
+            <tr><td>GitHub Copilot</td><td>Autocompletado</td><td>Sugiere código mientras escribís en tu editor (VS Code, JetBrains)</td><td>Desarrollo diario</td></tr>
+            <tr><td>Claude Code</td><td>Agente terminal</td><td>Ejecuta tareas complejas en tu proyecto desde la terminal</td><td>Refactoring, features completas</td></tr>
+            <tr><td>Cursor</td><td>Editor IA</td><td>Editor de código con IA integrada que entiende tu proyecto entero</td><td>Proyectos grandes</td></tr>
+            <tr><td>Claude / ChatGPT</td><td>Chat</td><td>Conversación para generar, explicar, depurar código</td><td>Aprendizaje y prototipado</td></tr>
+            <tr><td>Replit Agent</td><td>Entorno completo</td><td>Genera apps completas desde una descripción</td><td>Prototipos rápidos</td></tr>
+        </tbody>
+    </table>
+    <div class="callout warning" style="margin-top:14px;">
+        <span class="callout-label" style="color:var(--amber)">Precaución importante</span>
+        <p>El código generado por IA <strong>siempre debe revisarse</strong>. Puede contener errores sutiles, vulnerabilidades de seguridad o no seguir las mejores prácticas de tu proyecto. Usá la IA como acelerador, no como reemplazo del criterio profesional.</p>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 13: DEPURACIÓN CON IA ══════════ -->
+<section class="slide">
+    <span class="slide-number">13 / 24</span>
+    <h2 class="section-title">Código: depuración inteligente</h2>
+    <p class="body">
+        Una de las aplicaciones más útiles: pegás un error y la IA te lo resuelve. Veamos un ejemplo real:
+    </p>
+    <div class="prompt-box" style="font-size:0.88rem;">
+<span class="label" style="color:var(--red)">Prompt de depuración</span>
+<span style="color:var(--red);font-weight:600;">Error:</span>
+<span style="color:var(--text-primary)">TypeError: Cannot read properties of undefined (reading 'map')
+  at ProductList (ProductList.jsx:12:24)</span>
+
+<span style="color:var(--cyan);font-weight:600;">Prompt:</span> <span style="color:var(--text-primary)">"Mi componente React falla con este error. El código es:
+
+const ProductList = ({ products }) => {
+  return products.map(p => &lt;div key={p.id}&gt;{p.name}&lt;/div&gt;);
+};
+
+Explicame: 1) Por qué ocurre el error. 2) Cómo corregirlo. 3) Cómo prevenir este tipo de errores en el futuro."</span>
+
+<span style="color:var(--green);font-weight:600;">→ La IA explica:</span> <span style="color:var(--text-secondary)">1) products es undefined cuando el componente se renderiza antes de recibir datos. 2) Agregar valor por defecto: ({ products = [] }). 3) Usar optional chaining y propTypes/TypeScript.</span></div>
+    <div class="callout idea" style="margin-top:10px;">
+        <span class="callout-label" style="color:var(--purple)">¿Por qué es tan buena la IA en esto?</span>
+        <p>Porque ha "visto" millones de errores similares en su entrenamiento. Reconoce patrones de error que a un humano le tomaría tiempo googlear y diagnosticar.</p>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 14: DESARROLLO DE PRODUCTOS ══════════ -->
+<section class="slide">
+    <span class="slide-number">14 / 24</span>
+    <span class="slide-label" style="color:var(--amber);background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.2);">Área 4: Productos</span>
+    <h2 class="section-title">IA en desarrollo de productos</h2>
+    <p class="body">
+        La IA Generativa está transformando cómo se <strong style="color:var(--text-primary)">diseñan, prototinan y lanzan productos</strong>. Desde la idea inicial hasta el producto final, la IA puede participar en cada etapa.
+    </p>
+    <div class="card-grid" style="grid-template-columns:repeat(2,1fr);">
+        <div class="card" style="border-color:rgba(251,191,36,0.15);">
+            <h4 style="color:var(--amber)">💡 Ideación y brainstorming</h4>
+            <p>Generar ideas de producto, explorar mercados, identificar oportunidades. Ejemplo: "Generá 10 ideas de apps móviles para el mercado costarricense que resuelvan problemas de transporte público." La IA produce ideas diversas que un equipo humano usaría como punto de partida.</p>
+        </div>
+        <div class="card" style="border-color:rgba(52,211,153,0.15);">
+            <h4 style="color:var(--green)">🎨 Diseño y prototipado</h4>
+            <p>Crear wireframes, mockups de interfaces, flujos de usuario. Herramientas como <strong>v0.dev</strong> (Vercel) generan interfaces completas en React desde una descripción. "Diseñá una pantalla de login con campo de email, contraseña, botón verde y opción de Google Sign-in."</p>
+        </div>
+        <div class="card" style="border-color:rgba(167,139,250,0.15);">
+            <h4 style="color:var(--purple)">📋 Investigación de usuario</h4>
+            <p>Analizar encuestas, sintetizar entrevistas, crear personas de usuario. "Analicé 50 respuestas de encuesta. Identificá los 3 pain points más frecuentes y sugerí soluciones." La IA procesa texto masivo en segundos.</p>
+        </div>
+        <div class="card" style="border-color:rgba(248,113,113,0.15);">
+            <h4 style="color:var(--red)">📊 Documentación de producto</h4>
+            <p>Generar PRDs (Product Requirements Documents), user stories, especificaciones técnicas. La IA toma notas desordenadas y las convierte en documentación estructurada y profesional.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 15: EJEMPLO PRODUCTO ══════════ -->
+<section class="slide">
+    <span class="slide-number">15 / 24</span>
+    <h2 class="section-title">Producto: de idea a prototipo</h2>
+    <p class="body" style="margin-bottom:8px;">Veamos un flujo completo usando IA en cada paso. Ejemplo: app de delivery para zonas rurales de Costa Rica.</p>
+    <div class="flow-diagram">
+        <div class="flow-step" style="border-color:rgba(251,191,36,0.3);">
+            <span class="step-label" style="color:var(--amber)">Paso 1</span>
+            <span class="step-text">Idear</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" style="border-color:rgba(167,139,250,0.3);">
+            <span class="step-label" style="color:var(--purple)">Paso 2</span>
+            <span class="step-text">Diseñar</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" style="border-color:rgba(52,211,153,0.3);">
+            <span class="step-label" style="color:var(--green)">Paso 3</span>
+            <span class="step-text">Prototipar</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" style="border-color:rgba(56,189,248,0.3);">
+            <span class="step-label" style="color:var(--cyan)">Paso 4</span>
+            <span class="step-text">Validar</span>
+        </div>
+    </div>
+    <div class="two-col" style="margin-top:10px;">
+        <div class="prompt-box" style="font-size:0.85rem;">
+<span class="label" style="color:var(--amber)">Paso 1: Ideación</span>
+<span style="color:var(--text-primary)">"Sos un product manager. Proponé 5 funcionalidades clave para una app de delivery en zonas rurales de CR donde no hay Uber Eats ni Rappi. Considerá: conectividad limitada, caminos sin pavimentar, distancias largas."</span></div>
+        <div class="prompt-box" style="font-size:0.85rem;">
+<span class="label" style="color:var(--purple)">Paso 2: User Stories</span>
+<span style="color:var(--text-primary)">"Convertí estas 5 funcionalidades en user stories con formato: 'Como [usuario], quiero [acción] para [beneficio]'. Incluí criterios de aceptación para cada una."</span></div>
+    </div>
+    <div class="callout info" style="margin-top:8px;">
+        <span class="callout-label" style="color:var(--cyan)">Prompt Chaining en acción</span>
+        <p>Cada paso alimenta al siguiente. Esto es <strong>Prompt Chaining</strong> (encadenamiento) que vimos en la Semana 2: dividimos un problema grande en pasos pequeños y verificables.</p>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 16: CIENCIA E INVESTIGACIÓN ══════════ -->
+<section class="slide">
+    <span class="slide-number">16 / 24</span>
+    <span class="slide-label" style="color:var(--red);background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.2);">Área 5: Ciencia</span>
+    <h2 class="section-title">IA en ciencia e investigación</h2>
+    <p class="body">
+        Esta es quizás el área con mayor impacto a largo plazo. La IA Generativa está acelerando descubrimientos que antes tomaban <strong style="color:var(--text-primary)">décadas</strong>.
+    </p>
+    <div class="card-grid" style="grid-template-columns:repeat(2,1fr);">
+        <div class="card" style="border-color:rgba(248,113,113,0.15);">
+            <h4 style="color:var(--red)">💊 Descubrimiento de fármacos</h4>
+            <p><strong>AlphaFold (DeepMind)</strong> predijo la estructura 3D de prácticamente todas las proteínas conocidas, un problema que la biología no pudo resolver en 50 años. Esto acelera el diseño de medicamentos: en lugar de probar millones de compuestos, la IA sugiere los más prometedores. Ejemplo real: Insilico Medicine usó IA para diseñar un fármaco contra fibrosis pulmonar que llegó a ensayos clínicos en solo 18 meses (vs. 4-5 años típicos).</p>
+        </div>
+        <div class="card" style="border-color:rgba(52,211,153,0.15);">
+            <h4 style="color:var(--green)">🧪 Nuevos materiales</h4>
+            <p><strong>GNoME (Google DeepMind)</strong> descubrió 2.2 millones de nuevos cristales estables, incluyendo 380,000 materiales que podrían usarse en baterías más eficientes, superconductores y chips solares. Sin IA, descubrir esos materiales por experimentación tradicional habría tomado siglos de trabajo en laboratorio.</p>
+        </div>
+        <div class="card" style="border-color:rgba(56,189,248,0.15);">
+            <h4 style="color:var(--cyan)">🌍 Clima y medio ambiente</h4>
+            <p>Modelos de IA generan predicciones climáticas más precisas, simulan escenarios de cambio climático y optimizan la ubicación de energías renovables. <strong>GraphCast (DeepMind)</strong> predice el clima a 10 días con mayor precisión que los métodos tradicionales, en minutos en vez de horas.</p>
+        </div>
+        <div class="card" style="border-color:rgba(167,139,250,0.15);">
+            <h4 style="color:var(--purple)">🧬 Genómica y biología</h4>
+            <p>IA que genera secuencias de ADN sintéticas para terapias génicas, analiza genomas completos buscando mutaciones, y predice cómo interactúan las proteínas. Está acelerando la medicina personalizada: tratamientos diseñados para tu genoma específico.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 17: CIENCIA EJEMPLO ══════════ -->
+<section class="slide">
+    <span class="slide-number">17 / 24</span>
+    <h2 class="section-title">Ciencia: ¿cómo funciona en la práctica?</h2>
+    <p class="body">
+        No necesitás ser científico para entender el impacto. Veamos un ejemplo simplificado del descubrimiento de fármacos:
+    </p>
+    <div class="flow-diagram" style="margin-top:16px;">
+        <div class="flow-step" style="border-color:rgba(248,113,113,0.3);min-width:160px;">
+            <span class="step-label" style="color:var(--red)">Antes (sin IA)</span>
+            <span class="step-text">10-15 años</span>
+        </div>
+        <div class="flow-arrow">vs.</div>
+        <div class="flow-step" style="border-color:rgba(52,211,153,0.3);min-width:160px;">
+            <span class="step-label" style="color:var(--green)">Ahora (con IA)</span>
+            <span class="step-text">1-3 años</span>
+        </div>
+    </div>
+    <div class="analogy-box" style="margin-top:18px;">
+        <div class="analogy-emoji">🔬</div>
+        <div>
+            <p><strong>Analogía:</strong> Imaginate que buscás una llave entre millones de llaves para abrir una cerradura específica. <strong>Sin IA:</strong> probás una por una (años de trabajo). <strong>Con IA:</strong> el modelo "mira" la cerradura, entiende su forma, y te dice "probá estas 50 llaves, son las que tienen mayor probabilidad de funcionar". No elimina la prueba de laboratorio, pero reduce dramáticamente las opciones.</p>
+        </div>
+    </div>
+    <div class="callout info" style="margin-top:12px;">
+        <span class="callout-label" style="color:var(--cyan)">¿Y esto cómo me aplica a mí?</span>
+        <p>Como profesional de tecnología, podrías trabajar en: desarrollo de interfaces para herramientas científicas, pipelines de datos para investigación, APIs que conecten modelos de IA con equipos de laboratorio, o visualización de resultados. La intersección entre tech y ciencia es uno de los campos laborales de mayor crecimiento.</p>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 18: PANORAMA DE HERRAMIENTAS ══════════ -->
+<section class="slide">
+    <span class="slide-number">18 / 24</span>
+    <h2 class="section-title">Panorama de herramientas (2026)</h2>
+    <p class="body" style="margin-bottom:8px;">Estas son las herramientas más relevantes en cada categoría. Todas tienen versiones gratuitas o trials para que experimentés:</p>
+    <table class="comparison-table">
+        <thead><tr><th>Categoría</th><th>Herramientas</th><th>Gratis para empezar</th></tr></thead>
+        <tbody>
+            <tr><td>Texto</td><td>Claude, ChatGPT, Gemini, Llama</td><td>Sí (con límites)</td></tr>
+            <tr><td>Imágenes</td><td>DALL-E 3, Midjourney, Stable Diffusion, Ideogram</td><td>SD es open source</td></tr>
+            <tr><td>Video</td><td>Sora, Runway Gen-3, Pika, Kling</td><td>Trials limitados</td></tr>
+            <tr><td>Música</td><td>Suno, Udio, Stable Audio</td><td>Sí (con límites)</td></tr>
+            <tr><td>Código</td><td>GitHub Copilot, Cursor, Claude Code, Replit</td><td>Trials disponibles</td></tr>
+            <tr><td>Diseño</td><td>v0.dev, Galileo AI, Uizard</td><td>Sí (con límites)</td></tr>
+            <tr><td>Voz</td><td>ElevenLabs, OpenAI TTS, Bark</td><td>Bark es open source</td></tr>
+        </tbody>
+    </table>
+    <div class="callout idea" style="margin-top:10px;">
+        <span class="callout-label" style="color:var(--purple)">Consejo</span>
+        <p>No tratés de aprender todas. Elegí <strong>una herramienta por categoría</strong> que se alinee con tus intereses y dominala. Es mejor ser muy bueno con una que conocer superficialmente diez.</p>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 19: PROMPT ENGINEERING APLICADO ══════════ -->
+<section class="slide">
+    <span class="slide-number">19 / 24</span>
+    <h2 class="section-title">Prompt Engineering aplicado por dominio</h2>
+    <p class="body" style="margin-bottom:8px;">
+        Las técnicas de Prompt Engineering que vimos en la Semana 2 se aplican diferente según el dominio. Acá tenés una guía rápida:
+    </p>
+    <div class="cheat-grid">
+        <div class="cheat-item" style="border-color:rgba(167,139,250,0.15);">
+            <h4 style="color:var(--purple)">Imágenes</h4>
+            <p>Sé visual y específico. Describí sujeto, ambiente, estilo, iluminación, ángulo. Usá referencias: "estilo Ghibli", "fotografía National Geographic".</p>
+            <span class="cheat-temp" style="color:var(--purple);background:rgba(167,139,250,0.1);">Zero-shot funciona bien</span>
+        </div>
+        <div class="cheat-item" style="border-color:rgba(56,189,248,0.15);">
+            <h4 style="color:var(--cyan)">Texto</h4>
+            <p>Definí rol, audiencia y tono. Usá Few-shot si necesitás un estilo específico (mostrá 2-3 ejemplos del tono deseado).</p>
+            <span class="cheat-temp" style="color:var(--cyan);background:rgba(56,189,248,0.1);">Mega-prompts para contenido largo</span>
+        </div>
+        <div class="cheat-item" style="border-color:rgba(52,211,153,0.15);">
+            <h4 style="color:var(--green)">Código</h4>
+            <p>Especificá lenguaje, versión, librerías, estructura. Pedí comentarios y tests. Usá CoT para lógica compleja: "Pensá paso a paso el algoritmo antes de escribir el código."</p>
+            <span class="cheat-temp" style="color:var(--green);background:rgba(52,211,153,0.1);">Chain-of-Thought + restricciones</span>
+        </div>
+        <div class="cheat-item" style="border-color:rgba(251,191,36,0.15);">
+            <h4 style="color:var(--amber)">Productos</h4>
+            <p>Usá Prompt Chaining: ideación → refinamiento → documentación. Cada paso es un prompt separado que alimenta al siguiente.</p>
+            <span class="cheat-temp" style="color:var(--amber);background:rgba(251,191,36,0.1);">Prompt Chaining es clave</span>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 20: LIMITACIONES ══════════ -->
+<section class="slide">
+    <span class="slide-number">20 / 24</span>
+    <h2 class="section-title">Limitaciones que debés conocer</h2>
+    <p class="body">
+        La IA Generativa es poderosa, pero <strong style="color:var(--text-primary)">no es perfecta</strong>. Conocer sus limitaciones te hace un usuario más efectivo:
+    </p>
+    <div class="card-grid" style="grid-template-columns:1fr;">
+        <div class="card" style="border-color:rgba(248,113,113,0.15);">
+            <h4 style="color:var(--red);font-size:1.25rem;">🤥 Alucinaciones</h4>
+            <p>Los modelos a veces generan información falsa con total confianza. Pueden inventar citas, estadísticas, fechas o hechos que no existen. <strong>Siempre verificá</strong> la información factual, especialmente datos numéricos, nombres y referencias. Esto aplica tanto a texto como a código (puede generar funciones de librerías que no existen).</p>
+        </div>
+        <div class="card" style="border-color:rgba(251,191,36,0.15);">
+            <h4 style="color:var(--amber);font-size:1.25rem;">⚖️ Derechos de autor</h4>
+            <p>El contenido generado puede parecerse a obras existentes. Las imágenes pueden replicar estilos de artistas vivos. El código puede incluir fragmentos con licencias restrictivas. Las leyes aún están evolucionando: en muchos países no está claro quién es el "autor" del contenido generado por IA.</p>
+        </div>
+        <div class="card" style="border-color:rgba(167,139,250,0.15);">
+            <h4 style="color:var(--purple);font-size:1.25rem;">🎭 Sesgos</h4>
+            <p>Los modelos heredan los sesgos de sus datos de entrenamiento. Si los datos sobrerrepresentan ciertos grupos, el modelo los favorecerá. Esto puede manifestarse en imágenes estereotipadas, texto con prejuicios o código que no considera diversidad de usuarios.</p>
+        </div>
+        <div class="card" style="border-color:rgba(56,189,248,0.15);">
+            <h4 style="color:var(--cyan);font-size:1.25rem;">📏 Calidad variable</h4>
+            <p>Un mismo modelo puede dar resultados excelentes un día y mediocres al siguiente con el mismo prompt (especialmente con temperatura alta). La calidad depende mucho de la complejidad de la tarea: resúmenes simples salen perfectos, razonamiento matemático complejo puede fallar.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 21: EJERCICIO PRÁCTICO ══════════ -->
+<section class="slide">
+    <span class="slide-number">21 / 24</span>
+    <span class="slide-label" style="color:var(--green);background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.2);">Proyecto del curso · 55% de la nota</span>
+    <h2 class="section-title">Portafolio Creativo con IA Generativa</h2>
+    <p class="body">
+        El proyecto consiste en crear un <strong style="color:var(--text-primary)">portafolio de contenido original</strong> generado con IA, acompañado de una <strong style="color:var(--green)">bitácora de prompts</strong> que documente todo el proceso creativo. El tema es libre, pero debe demostrar dominio de las técnicas del curso.
+    </p>
+    <h3 class="sub-title" style="color:var(--purple);margin-top:8px;">Discutamos: ¿qué tema te gustaría explorar?</h3>
+    <div class="card-grid" style="grid-template-columns:repeat(2,1fr);margin-top:4px;">
+        <div class="card" style="border-color:rgba(167,139,250,0.15);">
+            <h4 style="color:var(--purple)">🎨 Campaña de marca</h4>
+            <p>Crear la identidad visual y textual de un negocio ficticio (o real): nombre, slogan, 5+ imágenes para redes, textos publicitarios, y un anuncio de lanzamiento. Todo generado con IA.</p>
+        </div>
+        <div class="card" style="border-color:rgba(56,189,248,0.15);">
+            <h4 style="color:var(--cyan)">📖 Proyecto editorial</h4>
+            <p>Producir contenido escrito y visual: un mini-libro de cuentos ilustrados, una revista digital de 5 páginas, un blog con 3 artículos completos, o un guion corto con storyboard generado por IA.</p>
+        </div>
+        <div class="card" style="border-color:rgba(52,211,153,0.15);">
+            <h4 style="color:var(--green)">💻 Producto digital</h4>
+            <p>Diseñar y prototipar una app o sitio web usando IA: desde la ideación hasta un prototipo funcional con código generado, mockups de interfaz, textos de UX y documentación técnica.</p>
+        </div>
+        <div class="card" style="border-color:rgba(251,191,36,0.15);">
+            <h4 style="color:var(--amber)">🎵 Experiencia multimedia</h4>
+            <p>Combinar múltiples medios: crear una canción con letra + portada de álbum + video lyric + biografía del artista ficticio. O un podcast con guion, narración por IA y arte de portada.</p>
+        </div>
+    </div>
+    <div class="callout idea" style="margin-top:10px;">
+        <span class="callout-label" style="color:var(--purple)">Modalidad</span>
+        <p>Individual o en grupo (máximo 3 personas), a elección. La <strong>presentación es en la Semana 4</strong> (última clase): 8-10 minutos mostrando el portafolio y explicando el proceso.</p>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 22: PROYECTO REQUISITOS ══════════ -->
+<section class="slide">
+    <span class="slide-number">22 / 24</span>
+    <h2 class="section-title">Proyecto: requisitos y evaluación</h2>
+    <p class="body" style="margin-bottom:8px;">Tu entrega tiene dos partes igual de importantes: el <strong style="color:var(--text-primary)">contenido creativo</strong> y la <strong style="color:var(--green)">bitácora de prompts</strong>.</p>
+    <div class="two-col">
+        <div>
+            <div class="card" style="border-color:rgba(52,211,153,0.2);">
+                <h4 style="color:var(--green)">📋 Entregable 1: Portafolio creativo</h4>
+                <p style="margin-bottom:8px;">El contenido original generado con IA:</p>
+                <p>• Mínimo <strong style="color:var(--text-primary)">5 piezas de contenido</strong> (imágenes, textos, código, audio, etc.)</p>
+                <p style="margin-top:4px;">• Usar al menos <strong style="color:var(--text-primary)">2 tipos de contenido diferentes</strong> (ej: texto + imágenes, o código + texto)</p>
+                <p style="margin-top:4px;">• Usar al menos <strong style="color:var(--text-primary)">2 herramientas de IA diferentes</strong> (ej: Claude + DALL-E, ChatGPT + Suno)</p>
+            </div>
+        </div>
+        <div>
+            <div class="card" style="border-color:rgba(167,139,250,0.2);">
+                <h4 style="color:var(--purple)">📓 Entregable 2: Bitácora de prompts</h4>
+                <p style="margin-bottom:8px;">La documentación del proceso (esto es lo que más pesa):</p>
+                <p>• <strong style="color:var(--text-primary)">Cada prompt usado</strong>, con el resultado obtenido</p>
+                <p style="margin-top:4px;">• <strong style="color:var(--text-primary)">Iteraciones</strong>: cómo mejoraste los prompts y por qué</p>
+                <p style="margin-top:4px;">• <strong style="color:var(--text-primary)">Técnicas aplicadas</strong>: identificar si usaste Zero-shot, Few-shot, CoT, Mega-prompt, System prompt, Chaining</p>
+            </div>
+        </div>
+    </div>
+    <h3 class="sub-title" style="margin-top:16px;">Criterios de evaluación</h3>
+    <table class="comparison-table" style="margin-top:4px;">
+        <thead><tr><th>Criterio</th><th>Qué se evalúa</th><th>Peso</th></tr></thead>
+        <tbody>
+            <tr><td style="color:var(--cyan)">Selección del modelo</td><td>Justificar por qué eligieron ese modelo/herramienta para su proyecto</td><td>15%</td></tr>
+            <tr><td style="color:var(--purple)">Comprensión de conceptos</td><td>Demostrar que entienden cómo funciona la IA Generativa y el Prompt Engineering</td><td>20%</td></tr>
+            <tr><td style="color:var(--green)">Diseño de prompts</td><td>Calidad, variedad y evolución de los prompts. Uso de los 5 componentes y técnicas</td><td>25%</td></tr>
+            <tr><td style="color:var(--amber)">Calidad del contenido</td><td>Originalidad, coherencia y nivel profesional del contenido generado</td><td>25%</td></tr>
+            <tr><td style="color:var(--red)">Presentación</td><td>Claridad al explicar el proceso, reflexión sobre limitaciones encontradas</td><td>15%</td></tr>
+        </tbody>
+    </table>
+    <div class="callout warning" style="margin-top:10px;">
+        <span class="callout-label" style="color:var(--amber)">Fecha de entrega</span>
+        <p><strong>Semana 4 (última clase)</strong>. Presentación en vivo de 8-10 minutos. Subir el portafolio y la bitácora al LMS antes de la clase.</p>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 22: CHEAT SHEET ══════════ -->
+<section class="slide">
+    <span class="slide-number">23 / 24</span>
+    <h2 class="section-title">Cheat Sheet &amp; Resumen</h2>
+    <p class="note" style="margin-bottom:12px;">Tu guía de referencia rápida para las aplicaciones prácticas de IA Generativa:</p>
+    <div class="cheat-grid">
+        <div class="cheat-item" style="border-color:rgba(167,139,250,0.15);">
+            <h4 style="color:var(--purple)">Multimedia</h4>
+            <p>Imágenes, video, música, voz. Sé visual y específico en tus prompts.</p>
+            <span class="cheat-temp" style="color:var(--purple);background:rgba(167,139,250,0.1);">DALL-E, Midjourney, Suno</span>
+        </div>
+        <div class="cheat-item" style="border-color:rgba(56,189,248,0.15);">
+            <h4 style="color:var(--cyan)">Texto</h4>
+            <p>Artículos, poemas, emails, guiones. Definí rol, audiencia y formato.</p>
+            <span class="cheat-temp" style="color:var(--cyan);background:rgba(56,189,248,0.1);">Claude, ChatGPT, Gemini</span>
+        </div>
+        <div class="cheat-item" style="border-color:rgba(52,211,153,0.15);">
+            <h4 style="color:var(--green)">Código</h4>
+            <p>Generar, depurar, explicar, optimizar. Siempre revisá el output.</p>
+            <span class="cheat-temp" style="color:var(--green);background:rgba(52,211,153,0.1);">Copilot, Cursor, Claude Code</span>
+        </div>
+        <div class="cheat-item" style="border-color:rgba(251,191,36,0.15);">
+            <h4 style="color:var(--amber)">Productos</h4>
+            <p>Ideación, diseño, prototipado, documentación. Usá Prompt Chaining.</p>
+            <span class="cheat-temp" style="color:var(--amber);background:rgba(251,191,36,0.1);">v0.dev, Galileo, IA + Figma</span>
+        </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:18px;">
+        <div style="display:flex;gap:12px;align-items:center;padding:10px 16px;background:linear-gradient(160deg,var(--bg-card),var(--bg-card-alt));border-radius:10px;border:1px solid var(--border-subtle);">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:700;color:var(--cyan);">01</span>
+            <p style="font-size:1.1rem;color:var(--text-secondary);margin:0;"><strong style="color:var(--text-primary)">La IA Generativa crea contenido nuevo</strong> en texto, imagen, video, código, música y más.</p>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;padding:10px 16px;background:linear-gradient(160deg,var(--bg-card),var(--bg-card-alt));border-radius:10px;border:1px solid var(--border-subtle);">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:700;color:var(--purple);">02</span>
+            <p style="font-size:1.1rem;color:var(--text-secondary);margin:0;"><strong style="color:var(--text-primary)">El Prompt Engineering de la Semana 2 aplica en todas las áreas.</strong> Rol + Contexto + Instrucción + Formato + Restricciones.</p>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;padding:10px 16px;background:linear-gradient(160deg,var(--bg-card),var(--bg-card-alt));border-radius:10px;border:1px solid var(--border-subtle);">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:700;color:var(--green);">03</span>
+            <p style="font-size:1.1rem;color:var(--text-secondary);margin:0;"><strong style="color:var(--text-primary)">La programación asistida es la aplicación de mayor impacto inmediato</strong> para profesionales de tecnología.</p>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;padding:10px 16px;background:linear-gradient(160deg,var(--bg-card),var(--bg-card-alt));border-radius:10px;border:1px solid var(--border-subtle);">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:700;color:var(--amber);">04</span>
+            <p style="font-size:1.1rem;color:var(--text-secondary);margin:0;"><strong style="color:var(--text-primary)">Siempre verificá el output.</strong> La IA alucina, tiene sesgos y puede generar contenido con problemas legales.</p>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;padding:10px 16px;background:linear-gradient(160deg,var(--bg-card),var(--bg-card-alt));border-radius:10px;border:1px solid var(--border-subtle);">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:700;color:var(--red);">05</span>
+            <p style="font-size:1.1rem;color:var(--text-secondary);margin:0;"><strong style="color:var(--text-primary)">La práctica supera la teoría.</strong> Elegí una herramienta, probala hoy, iterá, y documentá tu proceso.</p>
+        </div>
+    </div>
+    <div class="callout info" style="margin-top:14px;">
+        <span class="callout-label" style="color:var(--cyan)">Semana 4 (final)</span>
+        <p><strong>Ética y limitaciones en IA Generativa</strong> — sesgos, derechos de autor, desinformación, y <strong>presentación de proyectos finales</strong>.</p>
+    </div>
+</section>
+
+<!-- ══════════ SLIDE 24: PRÓXIMOS PASOS ══════════ -->
+<section class="slide">
+    <span class="slide-number">24 / 24</span>
+    <h2 class="section-title">Próximos pasos</h2>
+    <p class="body">
+        Esta es tu hoja de ruta para la próxima semana:
+    </p>
+    <div class="card-grid" style="grid-template-columns:1fr;">
+        <div style="display:flex;gap:16px;align-items:flex-start;background:linear-gradient(160deg,var(--bg-card),var(--bg-card-alt));border-radius:14px;padding:22px 28px;border:1px solid rgba(52,211,153,0.15);">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:1.6rem;font-weight:700;color:var(--green);flex-shrink:0;">01</span>
+            <div>
+                <h4 style="font-size:1.2rem;font-weight:700;color:var(--text-primary);margin-bottom:4px;">Hoy: Elegí tu tema y formá equipo (si querés)</h4>
+                <p style="font-size:1.05rem;color:var(--text-secondary);line-height:1.5;margin:0;">Definí si trabajás solo o en grupo. Elegí el tema de tu portafolio. Seleccioná las herramientas de IA que vas a usar.</p>
+            </div>
+        </div>
+        <div style="display:flex;gap:16px;align-items:flex-start;background:linear-gradient(160deg,var(--bg-card),var(--bg-card-alt));border-radius:14px;padding:22px 28px;border:1px solid rgba(56,189,248,0.15);">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:1.6rem;font-weight:700;color:var(--cyan);flex-shrink:0;">02</span>
+            <div>
+                <h4 style="font-size:1.2rem;font-weight:700;color:var(--text-primary);margin-bottom:4px;">Esta semana: Creá, iterá, documentá</h4>
+                <p style="font-size:1.05rem;color:var(--text-secondary);line-height:1.5;margin:0;">Generá tu contenido. Iterá los prompts (esto es clave). Andá llenando la bitácora mientras trabajás, no al final. Probá al menos 3 técnicas de Prompt Engineering diferentes.</p>
+            </div>
+        </div>
+        <div style="display:flex;gap:16px;align-items:flex-start;background:linear-gradient(160deg,var(--bg-card),var(--bg-card-alt));border-radius:14px;padding:22px 28px;border:1px solid rgba(167,139,250,0.15);">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:1.6rem;font-weight:700;color:var(--purple);flex-shrink:0;">03</span>
+            <div>
+                <h4 style="font-size:1.2rem;font-weight:700;color:var(--text-primary);margin-bottom:4px;">Semana 4: Presentá tu portafolio</h4>
+                <p style="font-size:1.05rem;color:var(--text-secondary);line-height:1.5;margin:0;">8-10 minutos por equipo/persona. Mostrá el contenido, explicá el proceso, y reflexioná sobre qué funcionó, qué no, y qué limitaciones encontraste.</p>
+            </div>
+        </div>
+    </div>
+    <div class="callout success" style="margin-top:16px;">
+        <span class="callout-label" style="color:var(--green)">Recordá</span>
+        <p>Lo más valioso no es el contenido final, sino <strong>el proceso</strong>: cómo diseñaste los prompts, cómo iteraste, qué técnicas usaste y por qué. La bitácora es donde se demuestra el aprendizaje.</p>
+    </div>
+</section>
+
+</div><!-- end deck -->
+
+<script>
+const slides = document.querySelectorAll('.slide');
+let cur = 0;
+
+function ui() {
+    slides.forEach((s, i) => {
+        s.classList.remove('active', 'prev');
+        if (i === cur) s.classList.add('active');
+        else if (i < cur) s.classList.add('prev');
+    });
+    slides[cur].scrollTop = 0;
+}
+
+function next() { if (cur < slides.length - 1) { cur++; ui(); } }
+function prev() { if (cur > 0) { cur--; ui(); } }
+function go(n) { cur = n; ui(); }
+
+document.addEventListener('keydown', e => {
+    if (['ArrowRight', 'ArrowDown', ' '].includes(e.key)) { e.preventDefault(); next(); }
+    if (['ArrowLeft', 'ArrowUp'].includes(e.key)) { e.preventDefault(); prev(); }
+    if (e.key === 'Home') { e.preventDefault(); go(0); }
+    if (e.key === 'End') { e.preventDefault(); go(slides.length - 1); }
+    if (e.key === 'F2') { e.preventDefault(); toggleFullscreen(); }
+});
+
+let tx = 0;
+document.addEventListener('touchstart', e => { tx = e.changedTouches[0].screenX; }, { passive: true });
+document.addEventListener('touchend', e => { const d = e.changedTouches[0].screenX - tx; if (Math.abs(d) > 50) { d < 0 ? next() : prev(); } }, { passive: true });
+
+function toggleFullscreen() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+    else document.exitFullscreen().catch(() => {});
+}
+
+ui();
+</script>
+</body>
+</html>
